@@ -9,10 +9,13 @@
 **做什么**: 需要用户补一份对应的 tsx 源码 (本地搜过, WeChat / Downloads / Desktop 都没有), 或者照图重建. 落地后替换当前 App.tsx 里的 scene/stage/conversation 三屏为这一屏.
 **何时**: token-alignment 后, 在开始正式 `page/*` 调优之前.
 **关联截图**: 见 system 消息附图 "Image #4" / "Image #5".
-**已确认资产** (待重建时从这里搬到 `src/assets/`):
-- 背景: `/Users/max/Library/Containers/com.tencent.xinWeChat/.../msg/file/2026-05/Onboarding界面设计 (1)/src/imports/background.jpg` (1.9 MB, 派对场景科学楼前)
-- 学姐人物: 同上 `src/imports/ppl.png` (880 KB, 长条紫色 silhouette)
-- 其他备选物料同目录, 见 `/tmp/imports-preview.html`
+**已落地资产** (已搬进 `src/assets/after-party/`, commit on branch `chore/import-after-party-assets`):
+- `scene-bg.jpg` (128 KB, 派对纯背景, 桌子 / 气球 / 旗 / 路灯 / Welcome Freshmen 牌, 远景含小尺寸路人剪影. 来源 `~/Downloads/scence01.jpg`)
+- `scene-with-silhouette.png` (361 KB, 同背景 + 居中大尺寸学姐主角紫色 silhouette. 来源 `~/Downloads/scence02.png`)
+
+**重建方案二选一**:
+1. 单图: 直接用 `scene-with-silhouette.png` 当背景, 主角和场景一体, 实现快但主角无法独立动画
+2. 双层: `scene-bg.jpg` 当底 + 主角剪影另起一个 SVG/PNG (需要从 scence02 抠图或重画), 主角可呼吸/发光/进场动画
 
 ### [ ] Token alignment phase 2 (字号档 + 剩余小众色)
 **触发**: 第一轮 `chore/align-tokens` (commit `23d2158`) 把 16 个高频 hex 和 11/13/18px 字号对齐了, 但还有约 60 处低频 hex (`#7a6ee0` / `#b0aed4` / `#f7f5f2` / `#d8d0f9` 等) 和约 55 处其他字号 (`14/15/20/22px` 等) 没对.
