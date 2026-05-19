@@ -1,0 +1,42 @@
+/* Uply Onboarding — animation keyframes & base utility classes
+ * Import once in your app entry (e.g. import "./uply/styles.css")
+ */
+
+@keyframes uply-spotlight   { 0%,100%{opacity:.55;transform:translateX(-50%) scaleY(1)} 50%{opacity:.75;transform:translateX(-50%) scaleY(1.05)} }
+@keyframes uply-flicker     { 0%,100%{opacity:1} 50%{opacity:.86} }
+@keyframes uply-float       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes uply-glow-pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(184,172,246,.6),0 0 40px 8px rgba(122,110,224,.45)} 50%{box-shadow:0 0 0 20px rgba(184,172,246,0),0 0 60px 12px rgba(122,110,224,.6)} }
+@keyframes uply-ripple      { 0%{transform:scale(.6);opacity:.7} 100%{transform:scale(1.6);opacity:0} }
+@keyframes uply-typing      { 0%{opacity:.3} 30%{opacity:1} 100%{opacity:.3} }
+@keyframes uply-fade-up     { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes uply-fade        { from{opacity:0} to{opacity:1} }
+@keyframes uply-spin        { to{transform:rotate(360deg)} }
+@keyframes uply-stamp-in    { 0%{opacity:0;transform:scale(2) rotate(-20deg)} 60%{opacity:1;transform:scale(.9) rotate(-8deg)} 100%{transform:scale(1) rotate(-6deg)} }
+
+.uply-fade-up { animation: uply-fade-up .6s cubic-bezier(.2,.7,.3,1) both; }
+.uply-fade    { animation: uply-fade    .5s ease both; }
+
+/* Google Fonts moved to index.html <link> to satisfy @import-must-be-first rule.
+   Originally: Playfair Display 500–800 + Manrope 300–800. */
+
+.uply-serif { font-family: 'Playfair Display', ui-serif, Georgia, serif; }
+.uply-sans  { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
+
+/* Color tokens — customize to taste */
+:root{
+  --uply-indigo-950:#0e0930;
+  --uply-indigo-900:#15103d;
+  --uply-indigo-800:#1d1656;
+  --uply-purple-700:#3d2fb5;
+  --uply-purple-600:#5a4ad9;
+  --uply-purple-500:#7a6ee0;
+  --uply-purple-400:#9c8ff0;
+  --uply-lavender-300:#b8acf6;
+  --uply-lavender-200:#d8d0f9;
+  --uply-lavender-100:#ebe6fb;
+  --uply-cream:#f3eee3;
+  --uply-paper:#faf7f0;
+  --uply-ink:#1d1452;
+  --uply-ink-mute:#8881b8;
+  --uply-gold:#f3d27e;
+}

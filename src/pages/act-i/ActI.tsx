@@ -1,0 +1,578 @@
+/**
+ * Uply Onboarding — ACT I screens
+ *
+ * Flow:
+ *   curtain → StageScreen (after-party encounter)
+ *           → ConversationScreen (dialog with Maya)
+ *           → LinkedInScreen (connection confirmed)
+ *
+ * Each screen renders inside an absolutely-positioned full-bleed container.
+ * Drop them into your phone-frame's screen slot.
+ */
+import { useState, useEffect } from "react";
+import {
+  StageBackdrop, GlowFigure, SolidFigure, Chip, SpeechBubble,
+  MicButton, TypingDots, ActLabel, PrimaryBtn,
+} from "@/components/ui/UplyUI";
+
+// ╔══════════════════════════════════════════════════════════════════════
+// ║  StageScreen — illustrated daytime "After Party" setting
+// ║  Maya greets the user; tap the mic to enter the dialogue.
+// ╚══════════════════════════════════════════════════════════════════════
+export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
+  const [taskChecked, setTaskChecked] = useState(false);
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <PartyBackdrop />
+
+      {/* Top scene chip */}
+      <div style={{ position: "absolute", top: 54, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 6 }}>
+        <Chip dark={false} style={{
+          background: "rgba(255,255,255,.78)", backdropFilter: "blur(10px)",
+          color: "#5a4ad9", fontWeight: 800, letterSpacing: ".18em",
+          padding: "8px 16px", fontSize: 11,
+          boxShadow: "0 4px 14px rgba(8,4,40,.12)",
+        }}>· FINAL PRESENTATION AFTER PARTY ·</Chip>
+      </div>
+
+      {/* Task chip top-left */}
+      <div className="uply-fade-up" style={{ position: "absolute", top: 104, left: 14, zIndex: 6 }}>
+        <button onClick={() => setTaskChecked(v => !v)} style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "8px 14px 8px 10px", borderRadius: 9999,
+          background: "rgba(255,255,255,.7)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(90,74,217,.18)", cursor: "pointer",
+          color: "#5a4ad9", fontFamily: "inherit", fontWeight: 700, fontSize: 13,
+          boxShadow: "0 4px 14px rgba(8,4,40,.08)",
+        }}>
+          <span style={{
+            width: 18, height: 18, borderRadius: 5,
+            border: taskChecked ? "2px solid #5a4ad9" : "1.5px solid #9c8ff0",
+            background: taskChecked ? "#5a4ad9" : "transparent",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            {taskChecked && <svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+          </span>
+          <span>🔗 Add alumni on LinkedIn</span>
+        </button>
+      </div>
+
+      {/* NPC speech bubble */}
+      <div className="uply-fade-up" style={{ position: "absolute", top: 184, left: 20, zIndex: 6, maxWidth: 240, animationDelay: ".4s" }}>
+        <div style={{
+          background: "rgba(255,255,255,.96)", color: "#1d1452",
+          padding: "14px 18px", borderRadius: "20px 20px 20px 4px",
+          fontSize: 17, lineHeight: 1.3, fontWeight: 500,
+          boxShadow: "0 8px 24px rgba(8,4,40,.18)",
+        }}>Hi, your presentation was great!</div>
+      </div>
+
+      {/* The solid figure (centered) */}
+      <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translateX(-50%)", zIndex: 5 }}>
+        <div className="uply-fade" style={{ animationDelay: ".2s" }}>
+          <SolidFigure size={180} />
+        </div>
+      </div>
+
+      {/* Bio card under figure */}
+      <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: "70%", zIndex: 6 }}>
+        <div className="uply-fade" style={{ animationDelay: ".6s" }}>
+          <div style={{
+            background: "rgba(255,255,255,.88)", backdropFilter: "blur(12px)",
+            borderRadius: 14, padding: "10px 18px",
+            boxShadow: "0 8px 20px rgba(8,4,40,.12)",
+            textAlign: "center", minWidth: 230,
+            border: "1px solid rgba(255,255,255,.6)",
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#5a4ad9", lineHeight: 1.2, whiteSpace: "nowrap" }}>Female Senior · Same Major</div>
+            <div style={{ fontSize: 12, color: "#8881b8", marginTop: 3, fontWeight: 600 }}>Seen at the library before</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mic + prompt */}
+      <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, zIndex: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+        <div className="uply-fade-up" style={{
+          fontSize: 14, color: "rgba(255,255,255,.92)",
+          textShadow: "0 1px 6px rgba(8,4,40,.5), 0 0 14px rgba(8,4,40,.3)",
+          fontWeight: 600, animationDelay: "1s",
+        }}>Want to say hi first?</div>
+        <button onClick={onMicTap} className="uply-fade-up" style={{
+          width: 68, height: 68, borderRadius: "50%",
+          background: "rgba(255,255,255,.55)", backdropFilter: "blur(14px)",
+          border: "1.5px solid rgba(255,255,255,.7)",
+          boxShadow: "0 8px 24px rgba(8,4,40,.25), inset 0 1px 0 rgba(255,255,255,.6)",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          animationDelay: "1.2s",
+        }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#5a4ad9">
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M7 11a5 5 0 0010 0" stroke="#5a4ad9" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <line x1="12" y1="16" x2="12" y2="20" stroke="#5a4ad9" strokeWidth="2" strokeLinecap="round" />
+            <line x1="9" y1="20" x2="15" y2="20" stroke="#5a4ad9" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ╔══════════════════════════════════════════════════════════════════════
+// ║  ConversationScreen — branching dialogue with Maya
+// ║  - 4 beats with response options
+// ║  - last beat has a special "ending trigger" choice that completes
+// ╚══════════════════════════════════════════════════════════════════════
+type Choice = { text: string; next?: number; ending?: boolean };
+type Beat   = { npc: string; hint: string | null; choices: Choice[] };
+
+const SCRIPT: Beat[] = [
+  {
+    npc: "Hi! Your presentation was great — really clear.",
+    hint: null,
+    choices: [
+      { text: "Thanks! I was actually really nervous.", next: 1 },
+      { text: "Oh — thank you, that means a lot.",       next: 1 },
+      { text: "Yeah it went okay, I guess.",             next: 1 },
+    ],
+  },
+  {
+    npc: "Aren't you usually at the library too? I feel like I've seen you on the second floor.",
+    hint: "She's making small talk. Mirror her energy — share something specific.",
+    choices: [
+      { text: "Yeah — I camp at the reading room most nights.", next: 2 },
+      { text: "Probably! I basically live there during finals.", next: 2 },
+      { text: "Maybe? I'm there a lot, honestly.",               next: 2 },
+    ],
+  },
+  {
+    npc: "I'm graduating this spring — just accepted a PM role at a small startup, actually.",
+    hint: "Try asking about her project or company.",
+    choices: [
+      { text: "Congrats! What does the startup do?", next: 3 },
+      { text: "Oh wow, what kind of product?",       next: 3 },
+      { text: "That's huge. How'd you find them?",    next: 3 },
+    ],
+  },
+  {
+    npc: "We're building handoff tools for designers — early stage but the team is great.",
+    hint: "Good moment to exchange contacts. Be specific about why.",
+    choices: [
+      { text: "Can I follow you on LinkedIn?",                       ending: true },
+      { text: "That sounds super cool — let me know how it goes!",   next: 3 },
+      { text: "Nice. Well, see you around the library!",             next: 3 },
+    ],
+  },
+];
+
+type Phase =
+  | "countdown" | "npc-typing" | "npc-speaking" | "choosing"
+  | "user-speaking" | "ending-npc-typing" | "ending";
+
+export function ConversationScreen({
+  onComplete, onSkip,
+}: { onComplete: () => void; onSkip: () => void }) {
+  const [phase, setPhase] = useState<Phase>("countdown");
+  const [beat, setBeat] = useState(-1);
+  const [history, setHistory] = useState<{ who: "npc" | "me"; text: string }[]>([]);
+  const [countdown, setCountdown] = useState(3);
+  const [showHint, setShowHint] = useState(false);
+
+  const playNpcBeat = (i: number) => {
+    setBeat(i);
+    setPhase("npc-typing");
+    setShowHint(false);
+    setTimeout(() => {
+      setPhase("npc-speaking");
+      setHistory(h => [...h, { who: "npc", text: SCRIPT[i].npc }]);
+      setTimeout(() => {
+        if (SCRIPT[i].hint) setShowHint(true);
+        setPhase("choosing");
+      }, 1300);
+    }, 900);
+  };
+
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    if (countdown <= 0) { playNpcBeat(0); return; }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, countdown]);
+
+  const pickChoice = (c: Choice) => {
+    setShowHint(false);
+    setPhase("user-speaking");
+    setTimeout(() => {
+      setHistory(h => [...h, { who: "me", text: c.text }]);
+      if (c.ending) {
+        setPhase("ending-npc-typing");
+        setTimeout(() => {
+          setHistory(h => [...h, { who: "npc", text: "Of course! Let me add you right now 🌟" }]);
+          setPhase("ending");
+          setTimeout(() => onComplete(), 1800);
+        }, 1100);
+      } else {
+        playNpcBeat(c.next!);
+      }
+    }, 1400);
+  };
+
+  const skipFirst = () => {
+    if (phase !== "countdown") return;
+    setCountdown(-1);
+    setPhase("user-speaking");
+    setTimeout(() => {
+      setHistory(h => [...h, { who: "me", text: "Hey — great presentation." }]);
+      playNpcBeat(0);
+    }, 1000);
+  };
+
+  const latestNpc = [...history].reverse().find(x => x.who === "npc");
+  const latestMe  = [...history].reverse().find(x => x.who === "me");
+  const current   = beat >= 0 ? SCRIPT[beat] : null;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <StageBackdrop lit>
+        {/* Top scene chips */}
+        <div style={{ position: "absolute", top: 54, left: 18, right: 18, display: "flex", gap: 8, justifyContent: "space-between", zIndex: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Chip>🎓 After Party</Chip>
+            <Chip>🔗 Add on LinkedIn</Chip>
+          </div>
+          <Chip onClick={onSkip}>End scene ✕</Chip>
+        </div>
+
+        {/* Character */}
+        <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", opacity: phase === "ending" ? .6 : 1, transition: "opacity .8s ease" }}>
+          <GlowFigure size={180} color={phase === "npc-speaking" || phase === "ending-npc-typing" ? "#b8acf6" : "#9c8ff0"} />
+        </div>
+
+        {/* NPC bubble */}
+        {(phase === "npc-typing" || phase === "npc-speaking" || phase === "choosing" || phase === "ending-npc-typing" || phase === "user-speaking" || phase === "ending") && latestNpc && (
+          <div className="uply-fade-up" key={latestNpc.text} style={{ position: "absolute", top: "10%", right: 18, maxWidth: 260, zIndex: 7 }}>
+            <SpeechBubble tail="bottom-left">
+              {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="#8881b8" /> : latestNpc.text}
+            </SpeechBubble>
+          </div>
+        )}
+
+        {/* User echo while npc thinks */}
+        {latestMe && (phase === "npc-typing" || phase === "npc-speaking") && (
+          <div className="uply-fade-up" style={{ position: "absolute", top: "42%", left: 18, maxWidth: 240, zIndex: 6 }}>
+            <div style={{
+              padding: "10px 14px", borderRadius: 16,
+              background: "rgba(122,110,224,.85)", color: "#fff",
+              fontSize: 14, fontWeight: 500, lineHeight: 1.35,
+              boxShadow: "0 6px 18px rgba(8,4,40,.3)", opacity: .85,
+            }}>{latestMe.text}</div>
+          </div>
+        )}
+
+        {/* Pre-conversation countdown */}
+        {phase === "countdown" && (
+          <div className="uply-fade" style={{ position: "absolute", top: "30%", left: 0, right: 0, textAlign: "center", color: "#ebe6fb", padding: "0 30px" }}>
+            <ActLabel color="#b8acf6">YOUR TURN?</ActLabel>
+            <div className="uply-serif" style={{ fontSize: 22, lineHeight: 1.25, marginTop: 12, fontWeight: 600 }}>
+              Want to break the silence first?
+            </div>
+            <div style={{ marginTop: 18, color: "#8881b8", fontSize: 14 }}>
+              She'll speak in <b style={{ color: "#b8acf6" }}>{Math.max(0, countdown)}s</b> if you don't
+            </div>
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+              <button onClick={skipFirst} style={{
+                padding: "12px 24px", borderRadius: 9999,
+                background: "rgba(184,172,246,.16)", color: "#ebe6fb",
+                border: "1px solid rgba(184,172,246,.3)", fontWeight: 700, fontSize: 14,
+                cursor: "pointer", fontFamily: "inherit", letterSpacing: ".02em",
+              }}>🎤  I'll go first</button>
+            </div>
+          </div>
+        )}
+
+        {/* Hint banner */}
+        {showHint && current?.hint && (
+          <div className="uply-fade-up" style={{
+            position: "absolute", bottom: 250, left: 18, right: 18, zIndex: 9,
+            background: "rgba(15,8,50,.85)", backdropFilter: "blur(10px)",
+            border: "1px dashed rgba(243,210,126,.5)",
+            borderRadius: 14, padding: "10px 14px",
+            display: "flex", alignItems: "flex-start", gap: 10,
+            color: "#f3d27e", fontSize: 12.5, lineHeight: 1.4,
+          }}>
+            <span style={{ fontSize: 14 }}>💡</span>
+            <div><b style={{ letterSpacing: ".06em" }}>STAGE WHISPER · </b>{current.hint}</div>
+          </div>
+        )}
+
+        {/* Choices */}
+        {phase === "choosing" && current && (
+          <div className="uply-fade-up" style={{
+            position: "absolute", bottom: 30, left: 14, right: 14, zIndex: 10,
+            display: "flex", flexDirection: "column", gap: 8,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".28em", color: "#b8acf6", marginBottom: 4, paddingLeft: 6, opacity: .7 }}>YOUR LINE</div>
+            {current.choices.map((c, i) => (
+              <button key={i} onClick={() => pickChoice(c)} style={{
+                background: c.ending
+                  ? "linear-gradient(180deg,#9c8ff0,#7a6ee0)"
+                  : "rgba(255,255,255,.08)",
+                color: "#fff", textAlign: "left",
+                padding: "14px 18px", borderRadius: 18,
+                border: c.ending ? "1px solid rgba(255,255,255,.25)" : "1px solid rgba(184,172,246,.22)",
+                fontSize: 15, fontWeight: 600, lineHeight: 1.3,
+                cursor: "pointer", fontFamily: "inherit",
+                backdropFilter: "blur(8px)",
+                boxShadow: c.ending ? "0 8px 30px rgba(122,110,224,.45)" : "none",
+              }}>{c.ending && <span style={{ marginRight: 6 }}>🔗</span>}{c.text}</button>
+            ))}
+          </div>
+        )}
+
+        {/* User speaking */}
+        {phase === "user-speaking" && (
+          <div className="uply-fade" style={{
+            position: "absolute", bottom: 60, left: 0, right: 0,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 14, zIndex: 10,
+          }}>
+            <div style={{ color: "#b8acf6", fontSize: 13, letterSpacing: ".18em", fontWeight: 700 }}>
+              YOU'RE SPEAKING...
+            </div>
+            <MicButton active size={72} />
+          </div>
+        )}
+
+        {/* Beat counter */}
+        {beat >= 0 && phase !== "ending" && (
+          <div style={{ position: "absolute", bottom: 14, left: 18, zIndex: 5,
+            color: "#8881b8", fontSize: 10.5, fontWeight: 700, letterSpacing: ".28em" }}>
+            ROUND {beat + 1} / {SCRIPT.length}
+          </div>
+        )}
+      </StageBackdrop>
+    </div>
+  );
+}
+
+// ╔══════════════════════════════════════════════════════════════════════
+// ║  LinkedInScreen — connection-accepted result animation
+// ╚══════════════════════════════════════════════════════════════════════
+export function LinkedInScreen({ onContinue }: { onContinue: () => void }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const t1 = setTimeout(() => setStep(1), 1400);
+    const t2 = setTimeout(() => setStep(2), 2800);
+    return () => { [t1, t2].forEach(clearTimeout); };
+  }, []);
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#f3f2ef", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: "#0a66c2", color: "#fff", padding: "48px 18px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 6, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "#0a66c2", fontSize: 18, fontFamily: "serif" }}>in</div>
+        <div style={{ flex: 1, height: 32, borderRadius: 4, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", padding: "0 10px", fontSize: 13, fontWeight: 500, opacity: .9 }}>
+          <span style={{ opacity: .7 }}>🔍</span><span style={{ marginLeft: 8, opacity: .8 }}>Maya Chen</span>
+        </div>
+      </div>
+      <div style={{ flex: 1, padding: "20px 18px", overflow: "auto" }}>
+        <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
+          <div style={{ height: 80, background: "linear-gradient(120deg,#5a4ad9,#9c8ff0)" }} />
+          <div style={{ padding: "0 18px 18px", position: "relative" }}>
+            <div style={{
+              width: 88, height: 88, borderRadius: "50%",
+              background: "radial-gradient(circle at 30% 30%,#c3b9f5,#7a6ee0 70%)",
+              border: "4px solid #fff", marginTop: -44,
+            }} />
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontWeight: 700, fontSize: 20, color: "#000" }}>Maya Chen</div>
+              <div style={{ color: "#000", fontSize: 14, marginTop: 2 }}>Incoming PM @ Handoff · CS @ University · she/her</div>
+              <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>San Francisco Bay Area · 312 followers</div>
+            </div>
+            <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+              {step >= 1 ? (
+                <button style={{
+                  padding: "7px 16px", borderRadius: 9999, border: "none",
+                  background: "#5a4ad9", color: "#fff", fontWeight: 700, fontSize: 14,
+                  display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit",
+                  boxShadow: "0 4px 14px rgba(90,74,217,.35)",
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Following
+                </button>
+              ) : (
+                <button style={{
+                  padding: "7px 16px", borderRadius: 9999, border: "1px solid #0a66c2",
+                  background: "#fff", color: "#0a66c2", fontWeight: 700, fontSize: 14,
+                  fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", border: "1.5px solid #0a66c2", borderTopColor: "transparent", animation: "uply-spin 1s linear infinite" }} />
+                  Pending
+                </button>
+              )}
+              <button style={{ padding: "7px 16px", borderRadius: 9999, border: "1px solid #0a66c2", background: "#fff", color: "#0a66c2", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>Message</button>
+            </div>
+          </div>
+        </div>
+        {step >= 1 && (
+          <div className="uply-fade-up" style={{
+            marginTop: 14, padding: "14px 16px", borderRadius: 12,
+            background: "#e6f4ea", border: "1px solid #b6dfc1",
+            display: "flex", gap: 12, alignItems: "center",
+          }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2e7d32", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="16" height="16" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#1b5e20" }}>Maya accepted your invitation</div>
+              <div style={{ fontSize: 12.5, color: "#3f6f44", marginTop: 2 }}>You're now connected on LinkedIn.</div>
+            </div>
+          </div>
+        )}
+      </div>
+      {step >= 2 && (
+        <div className="uply-fade-up" style={{ padding: "14px 18px 26px", background: "linear-gradient(180deg, transparent, #f3f2ef 50%)" }}>
+          <PrimaryBtn onClick={onContinue}>End of Act I  →</PrimaryBtn>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ╔══════════════════════════════════════════════════════════════════════
+// ║  PartyBackdrop — illustrated daytime "After Party" backdrop
+// ║  (Science Building facade + bunting + plants + tables + tile floor)
+// ╚══════════════════════════════════════════════════════════════════════
+function PartyBackdrop() {
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden",
+      background: "linear-gradient(180deg, #cfd9e8 0%, #d8d3e0 35%, #d4c4ae 55%, #c9b59a 100%)" }}>
+      <div style={{ position: "absolute", top: -40, left: "30%", width: 300, height: 200,
+        background: "radial-gradient(circle, rgba(255,235,200,.6), transparent 60%)", filter: "blur(20px)" }} />
+      <div style={{
+        position: "absolute", top: "8%", left: "8%", right: "8%", height: "42%",
+        background: "linear-gradient(180deg, #d4dce5 0%, #b8c4d4 60%, #a5b3c4 100%)",
+        borderRadius: "8px 8px 0 0",
+        boxShadow: "inset 0 -20px 40px rgba(0,0,0,.08)",
+      }}>
+        {[10, 82].map((x, i) => (
+          <div key={i} style={{
+            position: "absolute", top: "18%", bottom: 0, left: `${x}%`, width: "8%",
+            background: "linear-gradient(90deg, #e9eef4, #c8d1de)",
+            borderRadius: "4px 4px 0 0",
+          }} />
+        ))}
+        <div style={{
+          position: "absolute", top: "28%", left: "34%", right: "34%", bottom: 0,
+          background: "linear-gradient(180deg, #4a6a90, #2a4570)",
+          borderRadius: "6px 6px 0 0",
+          boxShadow: "inset 0 0 0 2px rgba(255,255,255,.2)",
+        }}>
+          <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,.25)" }} />
+        </div>
+        <div style={{
+          position: "absolute", top: "8%", left: "12%", right: "12%", height: "18%",
+          color: "rgba(255,255,255,.5)", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, fontWeight: 800, letterSpacing: ".16em", fontFamily: "serif",
+        }}>SCIENCE BUILDING</div>
+      </div>
+
+      <Bunting top={170} from={4} to={48} count={8} colors={["#e6896d", "#f3c662", "#7faddb", "#e8a3c4", "#9ec98c"]} />
+      <Bunting top={170} from={52} to={96} count={8} colors={["#f3c662", "#9ec98c", "#e6896d", "#7faddb", "#e8a3c4"]} />
+
+      <Plant left="6%" bottom="22%" size={70} />
+      <Plant left="82%" bottom="22%" size={70} />
+
+      <Table left="0%" bottom="14%" />
+      <Table left="80%" bottom="14%" />
+
+      <div style={{
+        position: "absolute", left: 0, right: 0, bottom: 0, height: "24%",
+        background: "linear-gradient(180deg, #c9b59a 0%, #b8a380 60%, #a89570 100%)",
+      }}>
+        {[0, 20, 40, 60, 80, 100].map(p => (
+          <div key={p} style={{ position: "absolute", top: 0, bottom: 0, left: `${p}%`, width: 1,
+            background: "rgba(120,90,50,.18)", transform: "skewX(-12deg)" }} />
+        ))}
+        {[0, 40, 80].map(p => (
+          <div key={p} style={{ position: "absolute", left: 0, right: 0, top: `${p}%`, height: 1,
+            background: "rgba(120,90,50,.14)" }} />
+        ))}
+      </div>
+
+      <div style={{ position: "absolute", inset: 0,
+        background: "radial-gradient(80% 50% at 50% 65%, rgba(255,210,150,.18) 0%, transparent 60%)",
+        pointerEvents: "none" }} />
+    </div>
+  );
+}
+
+function Bunting({ top, from, to, count, colors }: { top: number; from: number; to: number; count: number; colors: string[] }) {
+  const flags = Array.from({ length: count }).map((_, i) => {
+    const t = i / (count - 1);
+    const x = from + (to - from) * t;
+    const sag = Math.sin(t * Math.PI) * 24;
+    return { x, y: top + sag, color: colors[i % colors.length], i };
+  });
+  return (
+    <>
+      <svg width="100%" height="80" viewBox="0 0 100 80" preserveAspectRatio="none"
+        style={{ position: "absolute", top: top - 4, left: 0, pointerEvents: "none" }}>
+        <path d={`M${from} 0 Q${(from + to) / 2} 50 ${to} 0`} stroke="rgba(80,55,30,.45)" strokeWidth=".3" fill="none" vectorEffect="non-scaling-stroke" />
+      </svg>
+      {flags.map(f => (
+        <div key={f.i} style={{
+          position: "absolute", top: f.y, left: `${f.x}%`,
+          width: 0, height: 0,
+          borderLeft: "9px solid transparent",
+          borderRight: "9px solid transparent",
+          borderTop: `14px solid ${f.color}`,
+          transform: "translateX(-9px)",
+          filter: "drop-shadow(0 2px 1px rgba(0,0,0,.1))",
+        }} />
+      ))}
+    </>
+  );
+}
+
+function Plant({ left, bottom, size }: { left: string; bottom: string; size: number }) {
+  return (
+    <div style={{ position: "absolute", left, bottom, width: size, height: size * 1.3 }}>
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: size * .9, height: size * .9, borderRadius: "50%",
+        background: "radial-gradient(circle at 35% 30%, #b8d99c, #6fa46b 70%, #4d7e58)",
+        boxShadow: "inset -4px -8px 12px rgba(0,0,0,.18)" }} />
+      <div style={{ position: "absolute", top: size * .18, left: "18%",
+        width: size * .4, height: size * .4, borderRadius: "50%",
+        background: "radial-gradient(circle, #a3cf85, #6fa46b)" }} />
+      <div style={{ position: "absolute", top: size * .18, right: "18%",
+        width: size * .42, height: size * .42, borderRadius: "50%",
+        background: "radial-gradient(circle, #a3cf85, #5f9560)" }} />
+      <div style={{ position: "absolute", bottom: 0, left: "18%", right: "18%", height: size * .45,
+        background: "linear-gradient(180deg, #c98d65, #a06340)",
+        borderRadius: "4px 4px 8px 8px / 4px 4px 18px 18px",
+        boxShadow: "inset 0 -8px 14px rgba(0,0,0,.25)" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: size * .08,
+          background: "#9a5a3a", borderRadius: "4px 4px 0 0" }} />
+      </div>
+    </div>
+  );
+}
+
+function Table({ left, bottom }: { left: string; bottom: string }) {
+  return (
+    <div style={{ position: "absolute", left, bottom, width: 130, height: 90 }}>
+      <div style={{ position: "absolute", top: 10, left: 0, right: 0, height: 50,
+        background: `repeating-linear-gradient(90deg, rgba(217,166,118,.95) 0 14px, rgba(245,222,180,.95) 14px 28px),
+                     repeating-linear-gradient(0deg, rgba(217,166,118,.5) 0 14px, rgba(245,222,180,.5) 14px 28px)`,
+        backgroundBlendMode: "multiply",
+        borderRadius: "4px 4px 0 0",
+        boxShadow: "0 8px 14px rgba(0,0,0,.12)",
+      }} />
+      <div style={{ position: "absolute", bottom: 0, left: 10, width: 6, height: 40, background: "#8a5a30", borderRadius: 2 }} />
+      <div style={{ position: "absolute", bottom: 0, right: 10, width: 6, height: 40, background: "#8a5a30", borderRadius: 2 }} />
+      <div style={{ position: "absolute", top: 0, left: 20, width: 34, height: 18, borderRadius: "50%",
+        background: "radial-gradient(circle at 40% 30%, #f0d59c, #c89a5f)" }} />
+      <div style={{ position: "absolute", top: -4, left: 60, width: 30, height: 22, borderRadius: "50%",
+        background: "radial-gradient(circle at 40% 30%, #e88a8a, #c54b4b)" }} />
+      <div style={{ position: "absolute", top: 0, right: 14, width: 26, height: 18, borderRadius: "50%",
+        background: "radial-gradient(circle at 40% 30%, #d8c098, #a8865f)" }} />
+    </div>
+  );
+}
