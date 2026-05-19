@@ -28,11 +28,22 @@
 **触发**: `.design/assets/{icons,illustrations}/` 目录占位中.
 **做什么**: 整理品牌图标 (ticket / bell / coffee / bar) 和插画 (theater-stage / silhouette-blur / uply-mascot) 进对应目录, 更新 `assets/README.md`.
 
-### [ ] Vercel 部署链路接入
-**触发**: commit message 模板要求 Preview URL, 没接前 Preview 字段是空的.
-**做什么**: `vercel link` 关联项目, 验证 push 后 preview 自动出 URL.
+### [ ] Vercel preview vs production 区分
+**触发**: 2026-05-19 首次部署 `vercel --yes` 默认走了 production (后续应该按需用 `vercel` for preview, `vercel --prod` for production). 当前 main = production 是 OK 的, 但 feature 分支应该走 preview.
+**做什么**: 后续 `page/*` / `chore/*` 分支 push 时手动 `vercel` 拿 preview URL 填进 commit message; main 合完跑 `vercel --prod` 升级. 或者配 GitHub Actions / Vercel git integration 自动化.
+
+### [ ] 真实 OPENAI_API_KEY 上 Vercel
+**触发**: 当前 `/api/realtime-token` 返回 503, voice mode 不可用.
+**做什么**: `vercel env add OPENAI_API_KEY production` 加 key, 重新 deploy. 当 voice 集成开始时再做.
 
 ## Done
+
+### [x] Vercel 部署链路接入 (2026-05-19)
+- 项目 link: `maxx1031s-projects/uply`
+- 生产 URL (alias): https://uply-gilt.vercel.app
+- 控制台: https://vercel.com/maxx1031s-projects/uply
+- `.vercel/project.json` 落地 (gitignored)
+- 部署验证: `/` 200, `/api/realtime-token` 503 (无 OPENAI_API_KEY, 符合 useRealtime 的 graceful fallback)
 
 ### [x] After Party 派对场景屏 (2026-05-19, commit `4acfc3d`)
 两段 phase 自动切换: scene-bg.jpg 空场 ~2.4s → scene-with-silhouette.png 主角浮现 + UI overlay (banner / LinkedIn checkbox / 对话气泡 / 信息卡 / mic). 替换旧 SceneScreen + StageScreen. 旧文件未删, 留 `chore/cleanup` 单独清.
