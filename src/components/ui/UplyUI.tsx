@@ -10,8 +10,8 @@ import { CSSProperties } from "react";
 // Uply mark (smiley orb logo)
 // ─────────────────────────────────────────────────────────────
 export function UplyMark({ size = 22, dark = false }: { size?: number; dark?: boolean }) {
-  const bg = dark ? "#5a4ad9" : "#ebe6fb";
-  const fg = dark ? "#ebe6fb" : "#5a4ad9";
+  const bg = dark ? "var(--accent-purple-mid)" : "var(--bg-lavender-soft)";
+  const fg = dark ? "var(--bg-lavender-soft)" : "var(--accent-purple-mid)";
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="11" fill={bg} />
@@ -40,8 +40,8 @@ export function PrimaryBtn({
       disabled={disabled}
       style={{
         width: "100%", height: 54, borderRadius: 9999, border: "none",
-        background: disabled ? "#3a3268" : "linear-gradient(180deg,#9c8ff0,#7a6ee0)",
-        color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: ".2px",
+        background: disabled ? "#3a3268" : "linear-gradient(180deg,var(--accent-purple-soft),#7a6ee0)",
+        color: "var(--text-on-dark)", fontWeight: 700, fontSize: 17, letterSpacing: ".2px",
         cursor: disabled ? "not-allowed" : "pointer",
         boxShadow: disabled ? "none" : (glow
           ? "0 0 0 1px rgba(255,255,255,.12) inset, 0 12px 40px rgba(122,110,224,.45), 0 2px 0 rgba(255,255,255,.25) inset"
@@ -59,7 +59,7 @@ export function GhostBtn({
 }: { children: React.ReactNode; onClick?: () => void; style?: CSSProperties }) {
   return (
     <button onClick={onClick} style={{
-      background: "transparent", border: "none", color: "#b8acf6",
+      background: "transparent", border: "none", color: "var(--accent-lavender)",
       fontSize: 15, fontWeight: 600, letterSpacing: ".3px", cursor: "pointer",
       padding: "12px 16px", fontFamily: "inherit", ...style,
     }}>{children}</button>
@@ -77,9 +77,9 @@ export function Chip({
       display: "inline-flex", alignItems: "center", gap: 6,
       padding: "8px 14px", borderRadius: 9999,
       background: dark ? "rgba(15,8,50,.65)" : "rgba(255,255,255,.9)",
-      color: dark ? "#ebe6fb" : "#1d1452",
+      color: dark ? "var(--bg-lavender-soft)" : "var(--text-ink)",
       border: dark ? "1px solid rgba(184,172,246,.2)" : "1px solid rgba(29,20,82,.08)",
-      fontSize: 13, fontWeight: 600, letterSpacing: ".2px",
+      fontSize: "var(--fs-caption)", fontWeight: 600, letterSpacing: ".2px",
       backdropFilter: "blur(8px)",
       cursor: onClick ? "pointer" : "default",
       ...style,
@@ -91,7 +91,7 @@ export function Chip({
 // Eyebrow label (ACT I · ENCOUNTER, etc.)
 // ─────────────────────────────────────────────────────────────
 export function ActLabel({
-  children, color = "#8881b8",
+  children, color = "var(--text-ink-mute)",
 }: { children: React.ReactNode; color?: string }) {
   return (
     <div style={{
@@ -111,7 +111,7 @@ export function StageBackdrop({
     <div style={{
       position: "absolute", inset: 0,
       background: lit
-        ? "radial-gradient(80% 60% at 50% 30%,#3d2f9d 0%,#1d1452 55%,#0a0726 100%)"
+        ? "radial-gradient(80% 60% at 50% 30%,#3d2f9d 0%,var(--text-ink) 55%,#0a0726 100%)"
         : "radial-gradient(80% 50% at 50% 20%,#241a5a 0%,#15103d 60%,#080522 100%)",
       overflow: "hidden",
       ...style,
@@ -176,9 +176,9 @@ export function GlowFigure({
         <svg width={size * .22} height={size * .16} viewBox="0 0 40 28" style={{
           position: "absolute", top: size * .18, zIndex: 2, opacity: .55,
         }}>
-          <circle cx="13" cy="10" r="2" fill="#ebe6fb" />
-          <circle cx="27" cy="10" r="2" fill="#ebe6fb" />
-          <path d="M12 18 Q20 24 28 18" stroke="#ebe6fb" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          <circle cx="13" cy="10" r="2" fill="var(--bg-lavender-soft)" />
+          <circle cx="27" cy="10" r="2" fill="var(--bg-lavender-soft)" />
+          <path d="M12 18 Q20 24 28 18" stroke="var(--bg-lavender-soft)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
         </svg>
       )}
     </div>
@@ -189,7 +189,7 @@ export function GlowFigure({
 // Solid figure (used in illustrated After-Party scene)
 // ─────────────────────────────────────────────────────────────
 export function SolidFigure({
-  size = 180, color = "#5a4ad9",
+  size = 180, color = "var(--accent-purple-mid)",
 }: { size?: number; color?: string }) {
   const w = size, h = size * 1.15;
   return (
@@ -229,13 +229,13 @@ export function SpeechBubble({
   return (
     <div style={{ position: "relative", display: "inline-block", maxWidth: 280, ...style }}>
       <div style={{
-        background: "#fff", color: "#1d1452",
+        background: "var(--text-on-dark)", color: "var(--text-ink)",
         padding: "14px 18px", borderRadius: 18,
         fontSize: 17, lineHeight: 1.35, fontWeight: 500,
         boxShadow: "0 8px 24px rgba(8,4,40,.25)",
       }}>{children}</div>
       <svg width="22" height="14" viewBox="0 0 22 14" style={{ position: "absolute", ...tails[tail] }}>
-        <path d="M0 0 L22 0 L11 14 Z" fill="#fff" />
+        <path d="M0 0 L22 0 L11 14 Z" fill="var(--text-on-dark)" />
       </svg>
     </div>
   );
@@ -266,23 +266,23 @@ export function MicButton({
         width: size, height: size, borderRadius: "50%", border: "none",
         background: active
           ? "radial-gradient(circle at 30% 30%,#c3b9f5,#7a6ee0 70%)"
-          : "radial-gradient(circle at 30% 30%,#b8acf6,#7a6ee0 70%)",
+          : "radial-gradient(circle at 30% 30%,var(--accent-lavender),#7a6ee0 70%)",
         boxShadow: "0 0 0 6px rgba(184,172,246,.18), 0 8px 30px rgba(122,110,224,.55), inset 0 -4px 12px rgba(29,20,82,.3), inset 0 2px 0 rgba(255,255,255,.4)",
         cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", zIndex: 1,
       }}>
-        <svg width={size * .4} height={size * .4} viewBox="0 0 24 24" fill="#fff">
+        <svg width={size * .4} height={size * .4} viewBox="0 0 24 24" fill="var(--text-on-dark)">
           <rect x="9" y="3" width="6" height="11" rx="3" />
-          <path d="M7 11a5 5 0 0010 0" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <line x1="12" y1="16" x2="12" y2="20" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-          <line x1="9" y1="20" x2="15" y2="20" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+          <path d="M7 11a5 5 0 0010 0" stroke="var(--text-on-dark)" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <line x1="12" y1="16" x2="12" y2="20" stroke="var(--text-on-dark)" strokeWidth="2" strokeLinecap="round" />
+          <line x1="9" y1="20" x2="15" y2="20" stroke="var(--text-on-dark)" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </button>
     </div>
   );
 }
 
-export function TypingDots({ color = "#b8acf6" }: { color?: string }) {
+export function TypingDots({ color = "var(--accent-lavender)" }: { color?: string }) {
   return (
     <div style={{ display: "inline-flex", gap: 4, alignItems: "center", padding: "4px 0" }}>
       {[0, 1, 2].map(i => (

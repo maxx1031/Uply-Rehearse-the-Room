@@ -171,7 +171,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
                 <div style={{
                   background: "rgba(107,99,212,0.85)",
                   color: "white",
-                  fontSize: "11px",
+                  fontSize: "var(--fs-micro)",
                   fontWeight: 600,
                   padding: "4px 10px",
                   borderRadius: "20px",
@@ -213,7 +213,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
                 background: "rgba(255,255,255,0.82)",
                 borderRadius: "12px",
                 padding: "6px 12px",
-                fontSize: "11px",
+                fontSize: "var(--fs-micro)",
                 color: "#5a5280",
                 fontWeight: 600,
                 backdropFilter: "blur(8px)",
@@ -236,7 +236,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
                 background: "rgba(255,255,255,0.82)",
                 borderRadius: "12px",
                 padding: "6px 12px",
-                fontSize: "11px",
+                fontSize: "var(--fs-micro)",
                 color: "#5a5280",
                 fontWeight: 600,
                 backdropFilter: "blur(8px)",
@@ -269,7 +269,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
                   className="text-center mb-2 mx-auto"
                   style={{
                     maxWidth: 320,
-                    fontSize: "13px",
+                    fontSize: "var(--fs-caption)",
                     color: "rgba(255,255,255,0.92)",
                     lineHeight: 1.4,
                     background: "rgba(18,10,42,0.55)",
@@ -335,7 +335,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
                   height: 68,
                   borderRadius: "50%",
                   background: active
-                    ? "linear-gradient(135deg, #7c73e6, #a89be0)"
+                    ? "linear-gradient(135deg, var(--btn-active-top), #a89be0)"
                     : connecting
                     ? "rgba(124,115,230,0.45)"
                     : "rgba(255,255,255,0.18)",
@@ -401,7 +401,7 @@ export function SceneScreen({ userName: _userName, onContinue }: Props) {
             right: 18,
             padding: "10px 18px",
             borderRadius: 999,
-            background: "linear-gradient(135deg, #8b7df0, #6b63d4)",
+            background: "linear-gradient(135deg, #8b7df0, var(--text-accent))",
             color: "white",
             fontSize: 14,
             fontWeight: 700,

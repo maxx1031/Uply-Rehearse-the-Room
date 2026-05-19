@@ -29,8 +29,8 @@ export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
       <div style={{ position: "absolute", top: 54, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 6 }}>
         <Chip dark={false} style={{
           background: "rgba(255,255,255,.78)", backdropFilter: "blur(10px)",
-          color: "#5a4ad9", fontWeight: 800, letterSpacing: ".18em",
-          padding: "8px 16px", fontSize: 11,
+          color: "var(--accent-purple-mid)", fontWeight: 800, letterSpacing: ".18em",
+          padding: "8px 16px", fontSize: "var(--fs-micro)",
           boxShadow: "0 4px 14px rgba(8,4,40,.12)",
         }}>· FINAL PRESENTATION AFTER PARTY ·</Chip>
       </div>
@@ -42,16 +42,16 @@ export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
           padding: "8px 14px 8px 10px", borderRadius: 9999,
           background: "rgba(255,255,255,.7)", backdropFilter: "blur(10px)",
           border: "1px solid rgba(90,74,217,.18)", cursor: "pointer",
-          color: "#5a4ad9", fontFamily: "inherit", fontWeight: 700, fontSize: 13,
+          color: "var(--accent-purple-mid)", fontFamily: "inherit", fontWeight: 700, fontSize: "var(--fs-caption)",
           boxShadow: "0 4px 14px rgba(8,4,40,.08)",
         }}>
           <span style={{
             width: 18, height: 18, borderRadius: 5,
-            border: taskChecked ? "2px solid #5a4ad9" : "1.5px solid #9c8ff0",
-            background: taskChecked ? "#5a4ad9" : "transparent",
+            border: taskChecked ? "2px solid var(--accent-purple-mid)" : "1.5px solid var(--accent-purple-soft)",
+            background: taskChecked ? "var(--accent-purple-mid)" : "transparent",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
-            {taskChecked && <svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            {taskChecked && <svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </span>
           <span>🔗 Add alumni on LinkedIn</span>
         </button>
@@ -60,7 +60,7 @@ export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
       {/* NPC speech bubble */}
       <div className="uply-fade-up" style={{ position: "absolute", top: 184, left: 20, zIndex: 6, maxWidth: 240, animationDelay: ".4s" }}>
         <div style={{
-          background: "rgba(255,255,255,.96)", color: "#1d1452",
+          background: "rgba(255,255,255,.96)", color: "var(--text-ink)",
           padding: "14px 18px", borderRadius: "20px 20px 20px 4px",
           fontSize: 17, lineHeight: 1.3, fontWeight: 500,
           boxShadow: "0 8px 24px rgba(8,4,40,.18)",
@@ -84,8 +84,8 @@ export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
             textAlign: "center", minWidth: 230,
             border: "1px solid rgba(255,255,255,.6)",
           }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#5a4ad9", lineHeight: 1.2, whiteSpace: "nowrap" }}>Female Senior · Same Major</div>
-            <div style={{ fontSize: 12, color: "#8881b8", marginTop: 3, fontWeight: 600 }}>Seen at the library before</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-purple-mid)", lineHeight: 1.2, whiteSpace: "nowrap" }}>Female Senior · Same Major</div>
+            <div style={{ fontSize: 12, color: "var(--text-ink-mute)", marginTop: 3, fontWeight: 600 }}>Seen at the library before</div>
           </div>
         </div>
       </div>
@@ -105,11 +105,11 @@ export function StageScreen({ onMicTap }: { onMicTap: () => void }) {
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
           animationDelay: "1.2s",
         }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="#5a4ad9">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--accent-purple-mid)">
             <rect x="9" y="3" width="6" height="11" rx="3" />
-            <path d="M7 11a5 5 0 0010 0" stroke="#5a4ad9" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <line x1="12" y1="16" x2="12" y2="20" stroke="#5a4ad9" strokeWidth="2" strokeLinecap="round" />
-            <line x1="9" y1="20" x2="15" y2="20" stroke="#5a4ad9" strokeWidth="2" strokeLinecap="round" />
+            <path d="M7 11a5 5 0 0010 0" stroke="var(--accent-purple-mid)" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <line x1="12" y1="16" x2="12" y2="20" stroke="var(--accent-purple-mid)" strokeWidth="2" strokeLinecap="round" />
+            <line x1="9" y1="20" x2="15" y2="20" stroke="var(--accent-purple-mid)" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
       </div>
@@ -244,14 +244,14 @@ export function ConversationScreen({
 
         {/* Character */}
         <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", opacity: phase === "ending" ? .6 : 1, transition: "opacity .8s ease" }}>
-          <GlowFigure size={180} color={phase === "npc-speaking" || phase === "ending-npc-typing" ? "#b8acf6" : "#9c8ff0"} />
+          <GlowFigure size={180} color={phase === "npc-speaking" || phase === "ending-npc-typing" ? "var(--accent-lavender)" : "var(--accent-purple-soft)"} />
         </div>
 
         {/* NPC bubble */}
         {(phase === "npc-typing" || phase === "npc-speaking" || phase === "choosing" || phase === "ending-npc-typing" || phase === "user-speaking" || phase === "ending") && latestNpc && (
           <div className="uply-fade-up" key={latestNpc.text} style={{ position: "absolute", top: "10%", right: 18, maxWidth: 260, zIndex: 7 }}>
             <SpeechBubble tail="bottom-left">
-              {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="#8881b8" /> : latestNpc.text}
+              {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
             </SpeechBubble>
           </div>
         )}
@@ -261,7 +261,7 @@ export function ConversationScreen({
           <div className="uply-fade-up" style={{ position: "absolute", top: "42%", left: 18, maxWidth: 240, zIndex: 6 }}>
             <div style={{
               padding: "10px 14px", borderRadius: 16,
-              background: "rgba(122,110,224,.85)", color: "#fff",
+              background: "rgba(122,110,224,.85)", color: "var(--text-on-dark)",
               fontSize: 14, fontWeight: 500, lineHeight: 1.35,
               boxShadow: "0 6px 18px rgba(8,4,40,.3)", opacity: .85,
             }}>{latestMe.text}</div>
@@ -270,18 +270,18 @@ export function ConversationScreen({
 
         {/* Pre-conversation countdown */}
         {phase === "countdown" && (
-          <div className="uply-fade" style={{ position: "absolute", top: "30%", left: 0, right: 0, textAlign: "center", color: "#ebe6fb", padding: "0 30px" }}>
-            <ActLabel color="#b8acf6">YOUR TURN?</ActLabel>
+          <div className="uply-fade" style={{ position: "absolute", top: "30%", left: 0, right: 0, textAlign: "center", color: "var(--bg-lavender-soft)", padding: "0 30px" }}>
+            <ActLabel color="var(--accent-lavender)">YOUR TURN?</ActLabel>
             <div className="uply-serif" style={{ fontSize: 22, lineHeight: 1.25, marginTop: 12, fontWeight: 600 }}>
               Want to break the silence first?
             </div>
-            <div style={{ marginTop: 18, color: "#8881b8", fontSize: 14 }}>
-              She'll speak in <b style={{ color: "#b8acf6" }}>{Math.max(0, countdown)}s</b> if you don't
+            <div style={{ marginTop: 18, color: "var(--text-ink-mute)", fontSize: 14 }}>
+              She'll speak in <b style={{ color: "var(--accent-lavender)" }}>{Math.max(0, countdown)}s</b> if you don't
             </div>
             <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
               <button onClick={skipFirst} style={{
                 padding: "12px 24px", borderRadius: 9999,
-                background: "rgba(184,172,246,.16)", color: "#ebe6fb",
+                background: "rgba(184,172,246,.16)", color: "var(--bg-lavender-soft)",
                 border: "1px solid rgba(184,172,246,.3)", fontWeight: 700, fontSize: 14,
                 cursor: "pointer", fontFamily: "inherit", letterSpacing: ".02em",
               }}>🎤  I'll go first</button>
@@ -297,7 +297,7 @@ export function ConversationScreen({
             border: "1px dashed rgba(243,210,126,.5)",
             borderRadius: 14, padding: "10px 14px",
             display: "flex", alignItems: "flex-start", gap: 10,
-            color: "#f3d27e", fontSize: 12.5, lineHeight: 1.4,
+            color: "var(--accent-gold)", fontSize: 12.5, lineHeight: 1.4,
           }}>
             <span style={{ fontSize: 14 }}>💡</span>
             <div><b style={{ letterSpacing: ".06em" }}>STAGE WHISPER · </b>{current.hint}</div>
@@ -310,13 +310,13 @@ export function ConversationScreen({
             position: "absolute", bottom: 30, left: 14, right: 14, zIndex: 10,
             display: "flex", flexDirection: "column", gap: 8,
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".28em", color: "#b8acf6", marginBottom: 4, paddingLeft: 6, opacity: .7 }}>YOUR LINE</div>
+            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".28em", color: "var(--accent-lavender)", marginBottom: 4, paddingLeft: 6, opacity: .7 }}>YOUR LINE</div>
             {current.choices.map((c, i) => (
               <button key={i} onClick={() => pickChoice(c)} style={{
                 background: c.ending
-                  ? "linear-gradient(180deg,#9c8ff0,#7a6ee0)"
+                  ? "linear-gradient(180deg,var(--accent-purple-soft),#7a6ee0)"
                   : "rgba(255,255,255,.08)",
-                color: "#fff", textAlign: "left",
+                color: "var(--text-on-dark)", textAlign: "left",
                 padding: "14px 18px", borderRadius: 18,
                 border: c.ending ? "1px solid rgba(255,255,255,.25)" : "1px solid rgba(184,172,246,.22)",
                 fontSize: 15, fontWeight: 600, lineHeight: 1.3,
@@ -334,7 +334,7 @@ export function ConversationScreen({
             position: "absolute", bottom: 60, left: 0, right: 0,
             display: "flex", flexDirection: "column", alignItems: "center", gap: 14, zIndex: 10,
           }}>
-            <div style={{ color: "#b8acf6", fontSize: 13, letterSpacing: ".18em", fontWeight: 700 }}>
+            <div style={{ color: "var(--accent-lavender)", fontSize: "var(--fs-caption)", letterSpacing: ".18em", fontWeight: 700 }}>
               YOU'RE SPEAKING...
             </div>
             <MicButton active size={72} />
@@ -344,7 +344,7 @@ export function ConversationScreen({
         {/* Beat counter */}
         {beat >= 0 && phase !== "ending" && (
           <div style={{ position: "absolute", bottom: 14, left: 18, zIndex: 5,
-            color: "#8881b8", fontSize: 10.5, fontWeight: 700, letterSpacing: ".28em" }}>
+            color: "var(--text-ink-mute)", fontSize: 10.5, fontWeight: 700, letterSpacing: ".28em" }}>
             ROUND {beat + 1} / {SCRIPT.length}
           </div>
         )}
@@ -365,48 +365,48 @@ export function LinkedInScreen({ onContinue }: { onContinue: () => void }) {
   }, []);
   return (
     <div style={{ position: "absolute", inset: 0, background: "#f3f2ef", display: "flex", flexDirection: "column" }}>
-      <div style={{ background: "#0a66c2", color: "#fff", padding: "48px 18px 12px", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 6, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "#0a66c2", fontSize: 18, fontFamily: "serif" }}>in</div>
-        <div style={{ flex: 1, height: 32, borderRadius: 4, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", padding: "0 10px", fontSize: 13, fontWeight: 500, opacity: .9 }}>
+      <div style={{ background: "var(--brand-linkedin)", color: "var(--text-on-dark)", padding: "48px 18px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 6, background: "var(--text-on-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "var(--brand-linkedin)", fontSize: "var(--fs-h2)", fontFamily: "serif" }}>in</div>
+        <div style={{ flex: 1, height: 32, borderRadius: 4, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", padding: "0 10px", fontSize: "var(--fs-caption)", fontWeight: 500, opacity: .9 }}>
           <span style={{ opacity: .7 }}>🔍</span><span style={{ marginLeft: 8, opacity: .8 }}>Maya Chen</span>
         </div>
       </div>
       <div style={{ flex: 1, padding: "20px 18px", overflow: "auto" }}>
-        <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
-          <div style={{ height: 80, background: "linear-gradient(120deg,#5a4ad9,#9c8ff0)" }} />
+        <div style={{ background: "var(--text-on-dark)", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
+          <div style={{ height: 80, background: "linear-gradient(120deg,var(--accent-purple-mid),var(--accent-purple-soft))" }} />
           <div style={{ padding: "0 18px 18px", position: "relative" }}>
             <div style={{
               width: 88, height: 88, borderRadius: "50%",
               background: "radial-gradient(circle at 30% 30%,#c3b9f5,#7a6ee0 70%)",
-              border: "4px solid #fff", marginTop: -44,
+              border: "4px solid var(--text-on-dark)", marginTop: -44,
             }} />
             <div style={{ marginTop: 10 }}>
               <div style={{ fontWeight: 700, fontSize: 20, color: "#000" }}>Maya Chen</div>
               <div style={{ color: "#000", fontSize: 14, marginTop: 2 }}>Incoming PM @ Handoff · CS @ University · she/her</div>
-              <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>San Francisco Bay Area · 312 followers</div>
+              <div style={{ color: "#666", fontSize: "var(--fs-caption)", marginTop: 6 }}>San Francisco Bay Area · 312 followers</div>
             </div>
             <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
               {step >= 1 ? (
                 <button style={{
                   padding: "7px 16px", borderRadius: 9999, border: "none",
-                  background: "#5a4ad9", color: "#fff", fontWeight: 700, fontSize: 14,
+                  background: "var(--accent-purple-mid)", color: "var(--text-on-dark)", fontWeight: 700, fontSize: 14,
                   display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit",
                   boxShadow: "0 4px 14px rgba(90,74,217,.35)",
                 }}>
-                  <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   Following
                 </button>
               ) : (
                 <button style={{
-                  padding: "7px 16px", borderRadius: 9999, border: "1px solid #0a66c2",
-                  background: "#fff", color: "#0a66c2", fontWeight: 700, fontSize: 14,
+                  padding: "7px 16px", borderRadius: 9999, border: "1px solid var(--brand-linkedin)",
+                  background: "var(--text-on-dark)", color: "var(--brand-linkedin)", fontWeight: 700, fontSize: 14,
                   fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", border: "1.5px solid #0a66c2", borderTopColor: "transparent", animation: "uply-spin 1s linear infinite" }} />
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", border: "1.5px solid var(--brand-linkedin)", borderTopColor: "transparent", animation: "uply-spin 1s linear infinite" }} />
                   Pending
                 </button>
               )}
-              <button style={{ padding: "7px 16px", borderRadius: 9999, border: "1px solid #0a66c2", background: "#fff", color: "#0a66c2", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>Message</button>
+              <button style={{ padding: "7px 16px", borderRadius: 9999, border: "1px solid var(--brand-linkedin)", background: "var(--text-on-dark)", color: "var(--brand-linkedin)", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>Message</button>
             </div>
           </div>
         </div>
@@ -417,7 +417,7 @@ export function LinkedInScreen({ onContinue }: { onContinue: () => void }) {
             display: "flex", gap: 12, alignItems: "center",
           }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2e7d32", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <svg width="16" height="16" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#1b5e20" }}>Maya accepted your invitation</div>

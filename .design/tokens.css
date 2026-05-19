@@ -60,4 +60,16 @@
   --shadow-btn-idle: 0 3px 0 #c2bfd6;
   --shadow-btn-active: 0 5px 0 var(--btn-shadow);
   --shadow-btn-pressed: 0 1px 0 var(--btn-shadow);
+
+  /* === Handoff Lavender Palette (Act I / Interlude / Epilogue 来源) === */
+  --text-ink:           #1d1452;  /* handoff 主文字, 比 --text-primary 更深 */
+  --text-ink-mute:      #8881b8;  /* handoff 次要文字, 比 --text-secondary 偏暖 */
+  --accent-purple-mid:  #5a4ad9;  /* handoff 按钮 / 强调 */
+  --accent-purple-soft: #9c8ff0;  /* hover / 高亮 */
+  --accent-lavender:    #b8acf6;  /* 装饰 / chip / 标签 */
+  --bg-lavender-soft:   #ebe6fb;  /* 浅紫卡片底 */
+  --bg-cream:           #fefcf6;  /* 偏白纸色, handoff 用 */
+  --bg-deep-night:      #1a1830;  /* 派对夜色背景 */
+  --accent-gold:        #f3d27e;  /* 暖金, 票根/勋章 */
+  --brand-linkedin:     #0a66c2;  /* LinkedIn 蓝, 品牌色 */
 }

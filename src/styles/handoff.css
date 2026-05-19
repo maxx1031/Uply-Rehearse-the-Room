@@ -28,15 +28,15 @@
   --uply-indigo-900:#15103d;
   --uply-indigo-800:#1d1656;
   --uply-purple-700:#3d2fb5;
-  --uply-purple-600:#5a4ad9;
+  --uply-purple-600:var(--accent-purple-mid);
   --uply-purple-500:#7a6ee0;
-  --uply-purple-400:#9c8ff0;
-  --uply-lavender-300:#b8acf6;
+  --uply-purple-400:var(--accent-purple-soft);
+  --uply-lavender-300:var(--accent-lavender);
   --uply-lavender-200:#d8d0f9;
-  --uply-lavender-100:#ebe6fb;
+  --uply-lavender-100:var(--bg-lavender-soft);
   --uply-cream:#f3eee3;
   --uply-paper:#faf7f0;
-  --uply-ink:#1d1452;
-  --uply-ink-mute:#8881b8;
-  --uply-gold:#f3d27e;
+  --uply-ink:var(--text-ink);
+  --uply-ink-mute:var(--text-ink-mute);
+  --uply-gold:var(--accent-gold);
 }

@@ -60,7 +60,7 @@ function FakeQRCode({ seed }: { seed: string }) {
               y={r * cellPx}
               width={cellPx}
               height={cellPx}
-              fill="#6B63D4"
+              fill="var(--text-accent)"
             />
           ) : null
         )
@@ -102,10 +102,10 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
         className="flex justify-center mb-4"
       >
         <div style={{
-          background: "linear-gradient(135deg, #6B63D4, #9b93ef)",
+          background: "linear-gradient(135deg, var(--text-accent), #9b93ef)",
           borderRadius: 20,
           padding: "5px 16px",
-          fontSize: "11px",
+          fontSize: "var(--fs-micro)",
           fontWeight: 700,
           color: "white",
           letterSpacing: "0.12em",
@@ -157,11 +157,11 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
               }}>
                 <div className="flex items-center gap-2 mb-2">
                   <img src={uplyIcon} alt="" aria-hidden style={{ height: 22, width: "auto" }} />
-                  <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px", letterSpacing: "0.14em", fontWeight: 600 }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "var(--fs-micro)", letterSpacing: "0.14em", fontWeight: 600 }}>
                     UPLY THEATER
                   </span>
                 </div>
-                <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.72)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 3 }}>
+                <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "var(--fs-micro)", fontWeight: 600, color: "rgba(255,255,255,0.72)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 3 }}>
                   Now Showing
                 </div>
                 <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "22px", fontWeight: 700, color: "white", lineHeight: 1.25 }}>
@@ -172,9 +172,9 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
 
             {/* Perforated tear */}
             <div className="relative flex items-center" style={{ background: "white" }}>
-              <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
+              <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
               <div style={{ flex: 1, borderTop: "2px dashed rgba(107,99,212,0.2)", margin: "0 4px" }} />
-              <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
+              <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
             </div>
 
             {/* Ticket body */}
@@ -184,7 +184,7 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
                 <div style={{ fontSize: "10px", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3 }}>
                   Ticket Holder
                 </div>
-                <div style={{ fontSize: "18px", fontWeight: 700, color: "#1a1830", fontFamily: "'Georgia','Times New Roman',serif" }}>
+                <div style={{ fontSize: "var(--fs-h2)", fontWeight: 700, color: "var(--bg-deep-night)", fontFamily: "'Georgia','Times New Roman',serif" }}>
                   {userName || "Member"}
                 </div>
               </div>
@@ -196,7 +196,7 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
                     <div style={{ fontSize: "10px", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>
                       Row
                     </div>
-                    <div style={{ fontSize: "20px", fontWeight: 700, color: "#6B63D4" }}>
+                    <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-accent)" }}>
                       {rowLetter}
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
                     <div style={{ fontSize: "10px", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>
                       Seat
                     </div>
-                    <div style={{ fontSize: "20px", fontWeight: 700, color: "#6B63D4" }}>
+                    <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-accent)" }}>
                       {String(seat).padStart(2, "0")}
                     </div>
                   </div>

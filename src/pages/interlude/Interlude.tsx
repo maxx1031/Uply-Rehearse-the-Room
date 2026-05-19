@@ -105,9 +105,9 @@ export function AnalyzingScreen({ onDone }: { onDone: () => void }) {
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           padding: "40px 30px",
         }}>
-          <ActLabel color="#b8acf6">INTERLUDE</ActLabel>
+          <ActLabel color="var(--accent-lavender)">INTERLUDE</ActLabel>
           <div className="uply-serif" style={{
-            color: "#ebe6fb", fontSize: 30, fontWeight: 600, lineHeight: 1.2,
+            color: "var(--bg-lavender-soft)", fontSize: 30, fontWeight: 600, lineHeight: 1.2,
             textAlign: "center", marginTop: 14, maxWidth: 320,
           }}>Reviewing the tape...</div>
 
@@ -118,9 +118,9 @@ export function AnalyzingScreen({ onDone }: { onDone: () => void }) {
                 <div key={a} style={{
                   position: "absolute", top: "50%", left: "50%",
                   width: 6, height: 6, marginLeft: -3, marginTop: -3,
-                  background: "#b8acf6", borderRadius: "50%",
+                  background: "var(--accent-lavender)", borderRadius: "50%",
                   transform: `rotate(${a}deg) translate(98px)`,
-                  boxShadow: "0 0 12px #b8acf6",
+                  boxShadow: "0 0 12px var(--accent-lavender)",
                 }} />
               ))}
             </div>
@@ -129,7 +129,7 @@ export function AnalyzingScreen({ onDone }: { onDone: () => void }) {
               animation: "uply-spin 12s linear infinite reverse" }} />
             <div style={{
               position: "absolute", inset: "18%", borderRadius: "50%",
-              background: "radial-gradient(circle at 30% 30%, #9c8ff0, #5a4ad9)",
+              background: "radial-gradient(circle at 30% 30%, var(--accent-purple-soft), var(--accent-purple-mid))",
               boxShadow: "0 0 40px rgba(184,172,246,.6)",
               display: "flex", alignItems: "center", justifyContent: "center",
               animation: "uply-glow-pulse 2.4s ease-in-out infinite",
@@ -146,14 +146,14 @@ export function AnalyzingScreen({ onDone }: { onDone: () => void }) {
               }}>
                 <div style={{
                   width: 16, height: 16, borderRadius: "50%",
-                  background: i < step ? "#9c8ff0" : "transparent",
-                  border: "1.5px solid #9c8ff0",
+                  background: i < step ? "var(--accent-purple-soft)" : "transparent",
+                  border: "1.5px solid var(--accent-purple-soft)",
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>
-                  {i < step && <svg width="9" height="9" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                  {i === step && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#b8acf6", animation: "uply-flicker .8s ease-in-out infinite" }} />}
+                  {i < step && <svg width="9" height="9" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  {i === step && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-lavender)", animation: "uply-flicker .8s ease-in-out infinite" }} />}
                 </div>
-                <div style={{ color: i <= step ? "#ebe6fb" : "#5d567f", fontSize: 14, fontWeight: 500 }}>{s}</div>
+                <div style={{ color: i <= step ? "var(--bg-lavender-soft)" : "#5d567f", fontSize: 14, fontWeight: 500 }}>{s}</div>
               </div>
             ))}
           </div>
@@ -185,7 +185,7 @@ export function ResultScreen({
       <div className="uply-fade-up" style={{ textAlign: "center", marginBottom: 18 }}>
         <ActLabel>YOUR STAGE ROLE</ActLabel>
         <div style={{ fontSize: 48, marginTop: 6 }}>{A.emoji}</div>
-        <div className="uply-serif" style={{ fontSize: 34, fontWeight: 700, color: "#1d1452", lineHeight: 1.05, marginTop: 4 }}>
+        <div className="uply-serif" style={{ fontSize: 34, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.05, marginTop: 4 }}>
           {A.name}
         </div>
         <div style={{ fontSize: 14, color: "#5d567f", fontStyle: "italic", marginTop: 8, padding: "0 20px" }}>
@@ -195,25 +195,25 @@ export function ResultScreen({
 
       {revealed >= 1 && (
         <div className="uply-fade-up" style={{
-          background: "#fefcf6", borderRadius: 18, padding: "16px 18px",
+          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px",
           boxShadow: "0 8px 24px rgba(8,4,40,.08)", marginBottom: 12,
         }}>
-          <div style={{ fontSize: 14, color: "#1d1452", lineHeight: 1.5 }}>{A.description}</div>
+          <div style={{ fontSize: 14, color: "var(--text-ink)", lineHeight: 1.5 }}>{A.description}</div>
         </div>
       )}
 
       {revealed >= 2 && (
         <div className="uply-fade-up" style={{
-          background: "#fefcf6", borderRadius: 18, padding: "16px 18px", marginBottom: 12,
+          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px", marginBottom: 12,
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 16 }}>✨</span>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".28em", color: "#5a4ad9" }}>WHAT YOU DID WELL</div>
+            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".28em", color: "var(--accent-purple-mid)" }}>WHAT YOU DID WELL</div>
           </div>
           {A.strengths.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "#1d1452", fontSize: 14 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#5a4ad9" }} />
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "var(--text-ink)", fontSize: 14 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-purple-mid)" }} />
               {s}
             </div>
           ))}
@@ -222,15 +222,15 @@ export function ResultScreen({
 
       {revealed >= 3 && (
         <div className="uply-fade-up" style={{
-          background: "#fefcf6", borderRadius: 18, padding: "16px 18px", marginBottom: 18,
+          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px", marginBottom: 18,
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 16 }}>🌱</span>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".28em", color: "#b9802c" }}>YOUR GROWTH EDGES</div>
+            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".28em", color: "#b9802c" }}>YOUR GROWTH EDGES</div>
           </div>
           {A.edges.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "#1d1452", fontSize: 14 }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "var(--text-ink)", fontSize: 14 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#d39a3a" }} />
               {s}
             </div>
@@ -273,18 +273,18 @@ export function ReflectionScreen({
           position: "absolute", inset: 0, padding: "70px 24px 40px",
           display: "flex", flexDirection: "column", overflowY: "auto",
         }}>
-          <ActLabel color="#8881b8">DIRECTOR'S NOTE</ActLabel>
-          <div className="uply-serif" style={{ color: "#ebe6fb", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
+          <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel>
+          <div className="uply-serif" style={{ color: "var(--bg-lavender-soft)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
             Does this reflect how you actually show up?
           </div>
-          <div style={{ color: "#8881b8", fontSize: 14, marginTop: 8 }}>
+          <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8 }}>
             Drag the marker — there's no wrong answer.
           </div>
 
           <div style={{ marginTop: 42, position: "relative" }}>
             <div style={{
               height: 8, borderRadius: 9999,
-              background: "linear-gradient(90deg, #f3d27e 0%, #b8acf6 50%, #5a4ad9 100%)",
+              background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
               boxShadow: "inset 0 1px 3px rgba(0,0,0,.3)",
             }} />
             <input type="range" min={0} max={100} value={val}
@@ -293,11 +293,11 @@ export function ReflectionScreen({
             <div style={{
               position: "absolute", top: -8, left: `${val}%`, transform: "translateX(-50%)",
               width: 24, height: 24, borderRadius: "50%",
-              background: "#fff", boxShadow: "0 4px 14px rgba(184,172,246,.6), 0 0 0 2px #5a4ad9",
+              background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(184,172,246,.6), 0 0 0 2px var(--accent-purple-mid)",
               transition: submitted ? "left .4s ease" : "none", pointerEvents: "none",
             }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18,
-              fontSize: 11, fontWeight: 700, letterSpacing: ".22em", color: "#8881b8" }}>
+              fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--text-ink-mute)" }}>
               <span>NOT AT ALL</span><span>SOMEWHERE BETWEEN</span><span>EXACTLY ME</span>
             </div>
           </div>
@@ -307,7 +307,7 @@ export function ReflectionScreen({
               marginTop: 32, padding: "18px 18px",
               background: "rgba(255,255,255,.06)", backdropFilter: "blur(8px)",
               border: "1px solid rgba(184,172,246,.2)",
-              borderRadius: 18, color: "#ebe6fb",
+              borderRadius: 18, color: "var(--bg-lavender-soft)",
             }}>
               <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
                 {feedback[bucket].title}

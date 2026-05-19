@@ -106,11 +106,11 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <img src={uplyIcon} alt="" aria-hidden style={{ height: 22, width: "auto" }} />
-                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px", letterSpacing: "0.14em", fontWeight: 600 }}>
+                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "var(--fs-micro)", letterSpacing: "0.14em", fontWeight: 600 }}>
                       UPLY THEATER
                     </span>
                   </div>
-                  <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
+                  <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "var(--fs-caption)", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
                     Now Showing
                   </div>
                   <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "26px", fontWeight: 700, color: "white", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
@@ -121,22 +121,22 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
 
               {/* Perforated tear */}
               <div className="relative flex items-center" style={{ background: "white" }}>
-                <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
+                <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
                 <div style={{ flex: 1, borderTop: "2px dashed rgba(107,99,212,0.2)", margin: "0 4px" }} />
-                <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
+                <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
               </div>
 
               {/* Ticket body */}
               <div style={{ padding: "18px 22px 28px" }}>
                 {/* Date */}
                 <div className="flex justify-between items-center mb-5">
-                  <span style={{ fontSize: "11px", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase" }}>Date</span>
-                  <span style={{ fontSize: "13px", color: "#6B63D4", fontWeight: 600 }}>{dateStr}</span>
+                  <span style={{ fontSize: "var(--fs-micro)", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase" }}>Date</span>
+                  <span style={{ fontSize: "var(--fs-caption)", color: "var(--text-accent)", fontWeight: 600 }}>{dateStr}</span>
                 </div>
 
                 {/* Phone or Email */}
                 <div className="mb-3">
-                  <label style={{ fontSize: "11px", color: "#9896b8", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <label style={{ fontSize: "var(--fs-micro)", color: "var(--text-secondary)", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     Phone or Email
                   </label>
                   <input
@@ -145,15 +145,15 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     className="w-full outline-none"
-                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a1830" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6B63D4")}
+                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "var(--bg-deep-night)" }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--text-accent)")}
                     onBlur={(e) => (e.target.style.borderColor = "rgba(107,99,212,0.15)")}
                   />
                 </div>
 
                 {/* Password */}
                 <div className="mb-3">
-                  <label style={{ fontSize: "11px", color: "#9896b8", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <label style={{ fontSize: "var(--fs-micro)", color: "var(--text-secondary)", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     Password
                   </label>
                   <input
@@ -162,15 +162,15 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full outline-none"
-                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a1830" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6B63D4")}
+                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "var(--bg-deep-night)" }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--text-accent)")}
                     onBlur={(e) => (e.target.style.borderColor = "rgba(107,99,212,0.15)")}
                   />
                 </div>
 
                 {/* Your Name */}
                 <div className="mb-7">
-                  <label style={{ fontSize: "11px", color: "#9896b8", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <label style={{ fontSize: "var(--fs-micro)", color: "var(--text-secondary)", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     Your Name
                   </label>
                   <input
@@ -179,8 +179,8 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full outline-none"
-                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a1830" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6B63D4")}
+                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "var(--bg-deep-night)" }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--text-accent)")}
                     onBlur={(e) => (e.target.style.borderColor = "rgba(107,99,212,0.15)")}
                   />
                 </div>
@@ -195,7 +195,7 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                   className="w-full py-3.5 rounded-2xl text-white"
                   style={{
                     background: ready
-                      ? "linear-gradient(180deg, #7c73e6 0%, #5b52cc 100%)"
+                      ? "linear-gradient(180deg, var(--btn-active-top) 0%, #5b52cc 100%)"
                       : "rgba(107,99,212,0.18)",
                     color: ready ? "white" : "#b0aed4",
                     fontWeight: 700,
@@ -205,8 +205,8 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                     boxShadow: !ready
                       ? "none"
                       : btnPressed
-                      ? "0 1px 0 #3d36a0, 0 4px 12px rgba(107,99,212,0.2)"
-                      : "0 5px 0 #3d36a0, 0 8px 24px rgba(107,99,212,0.38)",
+                      ? "0 1px 0 var(--btn-shadow), 0 4px 12px rgba(107,99,212,0.2)"
+                      : "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
                     transition: "transform 0.08s ease, box-shadow 0.08s ease",
                   }}
                 >
@@ -222,10 +222,10 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="text-center mt-5 text-sm"
-            style={{ color: "#9896b8" }}
+            style={{ color: "var(--text-secondary)" }}
           >
             Already an actor?{" "}
-            <span className="underline cursor-pointer" style={{ color: "#6B63D4" }} onClick={onLogin}>
+            <span className="underline cursor-pointer" style={{ color: "var(--text-accent)" }} onClick={onLogin}>
               Log in directly
             </span>
           </motion.p>

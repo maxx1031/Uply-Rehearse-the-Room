@@ -126,7 +126,7 @@ export default function App() {
           className="absolute top-0 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center"
           style={{ height: "48px" }}
         >
-          <div className="w-28 h-7 rounded-full" style={{ background: "#f0ede9" }} />
+          <div className="w-28 h-7 rounded-full" style={{ background: "var(--bg-paper)" }} />
         </div>
 
         <motion.div

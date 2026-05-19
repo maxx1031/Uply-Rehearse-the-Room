@@ -97,7 +97,7 @@ export function LoginScreen({ onBack, onLogin }: Props) {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <img src={uplyIcon} alt="" aria-hidden style={{ height: 22, width: "auto" }} />
-                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", letterSpacing: "0.14em", fontWeight: 600 }}>
+                    <span style={{ fontSize: "var(--fs-micro)", color: "rgba(255,255,255,0.65)", letterSpacing: "0.14em", fontWeight: 600 }}>
                       UPLY THEATER
                     </span>
                   </div>
@@ -112,16 +112,16 @@ export function LoginScreen({ onBack, onLogin }: Props) {
 
               {/* Perforated tear */}
               <div className="relative flex items-center" style={{ background: "white" }}>
-                <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
+                <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "0 50% 50% 0", flexShrink: 0, marginLeft: -1 }} />
                 <div style={{ flex: 1, borderTop: "2px dashed rgba(107,99,212,0.2)", margin: "0 4px" }} />
-                <div style={{ width: 20, height: 20, background: "#f0ede9", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
+                <div style={{ width: 20, height: 20, background: "var(--bg-paper)", borderRadius: "50% 0 0 50%", flexShrink: 0, marginRight: -1 }} />
               </div>
 
               {/* Form */}
               <div style={{ padding: "20px 22px 28px" }}>
                 {/* Email or Phone */}
                 <div className="mb-3">
-                  <label style={{ fontSize: "11px", color: "#9896b8", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <label style={{ fontSize: "var(--fs-micro)", color: "var(--text-secondary)", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     Email or Phone
                   </label>
                   <input
@@ -130,15 +130,15 @@ export function LoginScreen({ onBack, onLogin }: Props) {
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     className="w-full outline-none"
-                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a1830" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6B63D4")}
+                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "var(--bg-deep-night)" }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--text-accent)")}
                     onBlur={(e) => (e.target.style.borderColor = "rgba(107,99,212,0.15)")}
                   />
                 </div>
 
                 {/* Password */}
                 <div className="mb-7">
-                  <label style={{ fontSize: "11px", color: "#9896b8", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  <label style={{ fontSize: "var(--fs-micro)", color: "var(--text-secondary)", display: "block", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     Password
                   </label>
                   <input
@@ -147,12 +147,12 @@ export function LoginScreen({ onBack, onLogin }: Props) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full outline-none"
-                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "#1a1830" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6B63D4")}
+                    style={{ background: "#f7f5f2", border: "1.5px solid rgba(107,99,212,0.15)", borderRadius: "10px", padding: "10px 14px", fontSize: "14px", color: "var(--bg-deep-night)" }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--text-accent)")}
                     onBlur={(e) => (e.target.style.borderColor = "rgba(107,99,212,0.15)")}
                   />
                   <div className="flex justify-end mt-1.5">
-                    <span style={{ fontSize: "12px", color: "#6B63D4", cursor: "pointer" }}>Forgot password?</span>
+                    <span style={{ fontSize: "12px", color: "var(--text-accent)", cursor: "pointer" }}>Forgot password?</span>
                   </div>
                 </div>
 
@@ -166,7 +166,7 @@ export function LoginScreen({ onBack, onLogin }: Props) {
                   className="w-full py-3.5 rounded-2xl"
                   style={{
                     background: ready
-                      ? "linear-gradient(180deg, #7c73e6 0%, #5b52cc 100%)"
+                      ? "linear-gradient(180deg, var(--btn-active-top) 0%, #5b52cc 100%)"
                       : "rgba(107,99,212,0.18)",
                     color: ready ? "white" : "#b0aed4",
                     fontWeight: 700,
@@ -176,8 +176,8 @@ export function LoginScreen({ onBack, onLogin }: Props) {
                     boxShadow: !ready
                       ? "none"
                       : btnPressed
-                      ? "0 1px 0 #3d36a0, 0 4px 12px rgba(107,99,212,0.2)"
-                      : "0 5px 0 #3d36a0, 0 8px 24px rgba(107,99,212,0.38)",
+                      ? "0 1px 0 var(--btn-shadow), 0 4px 12px rgba(107,99,212,0.2)"
+                      : "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
                     transition: "transform 0.08s ease, box-shadow 0.08s ease",
                   }}
                 >
@@ -192,10 +192,10 @@ export function LoginScreen({ onBack, onLogin }: Props) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="text-center mt-5 text-sm"
-            style={{ color: "#9896b8" }}
+            style={{ color: "var(--text-secondary)" }}
           >
             No ticket yet?{" "}
-            <span className="underline cursor-pointer" style={{ color: "#6B63D4" }} onClick={onBack}>
+            <span className="underline cursor-pointer" style={{ color: "var(--text-accent)" }} onClick={onBack}>
               Claim yours
             </span>
           </motion.p>
