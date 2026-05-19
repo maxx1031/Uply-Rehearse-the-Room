@@ -7,7 +7,7 @@
 - **React 18 + Vite 6**, TypeScript
 - **Tailwind 4** (用 CSS 变量, 不写自定义 hex)
 - 移动端优先, viewport ≤ 414px
-- 动画: 仅用 CSS keyframes + transition, 暂不引 framer-motion / motion
+- 动画: 允许 `motion/react` (前段 intro 屏从 Vercel 来源迁入, 大量依赖 AnimatePresence + variants). 简单 transition 仍优先走 CSS, 不必为了用 motion 而用 motion
 - 路由: react-router 7
 - 中文 UI 文案直接写在 JSX 中, 不抽离 i18n (hackathon 阶段)
 
