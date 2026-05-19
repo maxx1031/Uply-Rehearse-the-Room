@@ -7,10 +7,10 @@ import { TicketScreen } from "./pages/intro/TicketScreen";
 import { LoginScreen } from "./pages/intro/LoginScreen";
 import { TicketConfirmOverlay } from "./pages/intro/TicketConfirmScreen";
 import { CurtainScreen } from "./pages/intro/CurtainScreen";
-import { SceneScreen } from "./pages/intro/SceneScreen";
 
-// act-i (handoff)
-import { StageScreen, ConversationScreen, LinkedInScreen } from "./pages/act-i/ActI";
+// act-i (new after-party scene + handoff conversation/linkedin)
+import { AfterPartyScene } from "./pages/act-i/AfterPartyScene";
+import { ConversationScreen, LinkedInScreen } from "./pages/act-i/ActI";
 
 // interlude (handoff)
 import {
@@ -31,9 +31,9 @@ import {
 
 type Step =
   // intro
-  | "splash" | "ticket" | "login" | "curtain" | "scene"
+  | "splash" | "ticket" | "login" | "curtain"
   // act-i
-  | "stage" | "conversation" | "linkedin"
+  | "after-party" | "conversation" | "linkedin"
   // interlude
   | "analyzing" | "result" | "reflection"
   // epilogue
@@ -165,20 +165,14 @@ export default function App() {
 
             {step === "curtain" && (
               <motion.div key="curtain" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
-                <CurtainScreen onDone={() => go("scene")} />
+                <CurtainScreen onDone={() => go("after-party")} />
               </motion.div>
             )}
 
-            {step === "scene" && (
-              <motion.div key="scene" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.5 }}>
-                <SceneScreen onContinue={() => go("stage")} />
-              </motion.div>
-            )}
-
-            {/* ── ACT I (handoff) ── */}
-            {step === "stage" && (
-              <motion.div key="stage" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <StageScreen onMicTap={() => go("conversation")} />
+            {/* ── ACT I ── */}
+            {step === "after-party" && (
+              <motion.div key="after-party" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.5 }}>
+                <AfterPartyScene onMicTap={() => go("conversation")} />
               </motion.div>
             )}
 
