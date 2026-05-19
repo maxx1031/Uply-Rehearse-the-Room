@@ -8,7 +8,11 @@
 **触发**: 用户 2026-05-19 发来一张截图 (`/Users/max/Library/Containers/com.tencent.xinWeChat/.../RWTemp/2026-05/ae6392.../c0d16cf....png`), 内容是一个把 SceneScreen + StageScreen + ConversationScreen 合并的页面: 顶部 banner "FINAL PRESENTATION AFTER PARTY" + 左上 "Add alumni on LinkedIn" checkbox + 派对场景 (科学楼前 / 桌子 / 彩旗) + 紫色长条 silhouette + 信息卡 "Female Senior · Same Major / Seen at the Library Before" + "Want to say hi first?" + mic 按钮 + 顶部对话气泡.
 **做什么**: 需要用户补一份对应的 tsx 源码 (本地搜过, WeChat / Downloads / Desktop 都没有), 或者照图重建. 落地后替换当前 App.tsx 里的 scene/stage/conversation 三屏为这一屏.
 **何时**: token-alignment 后, 在开始正式 `page/*` 调优之前.
-**关联截图**: 见 system 消息附图 "Image #4".
+**关联截图**: 见 system 消息附图 "Image #4" / "Image #5".
+**已确认资产** (待重建时从这里搬到 `src/assets/`):
+- 背景: `/Users/max/Library/Containers/com.tencent.xinWeChat/.../msg/file/2026-05/Onboarding界面设计 (1)/src/imports/background.jpg` (1.9 MB, 派对场景科学楼前)
+- 学姐人物: 同上 `src/imports/ppl.png` (880 KB, 长条紫色 silhouette)
+- 其他备选物料同目录, 见 `/tmp/imports-preview.html`
 
 ### [ ] Token alignment 统一过一遍
 **触发**: intro 段从 Vercel 原样导入会带进 inline hex (`#e8e4df` / `#f5f2ee` / `#1f1535` 等), 暂时违反 CLAUDE.md 第 1 条 "禁止 hex 直写".
