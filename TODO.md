@@ -4,18 +4,12 @@
 
 ## High
 
-### [ ] 合并版 "Final Presentation After Party" 页面 (替换 scene+stage+conversation)
-**触发**: 用户 2026-05-19 发来一张截图 (`/Users/max/Library/Containers/com.tencent.xinWeChat/.../RWTemp/2026-05/ae6392.../c0d16cf....png`), 内容是一个把 SceneScreen + StageScreen + ConversationScreen 合并的页面: 顶部 banner "FINAL PRESENTATION AFTER PARTY" + 左上 "Add alumni on LinkedIn" checkbox + 派对场景 (科学楼前 / 桌子 / 彩旗) + 紫色长条 silhouette + 信息卡 "Female Senior · Same Major / Seen at the Library Before" + "Want to say hi first?" + mic 按钮 + 顶部对话气泡.
-**做什么**: 需要用户补一份对应的 tsx 源码 (本地搜过, WeChat / Downloads / Desktop 都没有), 或者照图重建. 落地后替换当前 App.tsx 里的 scene/stage/conversation 三屏为这一屏.
-**何时**: token-alignment 后, 在开始正式 `page/*` 调优之前.
-**关联截图**: 见 system 消息附图 "Image #4" / "Image #5".
-**已落地资产** (已搬进 `src/assets/after-party/`, commit on branch `chore/import-after-party-assets`):
-- `scene-bg.jpg` (128 KB, 派对纯背景, 桌子 / 气球 / 旗 / 路灯 / Welcome Freshmen 牌, 远景含小尺寸路人剪影. 来源 `~/Downloads/scence01.jpg`)
-- `scene-with-silhouette.png` (361 KB, 同背景 + 居中大尺寸学姐主角紫色 silhouette. 来源 `~/Downloads/scence02.png`)
-
-**重建方案二选一**:
-1. 单图: 直接用 `scene-with-silhouette.png` 当背景, 主角和场景一体, 实现快但主角无法独立动画
-2. 双层: `scene-bg.jpg` 当底 + 主角剪影另起一个 SVG/PNG (需要从 scence02 抠图或重画), 主角可呼吸/发光/进场动画
+### [ ] After Party 屏遗留小调 (优先级看用户)
+**当前状态**: 主体已落地, commit `4acfc3d` (`src/pages/act-i/AfterPartyScene.tsx`). 替换原 SceneScreen + StageScreen 两屏 → 单屏两段 phase (空场 → 主角浮现 + UI overlay).
+**还可做** (看用户后续要不要):
+- 主角剪影独立动画 (呼吸 / 发光) — 当前是 `scene-with-silhouette.png` 整图淡入, 主角动不了. 想动需要再切双层: `scene-bg.jpg` 底 + 主角抠图的透明 PNG, 单独 motion 控制
+- ConversationScreen 是否要继续保留 (handoff 那套倒数 3 + 对话分支树) 或者合并进 After Party 屏 (mic 一点直接对话, 不切屏)
+- "Add alumni on LinkedIn" checkbox 当前纯装饰, 是否要绑定到 LinkedInScreen 的勾选状态
 
 ### [ ] Token alignment phase 2 (字号档 + 剩余小众色)
 **触发**: 第一轮 `chore/align-tokens` (commit `23d2158`) 把 16 个高频 hex 和 11/13/18px 字号对齐了, 但还有约 60 处低频 hex (`#7a6ee0` / `#b0aed4` / `#f7f5f2` / `#d8d0f9` 等) 和约 55 处其他字号 (`14/15/20/22px` 等) 没对.
@@ -39,6 +33,9 @@
 **做什么**: `vercel link` 关联项目, 验证 push 后 preview 自动出 URL.
 
 ## Done
+
+### [x] After Party 派对场景屏 (2026-05-19, commit `4acfc3d`)
+两段 phase 自动切换: scene-bg.jpg 空场 ~2.4s → scene-with-silhouette.png 主角浮现 + UI overlay (banner / LinkedIn checkbox / 对话气泡 / 信息卡 / mic). 替换旧 SceneScreen + StageScreen. 旧文件未删, 留 `chore/cleanup` 单独清.
 
 ### [x] Token alignment 第一轮 (2026-05-19, commit `23d2158`)
 16 个高频 hex 替换成 `.design/tokens.css` 变量, 10 个 handoff 专属色板变量入库, 11/13/18px 字号 → token. 视觉无差异. 详见 commit message.
