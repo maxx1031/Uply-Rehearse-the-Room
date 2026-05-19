@@ -47,8 +47,21 @@ interface OverlayState {
 
 const DEFAULT_ARCHETYPE: ArchetypeId = "quiet-observer";
 
+const VALID_STEPS: Step[] = [
+  "splash", "ticket", "login", "curtain",
+  "after-party", "conversation", "linkedin",
+  "analyzing", "result", "reflection",
+  "goal", "slogan", "home",
+];
+
+function readStepFromUrl(): Step {
+  if (typeof window === "undefined") return "splash";
+  const param = new URLSearchParams(window.location.search).get("step");
+  return (VALID_STEPS as string[]).includes(param ?? "") ? (param as Step) : "splash";
+}
+
 export default function App() {
-  const [step, setStep] = useState<Step>("splash");
+  const [step, setStep] = useState<Step>(readStepFromUrl);
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
