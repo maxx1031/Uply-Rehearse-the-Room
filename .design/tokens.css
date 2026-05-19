@@ -1,0 +1,63 @@
+:root {
+  /* === Background === */
+  --bg-paper: #f0ede8;          /* 浅黄纸质背景 */
+  --bg-primary: #6B63D4;        /* 亮紫色背景 */
+  --bg-gradient-deep: #281E6E;  /* 深紫渐变起点 */
+  --bg-gradient-light: #6B63D4; /* 浅紫渐变终点 */
+  --gradient-primary: linear-gradient(135deg, #281E6E, #6B63D4);
+
+  /* === Section Accents === */
+  --accent-yellow-soft: #FCD34D;   /* 浅黄分区 */
+  --accent-yellow-bright: #F59E0B; /* 亮黄强调 */
+
+  /* === Buttons === */
+  --btn-idle: #dddbe9;
+  --btn-active-top: #7c73e6;
+  --btn-active-bottom: #5b52cc;
+  --btn-shadow: #3d36a0;
+  --btn-gradient: linear-gradient(180deg, var(--btn-active-top), var(--btn-active-bottom));
+
+  /* === Text === */
+  --text-primary: #281E6E;
+  --text-secondary: #9896b8;
+  --text-accent: #6B63D4;
+  --text-on-dark: #ffffff;
+
+  /* === Typography === */
+  --font-heading: 'Fredoka', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  --fs-display: 32px;   /* 大标题 "陌生人·你" */
+  --fs-h1: 24px;        /* 页面标题 */
+  --fs-h2: 18px;        /* 卡片标题 */
+  --fs-body: 16px;      /* 正文 */
+  --fs-caption: 13px;   /* 辅助说明 */
+  --fs-micro: 11px;     /* 标签、徽章 */
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+
+  /* === Spacing (4px 基础栅格) === */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* === Radius === */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  /* === Elevation === */
+  --shadow-soft: 0 2px 8px rgba(40, 30, 110, 0.08);
+  --shadow-card: 0 4px 16px rgba(40, 30, 110, 0.12);
+  --shadow-btn-idle: 0 3px 0 #c2bfd6;
+  --shadow-btn-active: 0 5px 0 var(--btn-shadow);
+  --shadow-btn-pressed: 0 1px 0 var(--btn-shadow);
+}
