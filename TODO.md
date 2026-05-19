@@ -14,10 +14,10 @@
 - 学姐人物: 同上 `src/imports/ppl.png` (880 KB, 长条紫色 silhouette)
 - 其他备选物料同目录, 见 `/tmp/imports-preview.html`
 
-### [ ] Token alignment 统一过一遍
-**触发**: intro 段从 Vercel 原样导入会带进 inline hex (`#e8e4df` / `#f5f2ee` / `#1f1535` 等), 暂时违反 CLAUDE.md 第 1 条 "禁止 hex 直写".
-**做什么**: 单独分支 `chore/align-tokens`, 把 intro 6 屏所有 hex 映射成 `.design/tokens.css` 里的变量. 必要时往 tokens.css 加新变量 (例如外壳灰 `--bg-shell`, 与 `--bg-paper` 不同语义).
-**何时**: 等状态机串通能跑 (`chore/unify-state-machine` 合并后) 立刻做, 在第一次正式 `page/*` 调优之前.
+### [ ] Token alignment phase 2 (字号档 + 剩余小众色)
+**触发**: 第一轮 `chore/align-tokens` (commit `23d2158`) 把 16 个高频 hex 和 11/13/18px 字号对齐了, 但还有约 60 处低频 hex (`#7a6ee0` / `#b0aed4` / `#f7f5f2` / `#d8d0f9` 等) 和约 55 处其他字号 (`14/15/20/22px` 等) 没对.
+**做什么**: 先扩 tokens.css 加 `--fs-sm 12px / --fs-md 14px / --fs-lg 15px / --fs-h3 20px / --fs-h0 22px` 这种中间档, 再批量 sed 替换. 颜色那些低频 hex 按需做 snap 决定: 接近 token 就 snap, 太远的留 inline (个别 page 主色).
+**何时**: 当前不阻塞, 等用户进入 page 调优阶段触到具体页面再做更现实.
 
 ### [ ] Voice / OpenAI Realtime API 集成
 **触发**: Q4 决定先按 Handoff 的 tap-to-pick 走, voice chat 暂不接.
@@ -36,4 +36,6 @@
 **做什么**: `vercel link` 关联项目, 验证 push 后 preview 自动出 URL.
 
 ## Done
-(空)
+
+### [x] Token alignment 第一轮 (2026-05-19, commit `23d2158`)
+16 个高频 hex 替换成 `.design/tokens.css` 变量, 10 个 handoff 专属色板变量入库, 11/13/18px 字号 → token. 视觉无差异. 详见 commit message.
