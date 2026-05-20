@@ -190,6 +190,20 @@ function readVariant(): Variant {
   return v === "b" ? "b" : "a";
 }
 
+// Mission-card variants — kept side by side for comparison.
+// ?mstyle=classic (purple eyebrow + dark title + lavender Skip)
+// ?mstyle=warm    (deep-purple eyebrow + yellow title + yellow Skip) — default
+// ?mstyle=v3      (字号对调: YOUR MISSION 大, Connect on LinkedIn 小 + 精简文案)
+type MissionStyle = "classic" | "warm" | "v3";
+function readMissionStyle(): MissionStyle {
+  if (typeof window === "undefined") return "v3";
+  const m = new URLSearchParams(window.location.search).get("mstyle");
+  return m === "classic" || m === "warm" ? m : "v3";
+}
+
+const MISSION_DESC_FULL = "You ran into a senior you'd seen before at the library — turns out she's at the same school party. You wanted to connect with her on LinkedIn.";
+const MISSION_DESC_SHORT = "A senior you'd seen at the library is at the party too. Go connect on LinkedIn.";
+
 const MAYA_NAME = "Maya";
 
 export function ConversationScreen({
@@ -205,6 +219,29 @@ export function ConversationScreen({
 
   const variant = readVariant();
   const tasks = variant === "b" ? TASKS_B : TASKS_A;
+  const mstyle = readMissionStyle();
+
+  // mission-card config (3 saved schemes): colors + font sizes + desc length
+  const missionCfg = mstyle === "classic"
+    ? {
+        eyebrowColor: "var(--accent-purple-mid)", titleColor: "var(--text-ink)",
+        skipBg: "var(--btn-idle)", skipText: "var(--text-ink-mute)",
+        eyebrowSize: "var(--fs-micro)", titleSize: 22, desc: MISSION_DESC_FULL,
+      }
+    : mstyle === "v3"
+    ? {
+        // 字号精确对调: YOUR MISSION 22px (原标题), Connect on LinkedIn --fs-micro (原 eyebrow); 精简文案
+        // YOUR MISSION 深紫大标题; Connect on LinkedIn 亮黄小字
+        eyebrowColor: "var(--text-ink)", titleColor: "var(--accent-yellow-bright)",
+        skipBg: "var(--accent-yellow-soft)", skipText: "var(--text-ink)",
+        eyebrowSize: 22, titleSize: "var(--fs-micro)", desc: MISSION_DESC_SHORT,
+      }
+    : {
+        // warm (default)
+        eyebrowColor: "var(--text-ink)", titleColor: "var(--accent-yellow-soft)",
+        skipBg: "var(--accent-yellow-soft)", skipText: "var(--text-ink)",
+        eyebrowSize: "var(--fs-micro)", titleSize: 22, desc: MISSION_DESC_FULL,
+      };
 
   const markTask = (id: string) => setTasksDone(s => new Set(s).add(id));
 
@@ -302,36 +339,42 @@ export function ConversationScreen({
           </div>
         )}
 
-        {/* PHASE: mission — full-screen mission card */}
+        {/* PHASE: mission — task briefing modal (type A: 浅紫→白渐变, flex 居中, 标题居中) */}
         {phase === "mission" && (
-          <div className="uply-fade-up" style={{
-            position: "absolute", left: 22, right: 22, top: "52%", transform: "translateY(-50%)",
-            background: "var(--bg-cream)", borderRadius: 22,
-            padding: "22px 22px 18px",
-            boxShadow: "0 24px 60px rgba(8,4,40,.32), 0 6px 16px rgba(8,4,40,.18)",
-            zIndex: 10,
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 22px",
           }}>
-            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)" }}>
-              YOUR MISSION
-            </div>
-            <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
-              Connect on LinkedIn
-            </div>
-            <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.45, marginTop: 10 }}>
-              You ran into a senior you'd seen before at the library — turns out she's at the same school party. You wanted to connect with her on LinkedIn.
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-              <button onClick={onSkip} style={{
-                flex: 1, height: 48, borderRadius: 14, border: "1px solid rgba(40,30,110,.18)",
-                background: "transparent", color: "var(--text-ink-mute)",
-                fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
-              }}>Skip</button>
-              <button onClick={startMission} style={{
-                flex: 1.4, height: 48, borderRadius: 14, border: "none",
-                background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
-                color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
-                boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
-              }}>Start</button>
+            <div className="uply-fade-up" style={{
+              width: "100%",
+              background: "linear-gradient(180deg, var(--bg-lavender-soft) 0%, #FFFFFF 60%)",
+              borderRadius: 22,
+              padding: "22px 22px 18px", textAlign: "center",
+              boxShadow: "0 24px 60px rgba(8,4,40,.32), 0 6px 16px rgba(8,4,40,.18)",
+            }}>
+              <div className={mstyle === "v3" ? "uply-serif" : undefined} style={{ fontSize: missionCfg.eyebrowSize, fontWeight: mstyle === "v3" ? 700 : 800, letterSpacing: mstyle === "v3" ? "0" : ".22em", color: missionCfg.eyebrowColor, lineHeight: 1.2 }}>
+                YOUR MISSION
+              </div>
+              <div className={mstyle === "v3" ? undefined : "uply-serif"} style={{ fontSize: missionCfg.titleSize, fontWeight: mstyle === "v3" ? 800 : 700, letterSpacing: mstyle === "v3" ? ".18em" : "0", textTransform: mstyle === "v3" ? "uppercase" : "none", color: missionCfg.titleColor, lineHeight: 1.2, marginTop: 6 }}>
+                Connect on LinkedIn
+              </div>
+              <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.45, marginTop: 12 }}>
+                {missionCfg.desc}
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+                <button onClick={startMission} style={{
+                  flex: 1.4, height: 48, borderRadius: 14, border: "none",
+                  background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
+                  color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+                  boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
+                }}>Start</button>
+                <button onClick={onSkip} style={{
+                  flex: 1, height: 48, borderRadius: 14, border: "none",
+                  background: missionCfg.skipBg, color: missionCfg.skipText,
+                  fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+                }}>Skip</button>
+              </div>
             </div>
           </div>
         )}
@@ -528,31 +571,37 @@ export function ConversationScreen({
           </div>
         )}
 
-        {/* PHASE: complete — mission completion card */}
+        {/* PHASE: complete — task complete modal (type A: 浅紫→白渐变, flex 居中) */}
         {phase === "complete" && (
-          <div className="uply-fade-up" style={{
-            position: "absolute", left: 22, right: 22, top: "50%", transform: "translateY(-50%)",
-            background: "var(--bg-cream)", borderRadius: 22,
-            padding: "24px 22px 20px", textAlign: "center",
-            boxShadow: "0 24px 60px rgba(8,4,40,.32)",
-            zIndex: 10,
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 22px",
           }}>
-            <div style={{ fontSize: 36 }}>🎉</div>
-            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)", marginTop: 8 }}>
-              MISSION COMPLETE
+            <div className="uply-fade-up" style={{
+              width: "100%",
+              background: "linear-gradient(180deg, var(--bg-lavender-soft) 0%, #FFFFFF 60%)",
+              borderRadius: 22,
+              padding: "24px 22px 20px", textAlign: "center",
+              boxShadow: "0 24px 60px rgba(8,4,40,.32)",
+            }}>
+              <div style={{ fontSize: 36 }}>🎉</div>
+              <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)", marginTop: 8 }}>
+                MISSION COMPLETE
+              </div>
+              <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
+                Connected with {MAYA_NAME}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-ink-mute)", lineHeight: 1.5, marginTop: 10 }}>
+                You held the conversation, found common ground, and made the ask. That's a real skill.
+              </div>
+              <button onClick={onComplete} style={{
+                marginTop: 18, width: "100%", height: 48, borderRadius: 14, border: "none",
+                background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
+                color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+                boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
+              }}>Continue →</button>
             </div>
-            <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
-              Connected with {MAYA_NAME}
-            </div>
-            <div style={{ fontSize: 13, color: "var(--text-ink-mute)", lineHeight: 1.5, marginTop: 8 }}>
-              You held the conversation, found common ground, and made the ask. That's a real skill.
-            </div>
-            <button onClick={onComplete} style={{
-              marginTop: 18, width: "100%", height: 48, borderRadius: 14, border: "none",
-              background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
-              color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
-              boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
-            }}>Continue →</button>
           </div>
         )}
       </div>
