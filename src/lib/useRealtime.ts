@@ -25,6 +25,8 @@ export interface UseRealtimeReturn {
   transcript: string;
   start: () => Promise<void>;
   stop: () => void;
+  /** Send a raw event over the data channel (e.g. function_call_output, response.create). */
+  sendEvent: (event: unknown) => void;
 }
 
 /**
@@ -140,6 +142,7 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     transcript,
     start,
     stop,
+    sendEvent: () => {},
   };
 }
 
@@ -219,6 +222,13 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     setTranscript("");
   }, [cleanup]);
 
+  const sendEvent = useCallback((event: unknown) => {
+    const dc = dcRef.current;
+    if (dc && dc.readyState === "open") {
+      dc.send(JSON.stringify(event));
+    }
+  }, []);
+
   useEffect(() => {
     return () => cleanup();
   }, [cleanup]);
@@ -278,17 +288,17 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
         try {
           const evt = JSON.parse(e.data);
           opts.onEvent?.(evt);
-          // Pull transcript fragments out of the most common event types so
-          // the UI can show what the model is saying.
-          if (evt.type === "response.audio_transcript.delta" && typeof evt.delta === "string") {
-            setTranscript((t) => t + evt.delta);
-          } else if (evt.type === "response.audio_transcript.done" && typeof evt.transcript === "string") {
-            setTranscript(evt.transcript);
-          } else if (evt.type === "response.done") {
-            // Keep last transcript visible until the next response begins.
-          } else if (evt.type === "response.created") {
+          // Pull the model's audio transcript out. Event names differ between the
+          // beta (`response.audio_transcript.*`) and GA (`response.output_audio_transcript.*`)
+          // interfaces, so match by suffix to support both.
+          const t = typeof evt.type === "string" ? evt.type : "";
+          if (t.endsWith("output_audio_transcript.delta") || t === "response.audio_transcript.delta") {
+            if (typeof evt.delta === "string") setTranscript((prev) => prev + evt.delta);
+          } else if (t.endsWith("output_audio_transcript.done") || t === "response.audio_transcript.done") {
+            if (typeof evt.transcript === "string") setTranscript(evt.transcript);
+          } else if (t === "response.created") {
             setTranscript("");
-          } else if (evt.type === "error") {
+          } else if (t === "error") {
             setError(evt.error?.message ?? "Unknown realtime error");
           }
         } catch {
@@ -334,5 +344,5 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     }
   }, [tokenEndpoint, cleanup, opts]);
 
-  return { status, error, isAvailable, transcript, start, stop };
+  return { status, error, isAvailable, transcript, start, stop, sendEvent };
 }

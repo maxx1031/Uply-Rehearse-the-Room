@@ -9,11 +9,12 @@
  * Each screen renders inside an absolutely-positioned full-bleed container.
  * Drop them into your phone-frame's screen slot.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   SolidFigure, Chip,
   MicButton, TypingDots, PrimaryBtn,
 } from "@/components/ui/UplyUI";
+import { useRealtime } from "@/lib/useRealtime";
 import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
 
 // ╔══════════════════════════════════════════════════════════════════════
@@ -167,6 +168,7 @@ const SCRIPT: Beat[] = [
 
 type Phase =
   | "mission"
+  | "voice"  // realtime voice conversation
   | "countdown" | "npc-typing" | "npc-speaking" | "choosing"
   | "user-speaking" | "ending-npc-typing" | "ending"
   | "complete";
@@ -245,6 +247,69 @@ export function ConversationScreen({
 
   const markTask = (id: string) => setTasksDone(s => new Set(s).add(id));
 
+  // ── Realtime voice ──────────────────────────────────────────────
+  const [userText, setUserText] = useState("");
+  const [, setMayaSpeaking] = useState(false);
+  // 互斥: 同时只显一个气泡 (当前说话方). user 开口 → "user"; Maya 回应 → "maya".
+  const [activeBubble, setActiveBubble] = useState<"maya" | "user" | null>(null);
+  const rtRef = useRef<ReturnType<typeof useRealtime> | null>(null);
+
+  // map a milestone stage → checklist task id (depends on variant)
+  const milestoneTaskId = useCallback((stage: string): string | undefined => {
+    if (variant === "b") {
+      return ({ icebreaker: "greet", common_thread: "common", linkedin: "ask" } as Record<string, string>)[stage];
+    }
+    return stage === "linkedin" ? "linkedin" : undefined;
+  }, [variant]);
+
+  const handleRtEvent = useCallback((evt: any) => {
+    if (!evt || typeof evt !== "object") return;
+    const rt = rtRef.current;
+
+    const et: string = typeof evt.type === "string" ? evt.type : "";
+
+    // user starts speaking → switch bubble to user, hide Maya's, start fresh
+    if (et === "input_audio_buffer.speech_started") {
+      setActiveBubble("user");
+      setUserText("");
+    }
+    // Maya starts a new response → switch bubble to Maya, hide user's
+    if (et === "response.created") {
+      setActiveBubble("maya");
+    }
+    // user speech → streaming transcript (delta) then final (completed).
+    // Match by suffix so beta/GA event-name differences both work.
+    if (et.endsWith("input_audio_transcription.delta") && typeof evt.delta === "string") {
+      setActiveBubble("user");
+      setUserText((t) => t + evt.delta);
+    }
+    if (et.endsWith("input_audio_transcription.completed") && typeof evt.transcript === "string") {
+      setActiveBubble("user");
+      setUserText(evt.transcript.trim());
+    }
+    // mark_milestone tool call → advance checklist
+    if (evt.type === "response.function_call_arguments.done" && evt.name === "mark_milestone") {
+      let stage = "";
+      try { stage = JSON.parse(evt.arguments || "{}").stage; } catch { /* ignore */ }
+      const taskId = milestoneTaskId(stage);
+      if (taskId) markTask(taskId);
+      // ack the tool call so Maya can keep talking
+      rt?.sendEvent({
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: evt.call_id, output: JSON.stringify({ ok: true }) },
+      });
+      if (stage === "linkedin") {
+        // let Maya finish her goodbye, then end the scene
+        setTimeout(() => { rt?.stop(); setPhase("complete"); }, 2600);
+      } else {
+        rt?.sendEvent({ type: "response.create" });
+      }
+    }
+  }, [milestoneTaskId]);
+
+  const rt = useRealtime({ onEvent: handleRtEvent, onSpeakingChange: setMayaSpeaking });
+  rtRef.current = rt;
+
   const playNpcBeat = (i: number) => {
     setBeat(i);
     setPhase("npc-typing");
@@ -275,6 +340,11 @@ export function ConversationScreen({
   }, [phase, countdown]);
 
   const startMission = () => {
+    if (rt.isAvailable) {
+      setPhase("voice");
+      rt.start();
+      return;
+    }
     setPhase("countdown");
     setCountdown(3);
   };
@@ -486,6 +556,65 @@ export function ConversationScreen({
                 </div>
               );
             })()}
+          </>
+        )}
+
+        {/* ── VOICE phase (realtime) ── */}
+        {phase === "voice" && (
+          <>
+            {/* Maya bubble (NPC, 紫边, 中部偏左) — 仅当 Maya 是当前说话方 */}
+            {activeBubble === "maya" && rt.transcript && (
+              <div className="uply-fade-up" style={{
+                position: "absolute", top: "33%", left: 18, right: 70,
+                display: "flex", justifyContent: "flex-start", zIndex: 7,
+              }}>
+                <div style={{
+                  maxWidth: 240,
+                  background: "#FFFFFF", border: "2px solid var(--text-accent)",
+                  borderRadius: 16, padding: "12px 16px",
+                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+                  boxShadow: "0 8px 24px rgba(8,4,40,.18)",
+                }}>{rt.transcript}</div>
+              </div>
+            )}
+
+            {/* User bubble (黄边, 底部偏右) — 仅当用户是当前说话方 */}
+            {activeBubble === "user" && userText && (
+              <div className="uply-fade-up" style={{
+                position: "absolute", bottom: 150, left: 70, right: 18, zIndex: 8,
+                display: "flex", justifyContent: "flex-end",
+              }}>
+                <div style={{
+                  maxWidth: 240,
+                  background: "#FFFFFF", border: "2px solid var(--accent-yellow-soft)",
+                  borderRadius: 16, padding: "12px 16px",
+                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+                  boxShadow: "0 8px 24px rgba(8,4,40,.18)",
+                }}>{userText}</div>
+              </div>
+            )}
+
+            {/* Bottom: mic (active ripple = listening). No "speaking" status text. */}
+            <div style={{
+              position: "absolute", bottom: 36, left: 0, right: 0, zIndex: 9,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+            }}>
+              {(rt.status === "requesting-token" || rt.status === "connecting") && (
+                <div style={{
+                  fontSize: "var(--fs-caption)", color: "var(--text-on-dark)",
+                  textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                }}>Connecting…</div>
+              )}
+              {rt.status === "error" && (
+                <div style={{
+                  fontSize: "var(--fs-caption)", color: "#ffb4b4",
+                  textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                }}>{rt.error?.slice(0, 60) ?? "Something went wrong"}</div>
+              )}
+              <div onClick={() => { if (rt.status === "idle" || rt.status === "error") rt.start(); }}>
+                <MicButton active={rt.status === "active"} size={64} />
+              </div>
+            </div>
           </>
         )}
 
