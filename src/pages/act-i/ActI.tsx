@@ -279,12 +279,13 @@ export function ConversationScreen({
     }
     // user speech → streaming transcript (delta) then final (completed).
     // Match by suffix so beta/GA event-name differences both work.
+    // NOTE: do NOT flip activeBubble here — the completed event can arrive late
+    // (after Maya already started), which would wrongly hide Maya's bubble.
+    // activeBubble only switches on speech_started / response.created.
     if (et.endsWith("input_audio_transcription.delta") && typeof evt.delta === "string") {
-      setActiveBubble("user");
       setUserText((t) => t + evt.delta);
     }
     if (et.endsWith("input_audio_transcription.completed") && typeof evt.transcript === "string") {
-      setActiveBubble("user");
       setUserText(evt.transcript.trim());
     }
     // mark_milestone tool call → advance checklist
