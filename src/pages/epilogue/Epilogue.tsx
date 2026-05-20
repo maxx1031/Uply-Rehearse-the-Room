@@ -9,7 +9,7 @@
  * GOALS drives which lesson the user starts; map to your lesson library.
  */
 import { useEffect, useState } from "react";
-import { StageBackdrop, ActLabel, PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
+import { ActLabel, PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
 
 // ─────────────────────────────────────────────────────────────
 // First-scene goals — these map to your starter-lesson library
@@ -37,63 +37,63 @@ export const GOALS: Goal[] = [
 export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
   const [picked, setPicked] = useState<GoalId | null>(null);
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
-      <StageBackdrop>
-        <div style={{
-          position: "absolute", inset: 0, padding: "70px 22px 32px",
-          display: "flex", flexDirection: "column", overflowY: "auto",
-        }}>
-          <ActLabel color="var(--text-ink-mute)">SET YOUR SCENE</ActLabel>
-          <div className="uply-serif" style={{ color: "var(--bg-lavender-soft)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
-            What's one small social thing you'd like to pull off?
-          </div>
-          <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8, marginBottom: 24 }}>
-            Your pick becomes your first real scene.
-          </div>
+    <div style={{
+      position: "absolute", inset: 0, overflow: "auto",
+      background: "linear-gradient(180deg, #f6f2e9 0%, #ebe5d7 100%)",
+      padding: "70px 22px 32px",
+      display: "flex", flexDirection: "column",
+    }}>
+      <ActLabel color="var(--text-ink-mute)">SET YOUR SCENE</ActLabel>
+      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
+        What's one small social thing you'd like to pull off?
+      </div>
+      <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8, marginBottom: 24 }}>
+        Your pick becomes your first real scene.
+      </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-            {GOALS.map(g => {
-              const active = picked === g.id;
-              return (
-                <button key={g.id} onClick={() => setPicked(g.id)} style={{
-                  textAlign: "left", padding: "14px 16px", borderRadius: 18,
-                  background: active ? "rgba(184,172,246,.18)" : "rgba(255,255,255,.04)",
-                  border: active ? "1.5px solid var(--accent-lavender)" : "1px solid rgba(184,172,246,.18)",
-                  color: "var(--bg-lavender-soft)", cursor: "pointer", fontFamily: "inherit",
-                  display: "flex", alignItems: "center", gap: 14,
-                  transition: "all .2s ease",
-                  boxShadow: active ? "0 0 0 4px rgba(184,172,246,.12), 0 12px 24px rgba(8,4,40,.3)" : "none",
-                }}>
-                  <div style={{
-                    width: 46, height: 46, borderRadius: 14, flexShrink: 0,
-                    background: active ? "rgba(184,172,246,.25)" : "rgba(184,172,246,.1)",
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
-                  }}>{g.emoji}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2, color: "var(--text-on-dark)" }}>{g.title}</div>
-                    <div style={{ fontSize: 12.5, color: "#a89ed4", marginTop: 3 }}>{g.sub}</div>
-                    <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-gold)", marginTop: 6 }}>{g.scene}</div>
-                  </div>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: "50%",
-                    border: active ? "2px solid var(--accent-lavender)" : "1.5px solid rgba(184,172,246,.3)",
-                    background: active ? "var(--accent-lavender)" : "transparent",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {active && <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-ink)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+        {GOALS.map(g => {
+          const active = picked === g.id;
+          return (
+            <button key={g.id} onClick={() => setPicked(g.id)} style={{
+              textAlign: "left", padding: "14px 16px", borderRadius: 18,
+              background: active ? "var(--bg-lavender-soft)" : "var(--bg-cream)",
+              border: active ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,.08)",
+              color: "var(--text-ink)", cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", gap: 14,
+              transition: "all .2s ease",
+              boxShadow: active
+                ? "0 0 0 4px rgba(107,99,212,.12), 0 12px 24px rgba(8,4,40,.12)"
+                : "0 4px 12px rgba(8,4,40,.06)",
+            }}>
+              <div style={{
+                width: 46, height: 46, borderRadius: 14, flexShrink: 0,
+                background: active ? "rgba(107,99,212,.18)" : "rgba(107,99,212,.08)",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+              }}>{g.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2, color: "var(--text-ink)" }}>{g.title}</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-ink-mute)", marginTop: 3 }}>{g.sub}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".22em", color: "#b9802c", marginTop: 6 }}>{g.scene}</div>
+              </div>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%",
+                border: active ? "2px solid var(--accent-purple-mid)" : "1.5px solid rgba(40,30,110,.18)",
+                background: active ? "var(--accent-purple-mid)" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {active && <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-          <div style={{ marginTop: 18 }}>
-            <PrimaryBtn disabled={!picked} glow={!!picked} onClick={() => picked && onPick(picked)}>
-              {picked ? "Take me to the stage →" : "Pick one scene"}
-            </PrimaryBtn>
-          </div>
-        </div>
-      </StageBackdrop>
+      <div style={{ marginTop: 18 }}>
+        <PrimaryBtn disabled={!picked} glow={!!picked} onClick={() => picked && onPick(picked)}>
+          {picked ? "Take me to the stage →" : "Pick one scene"}
+        </PrimaryBtn>
+      </div>
     </div>
   );
 }

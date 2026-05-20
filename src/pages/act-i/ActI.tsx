@@ -11,9 +11,10 @@
  */
 import { useState, useEffect } from "react";
 import {
-  StageBackdrop, GlowFigure, SolidFigure, Chip, SpeechBubble,
-  MicButton, TypingDots, ActLabel, PrimaryBtn,
+  SolidFigure, Chip, SpeechBubble,
+  MicButton, TypingDots, PrimaryBtn,
 } from "@/components/ui/UplyUI";
+import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
 
 // ╔══════════════════════════════════════════════════════════════════════
 // ║  StageScreen — illustrated daytime "After Party" setting
@@ -165,17 +166,47 @@ const SCRIPT: Beat[] = [
 ];
 
 type Phase =
+  | "mission"
   | "countdown" | "npc-typing" | "npc-speaking" | "choosing"
-  | "user-speaking" | "ending-npc-typing" | "ending";
+  | "user-speaking" | "ending-npc-typing" | "ending"
+  | "complete";
+
+type Variant = "a" | "b";
+type Task = { id: string; label: string; icon: string };
+
+const TASKS_A: Task[] = [
+  { id: "linkedin", label: "Connect on LinkedIn", icon: "🔗" },
+];
+
+const TASKS_B: Task[] = [
+  { id: "greet",  label: "Break the ice",             icon: "👋" },
+  { id: "common", label: "Find one common thread",    icon: "🧵" },
+  { id: "ask",    label: "Ask to connect on LinkedIn", icon: "🔗" },
+];
+
+function readVariant(): Variant {
+  if (typeof window === "undefined") return "a";
+  const v = new URLSearchParams(window.location.search).get("variant");
+  return v === "b" ? "b" : "a";
+}
+
+const MAYA_NAME = "Maya";
 
 export function ConversationScreen({
   onComplete, onSkip,
 }: { onComplete: () => void; onSkip: () => void }) {
-  const [phase, setPhase] = useState<Phase>("countdown");
+  const [phase, setPhase] = useState<Phase>("mission");
   const [beat, setBeat] = useState(-1);
   const [history, setHistory] = useState<{ who: "npc" | "me"; text: string }[]>([]);
   const [countdown, setCountdown] = useState(3);
   const [showHint, setShowHint] = useState(false);
+  const [tasksDone, setTasksDone] = useState<Set<string>>(new Set());
+  const [checklistExpanded, setChecklistExpanded] = useState(false);
+
+  const variant = readVariant();
+  const tasks = variant === "b" ? TASKS_B : TASKS_A;
+
+  const markTask = (id: string) => setTasksDone(s => new Set(s).add(id));
 
   const playNpcBeat = (i: number) => {
     setBeat(i);
@@ -191,6 +222,14 @@ export function ConversationScreen({
     }, 900);
   };
 
+  // After user responds to beat 0 → mark "greet" done (variant B)
+  // After beat 2 (career chitchat) → mark "common" done (variant B)
+  useEffect(() => {
+    if (variant !== "b") return;
+    if (beat >= 1 && !tasksDone.has("greet"))  markTask("greet");
+    if (beat >= 2 && !tasksDone.has("common")) markTask("common");
+  }, [beat, variant]);
+
   useEffect(() => {
     if (phase !== "countdown") return;
     if (countdown <= 0) { playNpcBeat(0); return; }
@@ -198,17 +237,23 @@ export function ConversationScreen({
     return () => clearTimeout(t);
   }, [phase, countdown]);
 
+  const startMission = () => {
+    setPhase("countdown");
+    setCountdown(3);
+  };
+
   const pickChoice = (c: Choice) => {
     setShowHint(false);
     setPhase("user-speaking");
     setTimeout(() => {
       setHistory(h => [...h, { who: "me", text: c.text }]);
       if (c.ending) {
+        markTask(variant === "b" ? "ask" : "linkedin");
         setPhase("ending-npc-typing");
         setTimeout(() => {
           setHistory(h => [...h, { who: "npc", text: "Of course! Let me add you right now 🌟" }]);
           setPhase("ending");
-          setTimeout(() => onComplete(), 1800);
+          setTimeout(() => setPhase("complete"), 1600);
         }, 1100);
       } else {
         playNpcBeat(c.next!);
@@ -216,139 +261,301 @@ export function ConversationScreen({
     }, 1400);
   };
 
-  const skipFirst = () => {
-    if (phase !== "countdown") return;
-    setCountdown(-1);
-    setPhase("user-speaking");
-    setTimeout(() => {
-      setHistory(h => [...h, { who: "me", text: "Hey — great presentation." }]);
-      playNpcBeat(0);
-    }, 1000);
-  };
-
   const latestNpc = [...history].reverse().find(x => x.who === "npc");
   const latestMe  = [...history].reverse().find(x => x.who === "me");
   const current   = beat >= 0 ? SCRIPT[beat] : null;
+  const inDialog  = phase !== "mission" && phase !== "complete";
 
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <StageBackdrop lit>
-        {/* Top scene chips */}
-        <div style={{ position: "absolute", top: 54, left: 18, right: 18, display: "flex", gap: 8, justifyContent: "space-between", zIndex: 8 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Chip>🎓 After Party</Chip>
-            <Chip>🔗 Add on LinkedIn</Chip>
-          </div>
-          <Chip onClick={onSkip}>End scene ✕</Chip>
-        </div>
+    <div style={{
+      position: "absolute", inset: 0, overflow: "hidden",
+    }}>
+      {/* After-party scene as background (same as #5) */}
+      <img
+        src={sceneWithSilhouette}
+        alt=""
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%", objectFit: "cover",
+        }}
+      />
+      {/* Soft vignette so chips / bubbles read against bright bg */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(20, 14, 50, 0.4) 100%)",
+        zIndex: 1,
+      }} />
+      <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
 
-        {/* Character */}
-        <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", opacity: phase === "ending" ? .6 : 1, transition: "opacity .8s ease" }}>
-          <GlowFigure size={180} color={phase === "npc-speaking" || phase === "ending-npc-typing" ? "var(--accent-lavender)" : "var(--accent-purple-soft)"} />
-        </div>
-
-        {/* NPC bubble */}
-        {(phase === "npc-typing" || phase === "npc-speaking" || phase === "choosing" || phase === "ending-npc-typing" || phase === "user-speaking" || phase === "ending") && latestNpc && (
-          <div className="uply-fade-up" key={latestNpc.text} style={{ position: "absolute", top: "10%", right: 18, maxWidth: 260, zIndex: 7 }}>
-            <SpeechBubble tail="bottom-left">
-              {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
-            </SpeechBubble>
-          </div>
-        )}
-
-        {/* User echo while npc thinks */}
-        {latestMe && (phase === "npc-typing" || phase === "npc-speaking") && (
-          <div className="uply-fade-up" style={{ position: "absolute", top: "42%", left: 18, maxWidth: 240, zIndex: 6 }}>
-            <div style={{
-              padding: "10px 14px", borderRadius: 16,
-              background: "rgba(122,110,224,.85)", color: "var(--text-on-dark)",
-              fontSize: 14, fontWeight: 500, lineHeight: 1.35,
-              boxShadow: "0 6px 18px rgba(8,4,40,.3)", opacity: .85,
-            }}>{latestMe.text}</div>
+        {/* Maya name tag (chest) — visible in dialog and complete phases */}
+        {inDialog && (
+          <div style={{
+            position: "absolute", top: "44%", left: "50%", transform: "translateX(-50%)",
+            background: "rgba(255,255,255,0.92)", backdropFilter: "blur(6px)",
+            borderRadius: 8, padding: "4px 10px",
+            fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".18em",
+            color: "var(--accent-purple-mid)",
+            boxShadow: "0 4px 12px rgba(40,30,110,.18)",
+            zIndex: 4,
+          }}>
+            {MAYA_NAME.toUpperCase()}
           </div>
         )}
 
-        {/* Pre-conversation countdown */}
+        {/* PHASE: mission — full-screen mission card */}
+        {phase === "mission" && (
+          <div className="uply-fade-up" style={{
+            position: "absolute", left: 22, right: 22, top: "52%", transform: "translateY(-50%)",
+            background: "var(--bg-cream)", borderRadius: 22,
+            padding: "22px 22px 18px",
+            boxShadow: "0 24px 60px rgba(8,4,40,.32), 0 6px 16px rgba(8,4,40,.18)",
+            zIndex: 10,
+          }}>
+            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)" }}>
+              YOUR MISSION
+            </div>
+            <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
+              Connect on LinkedIn
+            </div>
+            <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.45, marginTop: 10 }}>
+              You ran into a senior you'd seen before at the library — turns out she's at the same school party. You wanted to connect with her on LinkedIn.
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <button onClick={onSkip} style={{
+                flex: 1, height: 48, borderRadius: 14, border: "1px solid rgba(40,30,110,.18)",
+                background: "transparent", color: "var(--text-ink-mute)",
+                fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+              }}>Skip</button>
+              <button onClick={startMission} style={{
+                flex: 1.4, height: 48, borderRadius: 14, border: "none",
+                background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
+                color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+                boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
+              }}>Start</button>
+            </div>
+          </div>
+        )}
+
+        {/* In-dialog persistent: top scene chip + task checklist */}
+        {inDialog && (
+          <>
+            <div style={{ position: "absolute", top: 54, left: "50%", transform: "translateX(-50%)", zIndex: 8 }}>
+              <Chip>🎓 After Party</Chip>
+            </div>
+
+            {(() => {
+              const currentIdx = tasks.findIndex(tk => !tasksDone.has(tk.id));
+              const allDone = currentIdx === -1;
+              const doneCount = tasks.filter(t => tasksDone.has(t.id)).length;
+              const visibleTasks = checklistExpanded
+                ? tasks
+                : (allDone ? tasks.slice(-1) : [tasks[currentIdx]]);
+
+              return (
+                <div style={{
+                  position: "absolute", top: 100, left: 14, zIndex: 8,
+                  maxWidth: 220, display: "flex", flexDirection: "column", gap: 6,
+                }}>
+                  <button onClick={() => setChecklistExpanded(v => !v)} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
+                    padding: "2px 4px 4px", background: "transparent", border: "none",
+                    cursor: "pointer", fontFamily: "inherit",
+                    textShadow: "0 1px 4px rgba(255,255,255,0.6)",
+                  }}>
+                    <div style={{
+                      fontSize: 10, fontWeight: 800, letterSpacing: ".22em",
+                      color: "var(--accent-purple-mid)",
+                    }}>
+                      MISSION · {doneCount}/{tasks.length}
+                    </div>
+                    <span style={{
+                      fontSize: 11, color: "var(--accent-purple-mid)",
+                      transform: checklistExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform .2s ease",
+                    }}>▾</span>
+                  </button>
+                  {visibleTasks.map(t => {
+                    const idx = tasks.indexOf(t);
+                    const done = tasksDone.has(t.id);
+                    const isNow = !done && idx === currentIdx;
+
+                    const bg = done
+                      ? "rgba(255,255,255,0.78)"
+                      : isNow
+                      ? "var(--text-on-dark)"
+                      : "var(--bg-lavender-soft)";
+                    const border = isNow ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,0.08)";
+
+                    return (
+                      <div key={t.id} style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "7px 9px", borderRadius: 10,
+                        background: bg, border,
+                        backdropFilter: "blur(8px)",
+                        boxShadow: isNow
+                          ? "0 6px 16px rgba(107,99,212,0.18)"
+                          : "0 2px 6px rgba(40,30,110,0.08)",
+                      }}>
+                        {done ? (
+                          <span style={{
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                            background: "var(--accent-lavender)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          </span>
+                        ) : (
+                          <span style={{
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                            background: isNow ? "var(--bg-lavender-soft)" : "rgba(255,255,255,0.7)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 11,
+                          }}>{t.icon}</span>
+                        )}
+                        <span style={{
+                          fontSize: 11.5, fontWeight: 700, lineHeight: 1.25,
+                          flex: 1, minWidth: 0,
+                          color: done ? "var(--text-ink-mute)" : "var(--text-ink)",
+                          textDecoration: done ? "line-through" : "none",
+                        }}>{t.label}</span>
+                        {isNow && (
+                          <span style={{
+                            fontSize: 8.5, fontWeight: 800, letterSpacing: ".14em",
+                            color: "#8a5a30",
+                            background: "var(--accent-gold)",
+                            padding: "2px 6px", borderRadius: 999,
+                            flexShrink: 0,
+                          }}>NOW</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </>
+        )}
+
+        {/* NPC bubble — top-right, above Maya's head, clear of left checklist */}
+        {(phase === "npc-typing" || phase === "npc-speaking" || phase === "choosing" || phase === "ending-npc-typing" || phase === "ending") && latestNpc && (
+          <div className="uply-fade-up" key={latestNpc.text} style={{
+            position: "absolute", top: "13%", left: 220, right: 18,
+            display: "flex", justifyContent: "flex-end", zIndex: 7,
+          }}>
+            <div style={{ maxWidth: 180 }}>
+              <SpeechBubble tail="bottom-left">
+                {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
+              </SpeechBubble>
+            </div>
+          </div>
+        )}
+
+        {/* Countdown — quick "she'll speak in Ns" indicator */}
         {phase === "countdown" && (
-          <div className="uply-fade" style={{ position: "absolute", top: "30%", left: 0, right: 0, textAlign: "center", color: "var(--bg-lavender-soft)", padding: "0 30px" }}>
-            <ActLabel color="var(--accent-lavender)">YOUR TURN?</ActLabel>
-            <div className="uply-serif" style={{ fontSize: 22, lineHeight: 1.25, marginTop: 12, fontWeight: 600 }}>
-              Want to break the silence first?
-            </div>
-            <div style={{ marginTop: 18, color: "var(--text-ink-mute)", fontSize: 14 }}>
-              She'll speak in <b style={{ color: "var(--accent-lavender)" }}>{Math.max(0, countdown)}s</b> if you don't
-            </div>
-            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-              <button onClick={skipFirst} style={{
-                padding: "12px 24px", borderRadius: 9999,
-                background: "rgba(184,172,246,.16)", color: "var(--bg-lavender-soft)",
-                border: "1px solid rgba(184,172,246,.3)", fontWeight: 700, fontSize: 14,
-                cursor: "pointer", fontFamily: "inherit", letterSpacing: ".02em",
-              }}>🎤  I'll go first</button>
-            </div>
+          <div className="uply-fade" style={{
+            position: "absolute", top: "22%", left: 0, right: 0,
+            textAlign: "center", color: "var(--text-on-dark)", zIndex: 7,
+            textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+          }}>
+            <div style={{ fontSize: 13, opacity: .85 }}>She'll speak in</div>
+            <div className="uply-serif" style={{ fontSize: 36, fontWeight: 700, marginTop: 4 }}>{Math.max(0, countdown)}s</div>
           </div>
         )}
 
         {/* Hint banner */}
-        {showHint && current?.hint && (
+        {showHint && current?.hint && phase === "choosing" && (
           <div className="uply-fade-up" style={{
-            position: "absolute", bottom: 250, left: 18, right: 18, zIndex: 9,
-            background: "rgba(15,8,50,.85)", backdropFilter: "blur(10px)",
-            border: "1px dashed rgba(243,210,126,.5)",
+            position: "absolute", bottom: 240, left: 18, right: 18, zIndex: 9,
+            background: "rgba(255,255,255,0.92)", backdropFilter: "blur(10px)",
             borderRadius: 14, padding: "10px 14px",
             display: "flex", alignItems: "flex-start", gap: 10,
-            color: "var(--accent-gold)", fontSize: 12.5, lineHeight: 1.4,
+            color: "var(--text-ink)", fontSize: 12.5, lineHeight: 1.4,
+            boxShadow: "0 6px 18px rgba(40,30,110,.16)",
           }}>
             <span style={{ fontSize: 14 }}>💡</span>
-            <div><b style={{ letterSpacing: ".06em" }}>STAGE WHISPER · </b>{current.hint}</div>
+            <div><b style={{ color: "var(--accent-purple-mid)", letterSpacing: ".06em" }}>HINT · </b>{current.hint}</div>
           </div>
         )}
 
-        {/* Choices */}
+        {/* User speech bubble — above mic */}
+        {phase === "user-speaking" && latestMe && (
+          <div className="uply-fade-up" style={{
+            position: "absolute", bottom: 130, left: 24, right: 24, zIndex: 8,
+            display: "flex", justifyContent: "center",
+          }}>
+            <div style={{
+              maxWidth: 280, padding: "12px 16px", borderRadius: 18,
+              background: "var(--btn-gradient)", color: "var(--text-on-dark)",
+              fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+              boxShadow: "0 8px 24px rgba(107,99,212,.38)",
+            }}>{latestMe.text}</div>
+          </div>
+        )}
+
+        {/* Choices (bottom) */}
         {phase === "choosing" && current && (
           <div className="uply-fade-up" style={{
-            position: "absolute", bottom: 30, left: 14, right: 14, zIndex: 10,
+            position: "absolute", bottom: 20, left: 14, right: 14, zIndex: 10,
             display: "flex", flexDirection: "column", gap: 8,
           }}>
-            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".28em", color: "var(--accent-lavender)", marginBottom: 4, paddingLeft: 6, opacity: .7 }}>YOUR LINE</div>
             {current.choices.map((c, i) => (
               <button key={i} onClick={() => pickChoice(c)} style={{
                 background: c.ending
-                  ? "linear-gradient(180deg,var(--accent-purple-soft),#7a6ee0)"
-                  : "rgba(255,255,255,.08)",
-                color: "var(--text-on-dark)", textAlign: "left",
-                padding: "14px 18px", borderRadius: 18,
-                border: c.ending ? "1px solid rgba(255,255,255,.25)" : "1px solid rgba(184,172,246,.22)",
-                fontSize: 15, fontWeight: 600, lineHeight: 1.3,
+                  ? "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)"
+                  : "rgba(255,255,255,0.88)",
+                color: c.ending ? "var(--text-on-dark)" : "var(--text-ink)",
+                textAlign: "left",
+                padding: "13px 16px", borderRadius: 14,
+                border: "none",
+                fontSize: 14, fontWeight: 600, lineHeight: 1.3,
                 cursor: "pointer", fontFamily: "inherit",
-                backdropFilter: "blur(8px)",
-                boxShadow: c.ending ? "0 8px 30px rgba(122,110,224,.45)" : "none",
+                backdropFilter: c.ending ? "none" : "blur(8px)",
+                boxShadow: c.ending
+                  ? "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)"
+                  : "0 4px 12px rgba(40,30,110,.16)",
               }}>{c.ending && <span style={{ marginRight: 6 }}>🔗</span>}{c.text}</button>
             ))}
           </div>
         )}
 
-        {/* User speaking */}
+        {/* Mic indicator while user "speaking" */}
         {phase === "user-speaking" && (
           <div className="uply-fade" style={{
-            position: "absolute", bottom: 60, left: 0, right: 0,
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 14, zIndex: 10,
+            position: "absolute", bottom: 30, left: 0, right: 0,
+            display: "flex", justifyContent: "center", zIndex: 9,
           }}>
-            <div style={{ color: "var(--accent-lavender)", fontSize: "var(--fs-caption)", letterSpacing: ".18em", fontWeight: 700 }}>
-              YOU'RE SPEAKING...
-            </div>
-            <MicButton active size={72} />
+            <MicButton active size={64} />
           </div>
         )}
 
-        {/* Beat counter */}
-        {beat >= 0 && phase !== "ending" && (
-          <div style={{ position: "absolute", bottom: 14, left: 18, zIndex: 5,
-            color: "var(--text-ink-mute)", fontSize: 10.5, fontWeight: 700, letterSpacing: ".28em" }}>
-            ROUND {beat + 1} / {SCRIPT.length}
+        {/* PHASE: complete — mission completion card */}
+        {phase === "complete" && (
+          <div className="uply-fade-up" style={{
+            position: "absolute", left: 22, right: 22, top: "50%", transform: "translateY(-50%)",
+            background: "var(--bg-cream)", borderRadius: 22,
+            padding: "24px 22px 20px", textAlign: "center",
+            boxShadow: "0 24px 60px rgba(8,4,40,.32)",
+            zIndex: 10,
+          }}>
+            <div style={{ fontSize: 36 }}>🎉</div>
+            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)", marginTop: 8 }}>
+              MISSION COMPLETE
+            </div>
+            <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
+              Connected with {MAYA_NAME}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-ink-mute)", lineHeight: 1.5, marginTop: 8 }}>
+              You held the conversation, found common ground, and made the ask. That's a real skill.
+            </div>
+            <button onClick={onComplete} style={{
+              marginTop: 18, width: "100%", height: 48, borderRadius: 14, border: "none",
+              background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
+              color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+              boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
+            }}>Continue →</button>
           </div>
         )}
-      </StageBackdrop>
+      </div>
     </div>
   );
 }

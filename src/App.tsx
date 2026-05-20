@@ -60,6 +60,11 @@ function readStepFromUrl(): Step {
   return (VALID_STEPS as string[]).includes(param ?? "") ? (param as Step) : "splash";
 }
 
+function isStepLocked(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).has("step");
+}
+
 export default function App() {
   const [step, setStep] = useState<Step>(readStepFromUrl);
   const [dir, setDir] = useState(1);
@@ -69,8 +74,10 @@ export default function App() {
   // bucket is captured for future branching but not yet consumed downstream.
   const [, setBucket] = useState<ReflectionBucket | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const lockedRef = useRef<boolean>(isStepLocked());
 
   const go = (next: Step, direction = 1) => {
+    if (lockedRef.current) return;
     setDir(direction);
     setStep(next);
   };
@@ -193,7 +200,7 @@ export default function App() {
               <motion.div key="conversation" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <ConversationScreen
                   onComplete={() => go("linkedin")}
-                  onSkip={() => go("analyzing")}
+                  onSkip={() => go("goal")}
                 />
               </motion.div>
             )}

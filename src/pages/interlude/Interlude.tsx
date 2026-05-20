@@ -267,62 +267,60 @@ export function ReflectionScreen({
   };
 
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
-      <StageBackdrop>
+    <div style={{
+      position: "absolute", inset: 0, overflow: "auto",
+      background: "linear-gradient(180deg, #f6f2e9 0%, #ebe5d7 100%)",
+      padding: "70px 24px 40px",
+      display: "flex", flexDirection: "column",
+    }}>
+      <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel>
+      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
+        Does this reflect how you actually show up?
+      </div>
+      <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8 }}>
+        Drag the marker — there's no wrong answer.
+      </div>
+
+      <div style={{ marginTop: 42, position: "relative" }}>
         <div style={{
-          position: "absolute", inset: 0, padding: "70px 24px 40px",
-          display: "flex", flexDirection: "column", overflowY: "auto",
-        }}>
-          <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel>
-          <div className="uply-serif" style={{ color: "var(--bg-lavender-soft)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
-            Does this reflect how you actually show up?
-          </div>
-          <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8 }}>
-            Drag the marker — there's no wrong answer.
-          </div>
-
-          <div style={{ marginTop: 42, position: "relative" }}>
-            <div style={{
-              height: 8, borderRadius: 9999,
-              background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
-              boxShadow: "inset 0 1px 3px rgba(0,0,0,.3)",
-            }} />
-            <input type="range" min={0} max={100} value={val}
-              onChange={e => setVal(+e.target.value)} disabled={submitted}
-              style={{ position: "absolute", top: -12, left: 0, width: "100%", height: 32, opacity: 0, cursor: "pointer" }} />
-            <div style={{
-              position: "absolute", top: -8, left: `${val}%`, transform: "translateX(-50%)",
-              width: 24, height: 24, borderRadius: "50%",
-              background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(184,172,246,.6), 0 0 0 2px var(--accent-purple-mid)",
-              transition: submitted ? "left .4s ease" : "none", pointerEvents: "none",
-            }} />
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18,
-              fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--text-ink-mute)" }}>
-              <span>NOT AT ALL</span><span>SOMEWHERE BETWEEN</span><span>EXACTLY ME</span>
-            </div>
-          </div>
-
-          {submitted ? (
-            <div className="uply-fade-up" style={{
-              marginTop: 32, padding: "18px 18px",
-              background: "rgba(255,255,255,.06)", backdropFilter: "blur(8px)",
-              border: "1px solid rgba(184,172,246,.2)",
-              borderRadius: 18, color: "var(--bg-lavender-soft)",
-            }}>
-              <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
-                {feedback[bucket].title}
-              </div>
-              <div style={{ fontSize: 14, color: "#d8d0f9", lineHeight: 1.5 }}>{feedback[bucket].body}</div>
-            </div>
-          ) : <div style={{ flex: 1 }} />}
-
-          <div style={{ marginTop: 24, paddingBottom: 8 }}>
-            {submitted
-              ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue →</PrimaryBtn>
-              : <PrimaryBtn onClick={() => setSubmitted(true)}>Submit my read</PrimaryBtn>}
-          </div>
+          height: 8, borderRadius: 9999,
+          background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
+          boxShadow: "inset 0 1px 3px rgba(40,30,110,.18)",
+        }} />
+        <input type="range" min={0} max={100} value={val}
+          onChange={e => setVal(+e.target.value)} disabled={submitted}
+          style={{ position: "absolute", top: -12, left: 0, width: "100%", height: 32, opacity: 0, cursor: "pointer" }} />
+        <div style={{
+          position: "absolute", top: -8, left: `${val}%`, transform: "translateX(-50%)",
+          width: 24, height: 24, borderRadius: "50%",
+          background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(107,99,212,.4), 0 0 0 2px var(--accent-purple-mid)",
+          transition: submitted ? "left .4s ease" : "none", pointerEvents: "none",
+        }} />
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18,
+          fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--text-ink-mute)" }}>
+          <span>NOT AT ALL</span><span>SOMEWHERE BETWEEN</span><span>EXACTLY ME</span>
         </div>
-      </StageBackdrop>
+      </div>
+
+      {submitted ? (
+        <div className="uply-fade-up" style={{
+          marginTop: 32, padding: "18px 18px",
+          background: "var(--bg-cream)",
+          borderRadius: 18, color: "var(--text-ink)",
+          boxShadow: "0 8px 24px rgba(8,4,40,.08)",
+        }}>
+          <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
+            {feedback[bucket].title}
+          </div>
+          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{feedback[bucket].body}</div>
+        </div>
+      ) : <div style={{ flex: 1 }} />}
+
+      <div style={{ marginTop: 24, paddingBottom: 8 }}>
+        {submitted
+          ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue →</PrimaryBtn>
+          : <PrimaryBtn onClick={() => setSubmitted(true)}>Submit my read</PrimaryBtn>}
+      </div>
     </div>
   );
 }
