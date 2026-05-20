@@ -11,7 +11,7 @@
  */
 import { useState, useEffect } from "react";
 import {
-  SolidFigure, Chip, SpeechBubble,
+  SolidFigure, Chip,
   MicButton, TypingDots, PrimaryBtn,
 } from "@/components/ui/UplyUI";
 import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
@@ -339,6 +339,16 @@ export function ConversationScreen({
           </div>
         )}
 
+        {/* S2 stage blur+darken behind the task modal */}
+        {phase === "mission" && (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 9, pointerEvents: "none",
+            backdropFilter: "blur(8px) brightness(0.7)",
+            WebkitBackdropFilter: "blur(8px) brightness(0.7)",
+            background: "rgba(20,14,50,0.25)",
+          }} />
+        )}
+
         {/* PHASE: mission — task briefing modal (type A: 浅紫→白渐变, flex 居中, 标题居中) */}
         {phase === "mission" && (
           <div style={{
@@ -479,16 +489,21 @@ export function ConversationScreen({
           </>
         )}
 
-        {/* NPC bubble — top-right, above Maya's head, clear of left checklist */}
+        {/* NPC bubble — 类型 B-NPC: 白底 + 紫色边框, 屏幕中部偏左 (贴近人物).
+            互斥: 只在 npc/choosing/ending 阶段显示, user-speaking 时不显示. */}
         {(phase === "npc-typing" || phase === "npc-speaking" || phase === "choosing" || phase === "ending-npc-typing" || phase === "ending") && latestNpc && (
           <div className="uply-fade-up" key={latestNpc.text} style={{
-            position: "absolute", top: "13%", left: 220, right: 18,
-            display: "flex", justifyContent: "flex-end", zIndex: 7,
+            position: "absolute", top: "33%", left: 18, right: 70,
+            display: "flex", justifyContent: "flex-start", zIndex: 7,
           }}>
-            <div style={{ maxWidth: 180 }}>
-              <SpeechBubble tail="bottom-left">
-                {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
-              </SpeechBubble>
+            <div style={{
+              maxWidth: 240,
+              background: "#FFFFFF", border: "2px solid var(--text-accent)",
+              borderRadius: 16, padding: "12px 16px",
+              color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+              boxShadow: "0 8px 24px rgba(8,4,40,.18)",
+            }}>
+              {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
             </div>
           </div>
         )}
@@ -520,17 +535,19 @@ export function ConversationScreen({
           </div>
         )}
 
-        {/* User speech bubble — above mic */}
+        {/* User bubble — 类型 B-用户: 白底 + 浅黄边框, 屏幕底部偏右.
+            互斥: 只在 user-speaking 阶段显示 (NPC 气泡此时不显示). */}
         {phase === "user-speaking" && latestMe && (
           <div className="uply-fade-up" style={{
-            position: "absolute", bottom: 130, left: 24, right: 24, zIndex: 8,
-            display: "flex", justifyContent: "center",
+            position: "absolute", bottom: 130, left: 70, right: 18, zIndex: 8,
+            display: "flex", justifyContent: "flex-end",
           }}>
             <div style={{
-              maxWidth: 280, padding: "12px 16px", borderRadius: 18,
-              background: "var(--btn-gradient)", color: "var(--text-on-dark)",
-              fontSize: 14, fontWeight: 500, lineHeight: 1.4,
-              boxShadow: "0 8px 24px rgba(107,99,212,.38)",
+              maxWidth: 240,
+              background: "#FFFFFF", border: "2px solid var(--accent-yellow-soft)",
+              borderRadius: 16, padding: "12px 16px",
+              color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+              boxShadow: "0 8px 24px rgba(8,4,40,.18)",
             }}>{latestMe.text}</div>
           </div>
         )}
@@ -591,9 +608,6 @@ export function ConversationScreen({
               </div>
               <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
                 Connected with {MAYA_NAME}
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-ink-mute)", lineHeight: 1.5, marginTop: 10 }}>
-                You held the conversation, found common ground, and made the ask. That's a real skill.
               </div>
               <button onClick={onComplete} style={{
                 marginTop: 18, width: "100%", height: 48, borderRadius: 14, border: "none",
