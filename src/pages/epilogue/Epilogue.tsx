@@ -91,7 +91,7 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
 
       <div style={{ marginTop: 18 }}>
         <PrimaryBtn disabled={!picked} glow={!!picked} onClick={() => picked && onPick(picked)}>
-          {picked ? "Take me to the stage →" : "Pick one scene"}
+          {picked ? "Take me to the stage" : "Pick one scene"}
         </PrimaryBtn>
       </div>
     </div>

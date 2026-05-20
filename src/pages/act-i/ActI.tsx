@@ -600,7 +600,7 @@ export function ConversationScreen({
                 background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
                 color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
                 boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
-              }}>Continue →</button>
+              }}>Continue</button>
             </div>
           </div>
         )}
@@ -684,7 +684,7 @@ export function LinkedInScreen({ onContinue }: { onContinue: () => void }) {
       </div>
       {step >= 2 && (
         <div className="uply-fade-up" style={{ padding: "14px 18px 26px", background: "linear-gradient(180deg, transparent, #f3f2ef 50%)" }}>
-          <PrimaryBtn onClick={onContinue}>End of Act I  →</PrimaryBtn>
+          <PrimaryBtn onClick={onContinue}>End of Act I</PrimaryBtn>
         </div>
       )}
     </div>

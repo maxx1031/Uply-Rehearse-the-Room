@@ -192,7 +192,7 @@ export default function App() {
             {/* ── ACT I ── */}
             {step === "after-party" && (
               <motion.div key="after-party" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.5 }}>
-                <AfterPartyScene onMicTap={() => go("conversation")} />
+                <AfterPartyScene onDone={() => go("conversation")} />
               </motion.div>
             )}
 

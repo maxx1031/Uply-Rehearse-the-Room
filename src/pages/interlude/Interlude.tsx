@@ -240,7 +240,7 @@ export function ResultScreen({
 
       {revealed >= 4 && (
         <div className="uply-fade-up">
-          <PrimaryBtn onClick={onContinue}>This feels right →</PrimaryBtn>
+          <PrimaryBtn onClick={onContinue}>This feels right</PrimaryBtn>
         </div>
       )}
     </div>
@@ -318,7 +318,7 @@ export function ReflectionScreen({
 
       <div style={{ marginTop: 24, paddingBottom: 8 }}>
         {submitted
-          ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue →</PrimaryBtn>
+          ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue</PrimaryBtn>
           : <PrimaryBtn onClick={() => setSubmitted(true)}>Submit my read</PrimaryBtn>}
       </div>
     </div>
