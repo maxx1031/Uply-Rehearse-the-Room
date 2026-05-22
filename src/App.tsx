@@ -28,6 +28,7 @@ import {
   HomeScreen,
   type GoalId,
 } from "./pages/epilogue/Epilogue";
+import { ProfileScreen } from "./pages/profile/ProfileScreen";
 
 type Step =
   // intro
@@ -37,7 +38,9 @@ type Step =
   // interlude
   | "analyzing" | "result" | "reflection"
   // epilogue
-  | "goal" | "slogan" | "home";
+  | "goal" | "slogan" | "home"
+  // profile
+  | "profile";
 
 interface OverlayState {
   userName: string;
@@ -52,6 +55,7 @@ const VALID_STEPS: Step[] = [
   "after-party", "conversation", "linkedin",
   "analyzing", "result", "reflection",
   "goal", "slogan", "home",
+  "profile",
 ];
 
 function readStepFromUrl(): Step {
@@ -250,6 +254,12 @@ export default function App() {
                   goalId={goalId ?? undefined}
                   onRestart={restartFlow}
                 />
+              </motion.div>
+            )}
+
+            {step === "profile" && (
+              <motion.div key="profile" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
+                <ProfileScreen onBack={() => go("home", -1)} />
               </motion.div>
             )}
           </AnimatePresence>
