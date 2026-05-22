@@ -4,7 +4,6 @@ import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png"
 import {
   buildDefaultOnboardingProfile,
   buildFallbackReviewDraft,
-  normalizeReviewDraft,
   type OnboardingProfile,
   type PracticeSessionResult,
   type PracticeTranscriptTurn,
@@ -21,12 +20,13 @@ interface PracticePageProps {
 }
 
 const MOCK_SCRIPT: MockRealtimeTurn[] = [
-  { role: "assistant", text: "Hi, I am Maya. I am glad we could find a few minutes for coffee.", afterMs: 800 },
+  { role: "assistant", text: "Hi, I am Jordan. I am glad we could find a few minutes for coffee.", afterMs: 800 },
   { role: "user", text: "Thanks for meeting me. I saw your CS alumni badge and wanted to ask about internships.", afterMs: 2200 },
   { role: "assistant", text: "Of course. I remember that search feeling confusing at first. What part feels most unclear right now?", afterMs: 1200 },
   { role: "user", text: "I am trying to understand how to choose my first product internship.", afterMs: 2600 },
   { role: "assistant", text: "That is a good small question. I would start by looking for teams where you can talk to users every week.", afterMs: 1300 },
   { role: "user", text: "Could I send you one quick question later about how you found your first role?", afterMs: 2500 },
+  { role: "assistant", text: "Absolutely. Send me one focused question, and I will try to make the path feel less fuzzy.", afterMs: 1100 },
 ];
 
 function id(prefix: string): string {
@@ -117,13 +117,7 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     }
 
     if (type === "response.function_call_arguments.done" && evt.name === "finish_practice") {
-      let parsed: unknown = null;
-      try {
-        parsed = JSON.parse(evt.arguments || "{}");
-      } catch {
-        parsed = null;
-      }
-      const draft = normalizeReviewDraft(parsed, buildFallbackReviewDraft(transcriptRef.current, activeProfile));
+      const draft = buildFallbackReviewDraft(transcriptRef.current, activeProfile);
       rtRef.current?.sendEvent({
         type: "conversation.item.create",
         item: { type: "function_call_output", call_id: evt.call_id, output: JSON.stringify({ ok: true }) },
@@ -132,20 +126,11 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     }
   }, [activeProfile, appendTurn, finishPractice]);
 
-  const mockFinish = buildFallbackReviewDraft([
-    {
-      id: "mock",
-      speaker: "user",
-      text: "Could I send you one quick question later about how you found your first role?",
-      createdAt: nowIso(),
-    },
-  ], activeProfile);
-
   const rt = useRealtime({
     probeOnMount: false,
     tokenRequestBody: { flow: "mission", promptSeed },
     mockScript: MOCK_SCRIPT,
-    mockFinishArguments: mockFinish,
+    mockFinishArguments: { reason: "clear_small_ask" },
     onEvent: handleEvent,
   });
   rtRef.current = rt;

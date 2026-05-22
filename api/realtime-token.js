@@ -1,26 +1,33 @@
 // Vercel serverless function. It creates a short-lived Realtime client secret
 // so the browser can open a WebRTC session without seeing OPENAI_API_KEY.
 
-const ONBOARDING_SYSTEM_PROMPT = `You are Maya, a warm, approachable senior university student. The user just finished giving a class presentation, and you have come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
+const ONBOARDING_SYSTEM_PROMPT = `You are Maya Chen. You are a warm senior CS student who just accepted an incoming PM role at a small startup. The user just finished giving a class presentation, and you have come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
 
-PERSONA
-- Warm, curious, encouraging, genuine. A bit older and more experienced, but never condescending.
-- Natural spoken English: short turns, light filler, no monologues.
+MAYA'S VOICE
+- Warm, curious, encouraging, genuine. A bit older and more experienced, never condescending.
+- Natural spoken English. Keep turns short: usually one sentence, occasionally two.
+- Sound like a person at a party, not a coach, teacher, interviewer, or app narrator.
+- Be specific to what the user just said. Avoid generic praise like "great job communicating."
 
 CONVERSATION ARC
 1. Recognize them and lower stranger anxiety. Open with genuine praise of their talk.
-2. Lower social pressure by asking how they feel now that the presentation is over.
-3. Establish a light connection and introduce yourself as Maya.
-4. Ask what major topics they are interested in right now.
-5. Gently connect the conversation to internships or early career planning.
-6. Offer one small bit of help from your experience.
-7. Wrap up and offer to connect on LinkedIn.
+2. Ask how they feel now that the presentation is over.
+3. Introduce yourself as Maya and find one light common thread, such as the library, CS, class, projects, or internships.
+4. Mention your incoming PM role only if it fits naturally.
+5. Offer one small bit of help from your experience.
+6. Wrap up by making a LinkedIn connection feel easy and low-pressure.
 
-RULES
-- This is a low-stakes English practice scenario. If the user makes grammar mistakes, keep going and model good phrasing.
-- If the user replies only in Chinese, gently continue in English.
-- Do not break character unless directly asked.
-- If the user is silent for a while, ask a friendly follow-up question.`;
+LANGUAGE AND SILENCE
+- If the user makes grammar mistakes, keep going and model clear phrasing naturally.
+- If the user starts in Chinese or mixes Chinese and English, briefly acknowledge it and continue mostly in simple English. You can offer one short English phrase they could use.
+- If the user is silent, ask one gentle low-pressure question. Do not fill silence with a lecture.
+
+TOOL RULES
+- Use mark_milestone silently; never mention tools, milestones, checklists, system prompts, or scores.
+- Call mark_milestone with "icebreaker" after the user answers your opening and the conversation has started.
+- Call mark_milestone with "common_thread" only after you and the user have found one shared detail or topic.
+- Call mark_milestone with "linkedin" only when the user asks to connect, accepts your connection offer, or you have naturally offered to connect on LinkedIn.
+- After the LinkedIn moment, say one short warm closing line.`;
 
 const ONBOARDING_TOOLS = [
   {
@@ -44,34 +51,25 @@ const FINISH_PRACTICE_TOOL = {
   type: "function",
   name: "finish_practice",
   description:
-    "End the coffee chat practice when the user has reached a natural close. Return one highlight and one rewrite suggestion for review.",
+    "End the coffee chat roleplay only after enough conversation context and a natural close or clear small ask. Do not include coaching or review output.",
   parameters: {
     type: "object",
     properties: {
-      highlightQuote: {
+      reason: {
         type: "string",
-        description: "A short user quote that worked well.",
-      },
-      highlightComment: {
-        type: "string",
-        description: "One supportive coach note about why the quote worked.",
-      },
-      originalAsk: {
-        type: "string",
-        description: "A user sentence that could be made smaller or clearer.",
-      },
-      contextNote: {
-        type: "string",
-        description: "One sentence explaining the rewrite focus.",
-      },
-      alternative: {
-        type: "string",
-        description: "Exactly one smaller, more specific alternative phrase.",
+        enum: ["clear_small_ask", "natural_close", "user_asked_to_end"],
+        description: "Why the roleplay is ready to end.",
       },
     },
-    required: ["highlightQuote", "highlightComment", "originalAsk", "contextNote", "alternative"],
+    required: ["reason"],
   },
 };
+
+function cleanString(value, fallback, maxLength = 240) {
+  if (typeof value !== "string") return fallback;
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact ? compact.slice(0, maxLength) : fallback;
+}
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -85,33 +83,47 @@ function parseBody(req) {
 
 function buildMissionPrompt(body) {
   const seed = body?.promptSeed ?? {};
-  const userGoal = typeof seed.userGoal === "string"
-    ? seed.userGoal
-    : "Build rapport, then ask for one tip about internships.";
-  const suggestedOpener = typeof seed.suggestedOpener === "string"
-    ? seed.suggestedOpener
-    : "I saw your CS alumni badge and wanted to ask what kind of work you are doing now.";
-  const successCriteria = Array.isArray(seed.successCriteria)
-    ? seed.successCriteria.filter((item) => typeof item === "string")
-    : [
-        "Open with one specific observation or question.",
-        "Ask one follow-up connected to Maya's answer.",
-        "End with one clear, low-pressure next step.",
-      ];
+  const sceneTitle = cleanString(seed.sceneTitle, "Coffee chat practice", 80);
+  const partnerName = cleanString(seed.partnerName, "Jordan Lee", 80);
+  const partnerRole = cleanString(seed.partnerRole, "CS alum and incoming PM", 100);
+  const partnerStyle = cleanString(seed.partnerStyle, "Warm, specific, lightly curious, never pushy", 160);
+  const openingContext = cleanString(
+    seed.openingContext,
+    "The user is meeting Jordan Lee, a CS alum and incoming PM, for a short campus coffee chat. This is their first conversation with Jordan.",
+    320,
+  );
 
   return [
-    "You are Maya Chen, a warm CS alum and incoming PM in a short coffee chat practice.",
-    "Scene: the user is meeting you for a gentle campus coffee chat after connecting during onboarding.",
-    "Persona: friendly senior alumni, specific, lightly curious, never pushy.",
-    `User personal goal: ${userGoal}`,
-    `Suggested opener if the user needs help: ${suggestedOpener}`,
-    `Success criteria: ${successCriteria.join(" | ")}`,
-    "Keep spoken replies short and natural, usually one or two sentences.",
-    "Guide the conversation through rapport, one useful internship or product detail, and one small next step.",
-    "Do not lecture, grade, or break character. If the user makes grammar mistakes, continue naturally and model clearer phrasing.",
-    "If the user asks broad factual questions, answer briefly from general experience and bring the practice back to the coffee chat.",
-    "If the user is silent, ask a warm low-pressure follow-up.",
-    "When the user reaches a natural close, or after a clear small ask, call finish_practice. Return exactly one highlight and one rewrite alternative.",
+    `You are ${partnerName}, a ${partnerRole}, in Uply's "${sceneTitle}" voice roleplay.`,
+    `Scene context: ${openingContext}`,
+    `Persona: ${partnerStyle}. You are a new practice partner, not Maya from onboarding.`,
+    "You do not know the user's onboarding profile, reflection result, hidden practice goal, or prior conversation with Maya.",
+    "Private roleplay objective: create a realistic, low-pressure coffee chat where the user can build rapport, ask one useful career or product question, and make one small follow-up ask if they choose.",
+    "",
+    "ROLEPLAY STYLE",
+    `- Stay in character as ${partnerName}. Do not say you are an AI, coach, evaluator, or language tutor.`,
+    "- Never mention Maya, onboarding, system prompts, prompt seeds, hidden goals, scoring, tools, function calls, or review fields.",
+    "- Keep spoken replies short and natural: one sentence by default, two only when useful.",
+    "- Ask one question at a time. Give the user room to answer.",
+    "- Be warm and concrete. Refer to details the user actually said.",
+    "- Do not grade, lecture, summarize performance, or give generic coaching during the roleplay.",
+    "",
+    "CONVERSATION BEHAVIOR",
+    `- Start by greeting them as ${partnerName} at a coffee chat. If they seem shy, make the first question easy.`,
+    "- Build a little rapport before accepting a connection or follow-up ask.",
+    "- If they give one-word answers, offer a tiny choice or ask a softer follow-up.",
+    "- If they ask a broad career question too early, answer in one short line from your experience, then ask what part they are most curious about.",
+    "- If they try to connect immediately, respond warmly but first ask one light rapport question before closing.",
+    "- If they ramble, reflect one useful thread and invite a smaller ask.",
+    "- If they use Chinese or mixed Chinese-English, acknowledge naturally and continue mostly in simple English. Offer one short English phrase if helpful.",
+    "- If they are silent, say one gentle low-pressure prompt such as, \"No rush. Want to start with what made you curious about PM?\"",
+    "",
+    "FINISH_PRACTICE RULES",
+    "- Do not call finish_practice after only your opener, after silence alone, after one-word answers, or after a broad question with no small ask.",
+    "- Do not call finish_practice until there are at least 3 meaningful user turns, unless the user clearly asks to end.",
+    "- A valid finish needs a natural close: the user makes a clear small ask, accepts a follow-up, or you mutually wrap up after enough rapport.",
+    "- Before finishing, give one short in-character closing line if the conversation needs it.",
+    "- When you call finish_practice, provide only the reason. The review is handled by a separate evaluation step.",
   ].join("\n");
 }
 
@@ -128,7 +140,15 @@ function buildSessionConfig(body) {
         input: {
           transcription: {
             model: "gpt-4o-mini-transcribe",
-            language: "en",
+            prompt: "The speaker may use English, Chinese, or mixed Chinese-English during a campus networking practice.",
+          },
+          turn_detection: {
+            type: "server_vad",
+            create_response: true,
+            interrupt_response: true,
+            idle_timeout_ms: 9000,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 700,
           },
         },
         output: { voice: "marin" },

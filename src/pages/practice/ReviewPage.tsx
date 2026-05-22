@@ -21,7 +21,6 @@ function id(prefix: string): string {
 export function ReviewPage({ result, streak, onTryAgain, onDone }: ReviewPageProps) {
   const [feeling, setFeeling] = useState<ReviewFeeling | null>(null);
   const draft = result.reviewDraft;
-  const showHighlight = draft.highlightQuote.trim().toLowerCase() !== draft.originalAsk.trim().toLowerCase();
 
   const done = () => {
     if (!feeling) return;
@@ -67,13 +66,11 @@ export function ReviewPage({ result, streak, onTryAgain, onDone }: ReviewPagePro
 
       {feeling && (
         <div className={styles.reviewStack}>
-          {showHighlight && (
-            <section className={styles.card}>
-              <div className={styles.eyebrow}>Your highlight</div>
-              <blockquote>{draft.highlightQuote}</blockquote>
-              <p>{draft.highlightComment}</p>
-            </section>
-          )}
+          <section className={styles.card}>
+            <div className={styles.eyebrow}>Your highlight</div>
+            <blockquote>{draft.highlightQuote}</blockquote>
+            <p>{draft.highlightComment}</p>
+          </section>
 
           <section className={styles.card}>
             <div className={styles.eyebrow}>Try rewriting</div>
