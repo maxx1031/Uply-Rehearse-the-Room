@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronLeft, Coffee, Mic2, Sparkles, Target, UserRound } from "lucide-react";
+import { ChevronDown, ChevronLeft, Coffee, Mic2, Sparkles, Target } from "lucide-react";
 import {
   buildDefaultOnboardingProfile,
   type OnboardingProfile,
@@ -101,14 +101,6 @@ export function MissionPage({ profile, onBack, onStartPractice }: MissionPagePro
               </div>
             </div>
           )}
-        </section>
-
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <UserRound size={15} />
-            Prompt seed
-          </div>
-          <div className={styles.promptLine}>{promptSeed.openingContext}</div>
         </section>
       </div>
 
