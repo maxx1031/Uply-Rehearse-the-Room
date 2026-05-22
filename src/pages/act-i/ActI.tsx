@@ -304,8 +304,10 @@ export function ConversationScreen({
       setUserText("");
       setAwaitingUser(false);
     }
-    // mark_milestone tool call → advance checklist
-    if (evt.type === "response.function_call_arguments.done" && evt.name === "mark_milestone") {
+    // mark_milestone tool call → advance checklist. We match the arguments.done
+    // event by suffix and do NOT require evt.name (the GA event often omits it);
+    // mark_milestone is the only tool, so any function-call args payload is it.
+    if (et.endsWith("function_call_arguments.done")) {
       let stage = "";
       try { stage = JSON.parse(evt.arguments || "{}").stage; } catch { /* ignore */ }
       const taskId = milestoneTaskId(stage);
@@ -415,8 +417,7 @@ export function ConversationScreen({
         {inDialog && (
           <div style={{
             position: "absolute", top: "26%", left: "50%", transform: "translateX(-50%)",
-            background: "rgba(150,140,205,0.82)", backdropFilter: "blur(6px)",
-            border: "1.5px solid rgba(255,255,255,0.55)",
+            background: "rgba(90,74,217,0.6)", backdropFilter: "blur(6px)",
             borderRadius: 999, padding: "5px 14px",
             fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".18em",
             color: "#FFFFFF",
@@ -492,7 +493,6 @@ export function ConversationScreen({
             {(() => {
               const currentIdx = tasks.findIndex(tk => !tasksDone.has(tk.id));
               const allDone = currentIdx === -1;
-              const doneCount = tasks.filter(t => tasksDone.has(t.id)).length;
               const visibleTasks = checklistExpanded
                 ? tasks
                 : (allDone ? tasks.slice(-1) : [tasks[currentIdx]]);
@@ -502,24 +502,6 @@ export function ConversationScreen({
                   position: "absolute", top: 100, left: 14, zIndex: 8,
                   maxWidth: 220, display: "flex", flexDirection: "column", gap: 6,
                 }}>
-                  <button onClick={() => setChecklistExpanded(v => !v)} style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
-                    padding: "2px 4px 4px", background: "transparent", border: "none",
-                    cursor: "pointer", fontFamily: "inherit",
-                    textShadow: "0 1px 4px rgba(255,255,255,0.6)",
-                  }}>
-                    <div style={{
-                      fontSize: 10, fontWeight: 800, letterSpacing: ".22em",
-                      color: "var(--accent-purple-mid)",
-                    }}>
-                      MISSION · {doneCount}/{tasks.length}
-                    </div>
-                    <span style={{
-                      fontSize: 11, color: "var(--accent-purple-mid)",
-                      transform: checklistExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform .2s ease",
-                    }}>▾</span>
-                  </button>
                   {visibleTasks.map(t => {
                     const idx = tasks.indexOf(t);
                     const done = tasksDone.has(t.id);
@@ -528,9 +510,9 @@ export function ConversationScreen({
                     const bg = done
                       ? "rgba(255,255,255,0.78)"
                       : isNow
-                      ? "var(--bg-lavender-soft)"
+                      ? "rgba(90,74,217,0.6)"
                       : "var(--bg-lavender-soft)";
-                    const border = isNow ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,0.08)";
+                    const border = isNow ? "none" : "1px solid rgba(40,30,110,0.08)";
 
                     return (
                       <div key={t.id} style={{
@@ -554,13 +536,13 @@ export function ConversationScreen({
                           <span style={{
                             width: 16, height: 16, borderRadius: 4, flexShrink: 0,
                             background: "transparent",
-                            border: "2px solid var(--accent-purple-mid)",
+                            border: `2px solid ${isNow ? "#FFFFFF" : "var(--accent-purple-mid)"}`,
                           }} />
                         )}
                         <span style={{
                           fontSize: 11.5, fontWeight: 700, lineHeight: 1.25,
                           flex: 1, minWidth: 0,
-                          color: done ? "var(--text-ink-mute)" : "var(--accent-purple-mid)",
+                          color: done ? "var(--text-ink-mute)" : isNow ? "#FFFFFF" : "var(--accent-purple-mid)",
                           textDecoration: done ? "line-through" : "none",
                         }}>{t.label}</span>
                       </div>
@@ -579,7 +561,7 @@ export function ConversationScreen({
                 her next reply (set in useRealtime), so it coexists with the user's. */}
             {rt.transcript && (
               <div className="uply-fade-up" style={{
-                position: "absolute", top: "30%", left: 0, right: 0, zIndex: 7,
+                position: "absolute", top: "15%", left: 0, right: 0, zIndex: 7,
                 display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
