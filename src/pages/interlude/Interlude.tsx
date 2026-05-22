@@ -35,7 +35,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     emoji: "🌙",
     tagline: "You watch the room before you join it.",
     description:
-      "You waited, mirrored Maya's tone, and only stepped forward when it felt safe. That care is a strength — but the spotlight is also yours to take.",
+      "You waited, mirrored Maya's tone, and stepped forward when it felt safe. That kind of care and attentiveness is a real strength.",
     strengths: ["Reads emotional cues", "Steady, not rushed", "Sincere when it matters"],
     edges:     ["Could open up faster", "Steers away from spotlight", "Holds back specifics"],
   },
@@ -45,7 +45,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     emoji: "⚡",
     tagline: "You move toward people first.",
     description:
-      "You stepped forward early and kept the energy flowing. Pair that warmth with deeper questions next time.",
+      "You stepped forward early and kept the energy flowing. That natural warmth puts people at ease and opens doors.",
     strengths: ["Opens the door", "Keeps momentum", "Generous with attention"],
     edges:     ["Can over-talk", "Skim past depth", "Forget to leave silence"],
   },
@@ -55,7 +55,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     emoji: "🌿",
     tagline: "You tell the truth, even when it's softer than the room.",
     description:
-      "Your answers came from a real place — no performance. That's rare. Try practicing landing a confident first line.",
+      "Your answers came from a real place, with no performance. That kind of sincerity is rare and people trust it.",
     strengths: ["Authentic", "Listens without performing", "Trusted easily"],
     edges:     ["Slow to open", "Sometimes apologetic", "Holds back asks"],
   },
@@ -65,7 +65,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     emoji: "🪡",
     tagline: "You think in arcs, not moments.",
     description:
-      "You closed the loop — exchanging contacts, leaving a thread to pull next time. That's a designer's instinct.",
+      "You closed the loop, exchanging contacts and leaving a thread to pull next time. That is a designer's instinct.",
     strengths: ["Long-game thinker", "Curates a real network", "Follows up"],
     edges:     ["Can over-plan", "Misses spontaneous moments", "Sometimes too formal"],
   },
@@ -75,7 +75,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     emoji: "🌟",
     tagline: "You take the stage and bring people with you.",
     description:
-      "You owned the moment — Maya followed your lead. Watch that the room doesn't only follow; let them shape it too.",
+      "You owned the moment and Maya followed your lead. That kind of presence naturally fills a room.",
     strengths: ["Strong first impression", "Drives the conversation", "Energy in the room"],
     edges:     ["Can dominate airtime", "Skim over others' bids", "Resist quieter moments"],
   },
@@ -173,7 +173,7 @@ export function ResultScreen({
   const A = ARCHETYPES[archetypeId];
   const [revealed, setRevealed] = useState(0);
   useEffect(() => {
-    const ids = [200, 500, 900, 1300, 1700].map((d, i) => setTimeout(() => setRevealed(i + 1), d));
+    const ids = [200, 500, 900].map((d, i) => setTimeout(() => setRevealed(i + 1), d));
     return () => ids.forEach(clearTimeout);
   }, []);
   return (
@@ -198,47 +198,31 @@ export function ResultScreen({
           background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px",
           boxShadow: "0 8px 24px rgba(8,4,40,.08)", marginBottom: 12,
         }}>
-          <div style={{ fontSize: 14, color: "var(--text-ink)", lineHeight: 1.5 }}>{A.description}</div>
+          <div style={{ fontSize: 14, color: "var(--text-ink)", lineHeight: 1.5, textAlign: "center" }}>{A.description}</div>
         </div>
       )}
 
       {revealed >= 2 && (
         <div className="uply-fade-up" style={{
-          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px", marginBottom: 12,
+          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px", marginBottom: 18,
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 16 }}>✨</span>
             <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".28em", color: "var(--accent-purple-mid)" }}>WHAT YOU DID WELL</div>
           </div>
-          {A.strengths.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "var(--text-ink)", fontSize: 14 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-purple-mid)" }} />
-              {s}
-            </div>
-          ))}
+          <div style={{ width: "fit-content", margin: "0 auto" }}>
+            {A.strengths.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "var(--text-ink)", fontSize: 14, textAlign: "left" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-purple-mid)", flexShrink: 0 }} />
+                {s}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {revealed >= 3 && (
-        <div className="uply-fade-up" style={{
-          background: "var(--bg-cream)", borderRadius: 18, padding: "16px 18px", marginBottom: 18,
-          boxShadow: "0 8px 24px rgba(8,4,40,.08)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 16 }}>🌱</span>
-            <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".28em", color: "#b9802c" }}>YOUR GROWTH EDGES</div>
-          </div>
-          {A.edges.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", color: "var(--text-ink)", fontSize: 14 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#d39a3a" }} />
-              {s}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {revealed >= 4 && (
         <div className="uply-fade-up">
           <PrimaryBtn onClick={onContinue}>This feels right</PrimaryBtn>
         </div>
