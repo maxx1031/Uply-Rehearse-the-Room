@@ -16,11 +16,11 @@
 .uply-fade-up { animation: uply-fade-up .6s cubic-bezier(.2,.7,.3,1) both; }
 .uply-fade    { animation: uply-fade    .5s ease both; }
 
-/* Google Fonts moved to index.html <link> to satisfy @import-must-be-first rule.
-   Originally: Playfair Display 500–800 + Manrope 300–800. */
+/* Google Fonts loaded via index.html <link>. Display = Fredoka, body = Nunito
+   (matches the new onboarding visual system; was Playfair + Manrope). */
 
-.uply-serif { font-family: 'Playfair Display', ui-serif, Georgia, serif; }
-.uply-sans  { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
+.uply-serif { font-family: 'Fredoka', ui-rounded, system-ui, sans-serif; }
+.uply-sans  { font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif; }
 
 /* Color tokens — customize to taste */
 :root{
