@@ -21,6 +21,7 @@ function id(prefix: string): string {
 export function ReviewPage({ result, streak, onTryAgain, onDone }: ReviewPageProps) {
   const [feeling, setFeeling] = useState<ReviewFeeling | null>(null);
   const draft = result.reviewDraft;
+  const showHighlight = draft.highlightQuote.trim().toLowerCase() !== draft.originalAsk.trim().toLowerCase();
 
   const done = () => {
     if (!feeling) return;
@@ -48,8 +49,15 @@ export function ReviewPage({ result, streak, onTryAgain, onDone }: ReviewPagePro
           {(["good", "okay", "hard"] as ReviewFeeling[]).map((value) => (
             <button
               key={value}
-              className={feeling === value ? styles.feelingActive : styles.feelingButton}
+              className={
+                feeling === value
+                  ? styles.feelingActive
+                  : feeling
+                  ? styles.feelingDisabled
+                  : styles.feelingButton
+              }
               onClick={() => setFeeling(value)}
+              disabled={Boolean(feeling)}
             >
               {value === "good" ? "Good" : value === "okay" ? "Okay" : "Hard"}
             </button>
@@ -59,15 +67,13 @@ export function ReviewPage({ result, streak, onTryAgain, onDone }: ReviewPagePro
 
       {feeling && (
         <div className={styles.reviewStack}>
-          {feeling === "hard" && (
-            <div className={styles.supportNote}>It's okay, that one was tough. You still made one useful move.</div>
+          {showHighlight && (
+            <section className={styles.card}>
+              <div className={styles.eyebrow}>Your highlight</div>
+              <blockquote>{draft.highlightQuote}</blockquote>
+              <p>{draft.highlightComment}</p>
+            </section>
           )}
-
-          <section className={styles.card}>
-            <div className={styles.eyebrow}>Your highlight</div>
-            <blockquote>{draft.highlightQuote}</blockquote>
-            <p>{draft.highlightComment}</p>
-          </section>
 
           <section className={styles.card}>
             <div className={styles.eyebrow}>Try rewriting</div>
