@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, animate } from "motion/react";
-import partyBg from "@/assets/after-party/party-bg.jpg";
-import character from "@/assets/after-party/character.png";
+import partyBg from "@/assets/imports/background2-1.jpg";
+import character from "@/assets/imports/ppl.png";
 
 interface Props {
   /** Auto-fires after the reveal sequence completes. */

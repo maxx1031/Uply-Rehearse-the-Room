@@ -10,13 +10,15 @@
  * Drop them into your phone-frame's screen slot.
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Mic } from "lucide-react";
 import {
   SolidFigure, Chip,
   MicButton, TypingDots, PrimaryBtn,
 } from "@/components/ui/UplyUI";
 import { useRealtime } from "@/lib/useRealtime";
 import { logTurn } from "@/lib/conversationLog";
-import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
+import sceneBg from "@/assets/imports/background2-1.jpg";
+import characterImg from "@/assets/imports/ppl.png";
 
 // ╔══════════════════════════════════════════════════════════════════════
 // ║  StageScreen — illustrated daytime "After Party" setting
@@ -396,35 +398,52 @@ export function ConversationScreen({
     <div style={{
       position: "absolute", inset: 0, overflow: "hidden",
     }}>
-      {/* After-party scene as background (same as #5) */}
+      {/* Scene background */}
       <img
-        src={sceneWithSilhouette}
+        src={sceneBg}
         alt=""
         style={{
           position: "absolute", inset: 0,
-          width: "100%", height: "100%", objectFit: "cover",
+          width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%",
         }}
       />
-      {/* Soft vignette so chips / bubbles read against bright bg */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(20, 14, 50, 0.4) 100%)",
-        zIndex: 1,
-      }} />
-      <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
+      {/* Character (real figure, head near door-handle level) */}
+      {inDialog && (
+        <img
+          src={characterImg}
+          alt=""
+          style={{
+            position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)",
+            width: 300, height: "auto", mixBlendMode: "multiply", opacity: 0.88, zIndex: 1,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      {/* Blurred edges (top / bottom / left / right) */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3 }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 90, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 120, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", maskImage: "linear-gradient(to top, black 0%, transparent 100%)", WebkitMaskImage: "linear-gradient(to top, black 0%, transparent 100%)" }} />
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 48, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", maskImage: "linear-gradient(to right, black 0%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, black 0%, transparent 100%)" }} />
+        <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 48, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", maskImage: "linear-gradient(to left, black 0%, transparent 100%)", WebkitMaskImage: "linear-gradient(to left, black 0%, transparent 100%)" }} />
+      </div>
+      <div style={{ position: "absolute", inset: 0, zIndex: 4 }}>
 
-        {/* Maya name tag (above head) — lavender pill, light border (ref image) */}
+        {/* Maya name tag (above head) — translucent purple chip + connector line */}
         {inDialog && (
           <div style={{
-            position: "absolute", top: "26%", left: "50%", transform: "translateX(-50%)",
-            background: "rgba(90,74,217,0.6)", backdropFilter: "blur(6px)",
-            borderRadius: 999, padding: "5px 14px",
-            fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".18em",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 12px rgba(40,30,110,.18)",
-            zIndex: 4,
+            position: "absolute", top: "calc(30% - 36px)", left: 0, right: 0, zIndex: 5,
+            display: "flex", flexDirection: "column", alignItems: "center",
           }}>
-            {MAYA_NAME.toUpperCase()}
+            <div style={{
+              background: "rgba(107,99,212,0.45)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              border: "1px solid rgba(107,99,212,0.5)", borderRadius: 10, padding: "4px 14px",
+            }}>
+              <span style={{
+                fontFamily: "var(--font-heading)", fontSize: 13, fontWeight: 600,
+                letterSpacing: ".1em", color: "#FFFFFF", textTransform: "uppercase",
+              }}>{MAYA_NAME}</span>
+            </div>
+            <div style={{ width: 1, height: 10, background: "rgba(107,99,212,0.45)", marginTop: 3 }} />
           </div>
         )}
 
@@ -446,33 +465,34 @@ export function ConversationScreen({
             padding: "0 22px",
           }}>
             <div className="uply-fade-up" style={{
-              width: "100%",
-              background: "linear-gradient(180deg, var(--bg-lavender-soft) 0%, #FFFFFF 60%)",
-              borderRadius: 22,
-              padding: "22px 22px 18px", textAlign: "center",
-              boxShadow: "0 24px 60px rgba(8,4,40,.32), 0 6px 16px rgba(8,4,40,.18)",
+              width: 310, maxWidth: "100%",
+              background: "linear-gradient(160deg, #ece9ff 0%, #ffffff 55%)",
+              borderRadius: 24,
+              padding: "28px 26px 22px",
+              display: "flex", flexDirection: "column", alignItems: "center",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25), 0 4px 16px rgba(107,99,212,0.15)",
             }}>
-              <div className={mstyle === "v3" ? "uply-serif" : undefined} style={{ fontSize: missionCfg.eyebrowSize, fontWeight: mstyle === "v3" ? 700 : 800, letterSpacing: mstyle === "v3" ? "0" : ".22em", color: missionCfg.eyebrowColor, lineHeight: 1.2 }}>
-                YOUR MISSION
+              <div style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: 11, color: "#6B63D4", letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 10 }}>
+                Your Mission
               </div>
-              <div className={mstyle === "v3" ? undefined : "uply-serif"} style={{ fontSize: missionCfg.titleSize, fontWeight: mstyle === "v3" ? 800 : 700, letterSpacing: mstyle === "v3" ? ".18em" : "0", textTransform: mstyle === "v3" ? "uppercase" : "none", color: missionCfg.titleColor, lineHeight: 1.2, marginTop: 6 }}>
+              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 22, color: "#1a1830", textAlign: "center", lineHeight: 1.25, marginBottom: 14 }}>
                 Connect on LinkedIn
               </div>
-              <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.45, marginTop: 12 }}>
+              <div style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: 13, color: "#9896b8", textAlign: "center", lineHeight: 1.6, marginBottom: 24 }}>
                 {missionCfg.desc}
               </div>
-              <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-                <button onClick={startMission} style={{
-                  flex: 1.4, height: 48, borderRadius: 14, border: "none",
-                  background: "linear-gradient(180deg, var(--btn-active-top) 0%, var(--btn-active-bottom) 100%)",
-                  color: "var(--text-on-dark)", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
-                  boxShadow: "0 5px 0 var(--btn-shadow), 0 8px 24px rgba(107,99,212,0.38)",
-                }}>Start</button>
+              <div style={{ display: "flex", gap: 10, width: "100%" }}>
                 <button onClick={onSkip} style={{
-                  flex: 1, height: 48, borderRadius: 14, border: "none",
-                  background: missionCfg.skipBg, color: missionCfg.skipText,
-                  fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
+                  flex: 1, height: 46, borderRadius: 14, border: "none",
+                  background: "#eeecf5", color: "#9896b8",
+                  fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 15, cursor: "pointer",
                 }}>Skip</button>
+                <button onClick={startMission} style={{
+                  flex: 2, height: 46, borderRadius: 14, border: "none",
+                  background: "linear-gradient(135deg, #7c73e6, #5b52cc)",
+                  color: "#FFFFFF", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 15, cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(107,99,212,0.4)",
+                }}>Start</button>
               </div>
             </div>
           </div>
@@ -482,12 +502,11 @@ export function ConversationScreen({
         {inDialog && (
           <>
             <div style={{
-              position: "absolute", top: 54, left: "50%", transform: "translateX(-50%)", zIndex: 8,
-              fontSize: 19, fontWeight: 800, letterSpacing: ".01em",
-              color: "var(--accent-purple-mid)", whiteSpace: "nowrap",
-              textShadow: "0 1px 6px rgba(255,255,255,0.7)",
+              position: "absolute", top: 58, left: "50%", transform: "translateX(-50%)", zIndex: 8,
+              fontFamily: "var(--font-heading)", fontSize: 17, fontWeight: 600, letterSpacing: ".06em",
+              color: "#6B63D4", whiteSpace: "nowrap",
             }}>
-              • After Party •
+              · After Party ·
             </div>
 
             {(() => {
@@ -510,7 +529,7 @@ export function ConversationScreen({
                     const bg = done
                       ? "rgba(255,255,255,0.78)"
                       : isNow
-                      ? "rgba(90,74,217,0.6)"
+                      ? "rgba(107,99,212,0.45)"
                       : "var(--bg-lavender-soft)";
                     const border = isNow ? "none" : "1px solid rgba(40,30,110,0.08)";
 
@@ -540,7 +559,7 @@ export function ConversationScreen({
                           }} />
                         )}
                         <span style={{
-                          fontSize: 11.5, fontWeight: 700, lineHeight: 1.25,
+                          fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, lineHeight: 1.25,
                           flex: 1, minWidth: 0,
                           color: done ? "var(--text-ink-mute)" : isNow ? "#FFFFFF" : "var(--accent-purple-mid)",
                           textDecoration: done ? "line-through" : "none",
@@ -565,32 +584,31 @@ export function ConversationScreen({
                 display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
-                  maxWidth: 330, width: "100%",
-                  background: "rgba(255,255,255,0.8)",
-                  backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-                  border: "1.5px solid rgba(168,156,245,0.7)",
-                  borderRadius: 20, padding: "13px 18px",
-                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
-                  boxShadow: "0 10px 30px rgba(8,4,40,.18)",
+                  maxWidth: 280,
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+                  border: "1px solid rgba(107,99,212,0.25)",
+                  borderRadius: "16px 16px 16px 4px", padding: "10px 14px",
+                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                 }}>{rt.transcript}</div>
               </div>
             )}
 
-            {/* User bubble — centered, frosted, soft yellow translucent border.
-                Persists (with text) until the next press, so both bubbles coexist. */}
+            {/* User bubble — same frosted style, tail on the bottom-right. */}
             {(holding || awaitingUser || userText) && (
               <div className="uply-fade-up" style={{
-                position: "absolute", bottom: 138, left: 0, right: 0, zIndex: 8,
+                position: "absolute", bottom: 150, left: 0, right: 0, zIndex: 8,
                 display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
-                  maxWidth: 330, width: "100%",
-                  background: "rgba(255,255,255,0.8)",
-                  backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-                  border: "1.5px solid rgba(245,205,110,0.6)",
-                  borderRadius: 20, padding: "13px 18px",
-                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
-                  boxShadow: "0 10px 30px rgba(8,4,40,.18)",
+                  maxWidth: 280,
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+                  border: "1px solid rgba(107,99,212,0.25)",
+                  borderRadius: "16px 16px 4px 16px", padding: "10px 14px",
+                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                 }}>{userText || <TypingDots />}</div>
               </div>
             )}
@@ -642,17 +660,26 @@ export function ConversationScreen({
                 }}
                 style={{ touchAction: "none", userSelect: "none", cursor: rt.status === "active" ? "pointer" : "default" }}
               >
-                {/* Light-purple cylinder button — flat top + solid side wall for
-                    smooth depth (not a sphere). Presses down when held. */}
-                <div style={{
-                  width: 72, height: 72, borderRadius: "50%",
-                  background: "rgba(90,74,217,0.6)",
-                  boxShadow: holding
-                    ? "0 2px 0 #3f33a3, 0 4px 10px rgba(90,74,217,.35)"
-                    : "0 6px 0 #3f33a3, 0 10px 18px rgba(90,74,217,.4)",
-                  transform: holding ? "translateY(4px)" : "translateY(0)",
-                  transition: "transform .12s ease, box-shadow .12s ease",
-                }} />
+                {/* Gradient mic button with Mic icon + ripple rings while held */}
+                <div style={{ position: "relative", width: 72, height: 72, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {holding && [0, 1, 2].map((i) => (
+                    <div key={i} style={{
+                      position: "absolute", width: 72, height: 72, borderRadius: "50%",
+                      background: "rgba(107,99,212,0.35)", pointerEvents: "none",
+                      animation: `uply-ripple 1.6s ease-out ${i * 0.52}s infinite`,
+                    }} />
+                  ))}
+                  <div style={{
+                    position: "relative", zIndex: 1, width: 72, height: 72, borderRadius: "50%",
+                    background: holding ? "linear-gradient(135deg, #b3aaee, #9b93ef)" : "linear-gradient(135deg, #9b93ef, #7c73e6)",
+                    boxShadow: holding ? "none" : "0 8px 24px rgba(107,99,212,0.4)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transform: holding ? "scale(0.94)" : "scale(1)",
+                    transition: "background .2s ease, box-shadow .15s ease, transform .1s ease",
+                  }}>
+                    <Mic size={28} color="white" />
+                  </div>
+                </div>
               </div>
             </div>
           </>
