@@ -1,5 +1,5 @@
 /**
- * Uply Onboarding — Flow router
+ * Uply Onboarding - Flow router
  *
  * This is a reference example showing how to wire the modules together
  * AFTER your existing ticket / curtain screens. Drop into your App as
@@ -22,21 +22,23 @@ import {
   ArchetypeId, ReflectionBucket,
 } from "@/pages/interlude/Interlude";
 import { GoalScreen, SloganScreen, HomeScreen, GoalId, User } from "@/pages/epilogue/Epilogue";
+import { MissionPage } from "@/pages/mission/MissionPage";
 
 export type OnboardingStep =
-  | "stage"        // ACT I — illustrated after-party scene
-  | "conversation" // ACT I — dialogue with Maya
-  | "linkedin"     // ACT I — LinkedIn connection confirmed
-  | "analyzing"    // INTERLUDE — reviewing the tape
-  | "result"       // INTERLUDE — archetype reveal
-  | "reflection"   // INTERLUDE — does this match the real you?
-  | "goal"         // EPILOGUE — pick first social scene
-  | "slogan"       // EPILOGUE — curtain-call slogan
-  | "home";        // EPILOGUE — landing
+  | "stage"        // ACT I: illustrated after-party scene
+  | "conversation" // ACT I: dialogue with Maya
+  | "linkedin"     // ACT I: LinkedIn connection confirmed
+  | "analyzing"    // INTERLUDE: reviewing the tape
+  | "result"       // INTERLUDE: archetype reveal
+  | "reflection"   // INTERLUDE: does this match the real you?
+  | "goal"         // EPILOGUE: pick first social scene
+  | "slogan"       // EPILOGUE: curtain-call slogan
+  | "home"         // EPILOGUE: landing
+  | "mission";     // MAIN FLOW, first coffee chat mission
 
 export interface UplyOnboardingFlowProps {
   /** Starting step (default: "stage"). Use this when wiring into your existing
-   *  splash → ticket → curtain pipeline — hand off here after the curtain. */
+   *  splash → ticket → curtain pipeline: hand off here after the curtain. */
   initialStep?: OnboardingStep;
   /** Already-authenticated user payload. Drives the home greeting. */
   user?: User;
@@ -67,7 +69,7 @@ export default function UplyOnboardingFlow({
     case "conversation":
       return <ConversationScreen
         onComplete={() => go("linkedin")}
-        onSkip={() => go("analyzing")}
+        onSkip={() => go("goal")}
       />;
     case "linkedin":
       return <LinkedInScreen onContinue={() => go("analyzing")} />;
@@ -85,7 +87,9 @@ export default function UplyOnboardingFlow({
         else go("home");
       }} />;
     case "home":
-      return <HomeScreen user={user} goalId={goalId} onRestart={() => go("stage")} />;
+      return <HomeScreen user={user} onRestart={() => go("stage")} onStartMission={() => go("mission")} />;
+    case "mission":
+      return <MissionPage profile={undefined} onBack={() => go("home")} onStartPractice={() => go("home")} />;
   }
 }
 
@@ -112,5 +116,5 @@ export default function UplyOnboardingFlow({
  *   )}
  *
  * Each screen is exported individually too (see Act I / Interlude / Epilogue
- * source) — you can route them yourself if you want a different graph.
+ * source): you can route them yourself if you want a different graph.
  * ───────────────────────────────────────────────────────────── */

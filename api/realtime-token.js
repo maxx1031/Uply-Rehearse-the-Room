@@ -1,53 +1,38 @@
-// Vercel serverless function — mints a short-lived ephemeral token the browser
-// uses to establish a WebRTC connection with OpenAI's Realtime API.
-//
-// Why this exists: the OPENAI_API_KEY must never reach the browser. The browser
-// hits this endpoint, this endpoint authenticates to OpenAI with the real key,
-// OpenAI returns an ephemeral client secret (~60s TTL) that's safe to expose,
-// and the browser uses *that* to open the WebRTC peer connection.
-//
-// Env required: OPENAI_API_KEY (set via `vercel env add OPENAI_API_KEY`).
+// Vercel serverless function. It creates a short-lived Realtime client secret
+// so the browser can open a WebRTC session without seeing OPENAI_API_KEY.
 
-const SYSTEM_PROMPT = `You are Maya, a warm, approachable senior university student. The user just finished giving a class presentation, and you've come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
+const ONBOARDING_SYSTEM_PROMPT = `You are Maya, a warm, approachable senior university student. The user just finished giving a class presentation, and you have come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
 
 PERSONA
-- Warm, curious, encouraging, genuine. A bit older / more experienced, but never condescending.
-- Natural spoken English: short turns (1-2 sentences), light filler ("oh nice", "yeah", "haha"). Never monologue or lecture.
+- Warm, curious, encouraging, genuine. A bit older and more experienced, but never condescending.
+- Natural spoken English: short turns, light filler, no monologues.
 
-CONVERSATION ARC — follow this loosely and adapt to what the user says. Don't recite; make it feel like a real chat.
-1. Recognize them and lower stranger-anxiety. Open with genuine praise of their talk. Suggested opener: "Hey, your presentation was great! I really liked how clearly you explained your idea."
-2. Lower social pressure: "How are you feeling now that it's finally over?"
-3. Establish a light connection — introduce yourself: "By the way, I'm Maya. I think I've seen you around the library before, but I don't think we've officially met."
-4. Academics / direction: "What kind of topics are you most interested in right now?"
-5. Career / networking: "Are you starting to think about internships or full-time roles, or is that still a little far away?"
-6. Offer help: "I went through the internship search last year, so I remember how confusing it felt. Is there anything you're trying to figure out right now?"
-7. Wrap up and connect: politely signal you should get going, and — YOU take the initiative — offer to add them on LinkedIn so you can stay in touch (e.g. "We should connect on LinkedIn, I'd love to stay in touch!"). Don't wait for the user to bring it up.
-
-MILESTONE TOOL — call mark_milestone as you progress; it drives the user's on-screen mission checklist:
-- mark_milestone("icebreaker") once you've greeted them and broken the ice (after beats 1-2).
-- mark_milestone("common_thread") once you've found a shared interest or topic (around beats 4-5).
-- mark_milestone("linkedin") the moment YOU offer to connect / add them on LinkedIn (beat 7) — i.e. when you make the LinkedIn ask yourself, NOT when the user does. This ends the scene.
+CONVERSATION ARC
+1. Recognize them and lower stranger anxiety. Open with genuine praise of their talk.
+2. Lower social pressure by asking how they feel now that the presentation is over.
+3. Establish a light connection and introduce yourself as Maya.
+4. Ask what major topics they are interested in right now.
+5. Gently connect the conversation to internships or early career planning.
+6. Offer one small bit of help from your experience.
+7. Wrap up and offer to connect on LinkedIn.
 
 RULES
-- This is a low-stakes English practice scenario. If the user makes grammar mistakes, don't correct them mid-flow — keep going and model good phrasing in your next reply.
-- If the user replies only in Chinese, gently continue in English to encourage them to practice.
-- Don't break character. Don't say you're an AI unless directly asked.
-- If the user is silent for a while, prompt them with a friendly follow-up question.`;
+- This is a low-stakes English practice scenario. If the user makes grammar mistakes, keep going and model good phrasing.
+- If the user replies only in Chinese, gently continue in English.
+- Do not break character unless directly asked.
+- If the user is silent for a while, ask a friendly follow-up question.`;
 
-const TOOLS = [
+const ONBOARDING_TOOLS = [
   {
     type: "function",
     name: "mark_milestone",
-    description:
-      "Mark a conversation milestone the user has reached. Drives their on-screen mission checklist. Call it as soon as each milestone is genuinely reached.",
+    description: "Mark an onboarding conversation milestone for the checklist.",
     parameters: {
       type: "object",
       properties: {
         stage: {
           type: "string",
           enum: ["icebreaker", "common_thread", "linkedin"],
-          description:
-            "icebreaker = greeted and ice broken; common_thread = found a shared interest/topic; linkedin = the user agreed to connect on LinkedIn (ends the scene).",
         },
       },
       required: ["stage"],
@@ -55,14 +40,111 @@ const TOOLS = [
   },
 ];
 
+const FINISH_PRACTICE_TOOL = {
+  type: "function",
+  name: "finish_practice",
+  description:
+    "End the coffee chat practice when the user has reached a natural close. Return one highlight and one rewrite suggestion for review.",
+  parameters: {
+    type: "object",
+    properties: {
+      highlightQuote: {
+        type: "string",
+        description: "A short user quote that worked well.",
+      },
+      highlightComment: {
+        type: "string",
+        description: "One supportive coach note about why the quote worked.",
+      },
+      originalAsk: {
+        type: "string",
+        description: "A user sentence that could be made smaller or clearer.",
+      },
+      contextNote: {
+        type: "string",
+        description: "One sentence explaining the rewrite focus.",
+      },
+      alternative: {
+        type: "string",
+        description: "Exactly one smaller, more specific alternative phrase.",
+      },
+    },
+    required: ["highlightQuote", "highlightComment", "originalAsk", "contextNote", "alternative"],
+  },
+};
+
+function parseBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === "object") return req.body;
+  try {
+    return JSON.parse(req.body);
+  } catch {
+    return {};
+  }
+}
+
+function buildMissionPrompt(body) {
+  const seed = body?.promptSeed ?? {};
+  const userGoal = typeof seed.userGoal === "string"
+    ? seed.userGoal
+    : "Build rapport, then ask for one tip about internships.";
+  const suggestedOpener = typeof seed.suggestedOpener === "string"
+    ? seed.suggestedOpener
+    : "I saw your CS alumni badge and wanted to ask what kind of work you are doing now.";
+  const successCriteria = Array.isArray(seed.successCriteria)
+    ? seed.successCriteria.filter((item) => typeof item === "string")
+    : [
+        "Open with one specific observation or question.",
+        "Ask one follow-up connected to Maya's answer.",
+        "End with one clear, low-pressure next step.",
+      ];
+
+  return [
+    "You are Maya Chen, a warm CS alum and incoming PM in a short coffee chat practice.",
+    "Scene: the user is meeting you for a gentle campus coffee chat after connecting during onboarding.",
+    "Persona: friendly senior alumni, specific, lightly curious, never pushy.",
+    `User personal goal: ${userGoal}`,
+    `Suggested opener if the user needs help: ${suggestedOpener}`,
+    `Success criteria: ${successCriteria.join(" | ")}`,
+    "Keep spoken replies short and natural, usually one or two sentences.",
+    "Guide the conversation through rapport, one useful internship or product detail, and one small next step.",
+    "Do not lecture, grade, or break character. If the user makes grammar mistakes, continue naturally and model clearer phrasing.",
+    "If the user asks broad factual questions, answer briefly from general experience and bring the practice back to the coffee chat.",
+    "If the user is silent, ask a warm low-pressure follow-up.",
+    "When the user reaches a natural close, or after a clear small ask, call finish_practice. Return exactly one highlight and one rewrite alternative.",
+  ].join("\n");
+}
+
+function buildSessionConfig(body) {
+  const flow = body?.flow === "mission" ? "mission" : "onboarding";
+  const isMission = flow === "mission";
+
+  return {
+    session: {
+      type: "realtime",
+      model: isMission ? "gpt-realtime-2" : "gpt-realtime",
+      instructions: isMission ? buildMissionPrompt(body) : ONBOARDING_SYSTEM_PROMPT,
+      audio: {
+        input: {
+          transcription: {
+            model: "gpt-4o-mini-transcribe",
+            language: "en",
+          },
+        },
+        output: { voice: "marin" },
+      },
+      tools: isMission ? [FINISH_PRACTICE_TOOL] : ONBOARDING_TOOLS,
+      tool_choice: "auto",
+    },
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST" && req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
-  // Accept either OPENAI_API_KEY (standard) or OPEN_AI_KEY (alt spelling) so a
-  // typo in env setup doesn't silently disable voice mode.
   const apiKey = process.env.OPENAI_API_KEY ?? process.env.OPEN_AI_KEY;
   if (!apiKey) {
     res.status(503).json({
@@ -73,26 +155,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    const body = parseBody(req);
     const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        session: {
-          type: "realtime",
-          model: "gpt-realtime",
-          instructions: SYSTEM_PROMPT,
-          audio: {
-            // Transcribe the user's mic so the UI can show live user captions.
-            input: { transcription: { model: "gpt-4o-mini-transcribe" } },
-            output: { voice: "marin" },
-          },
-          tools: TOOLS,
-          tool_choice: "auto",
-        },
-      }),
+      body: JSON.stringify(buildSessionConfig(body)),
     });
 
     if (!upstream.ok) {
@@ -106,8 +176,6 @@ export default async function handler(req, res) {
     }
 
     const data = await upstream.json();
-    // The shape of `data` is `{ value: "<ephemeral_token>", expires_at: ... }` or
-    // similar; pass it through verbatim so the client can read `data.value`.
     res.setHeader("Cache-Control", "no-store");
     res.status(200).json(data);
   } catch (err) {

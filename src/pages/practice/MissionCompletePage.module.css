@@ -1,0 +1,60 @@
+.screen {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: var(--gradient-primary);
+  color: var(--text-on-dark);
+  font-family: var(--font-body);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-4);
+  cursor: pointer;
+  text-align: center;
+}
+
+.mark {
+  width: 92px;
+  height: 92px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--accent-yellow-soft);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-card);
+  animation: uply-fade-up 360ms ease-out both;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-bold);
+  animation: uply-fade-up 360ms ease-out both;
+}
+
+.reward {
+  display: grid;
+  gap: var(--sp-2);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.18);
+  padding: var(--sp-4) var(--sp-6);
+  font-family: var(--font-heading);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--shadow-soft);
+}
+
+.reward span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.hint {
+  color: var(--bg-lavender-soft);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

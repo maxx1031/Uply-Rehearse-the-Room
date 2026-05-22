@@ -1,5 +1,5 @@
 /**
- * Uply Onboarding — EPILOGUE screens
+ * Uply Onboarding - EPILOGUE screens
  *
  * Flow:
  *   ReflectionScreen → GoalScreen   (pick first real-world scene)
@@ -9,10 +9,24 @@
  * GOALS drives which lesson the user starts; map to your lesson library.
  */
 import { useEffect, useState } from "react";
+import {
+  Coffee,
+  Flame,
+  Handshake,
+  Home,
+  MessageCircle,
+  MessageSquare,
+  NotebookTabs,
+  Play,
+  RotateCcw,
+  Star,
+  User as UserIcon,
+} from "lucide-react";
 import { ActLabel, PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
+import styles from "./Epilogue.module.css";
 
 // ─────────────────────────────────────────────────────────────
-// First-scene goals — these map to your starter-lesson library
+// First-scene goals: these map to your starter-lesson library
 // ─────────────────────────────────────────────────────────────
 export type GoalId = "small-talk" | "follow-up" | "ask-help" | "pitch";
 
@@ -32,7 +46,7 @@ export const GOALS: Goal[] = [
 ];
 
 // ╔══════════════════════════════════════════════════════════════════════
-// ║  GoalScreen — pick the first real-world social goal
+// ║  GoalScreen: pick the first real-world social goal
 // ╚══════════════════════════════════════════════════════════════════════
 export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
   const [picked, setPicked] = useState<GoalId | null>(null);
@@ -99,7 +113,7 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
 }
 
 // ╔══════════════════════════════════════════════════════════════════════
-// ║  SloganScreen — final curtain-call line; auto-advances after ~3.6s
+// ║  SloganScreen: final curtain-call line; auto-advances after ~3.6s
 // ╚══════════════════════════════════════════════════════════════════════
 export function SloganScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
@@ -150,147 +164,106 @@ export function SloganScreen({ onDone }: { onDone: () => void }) {
   );
 }
 
-// ╔══════════════════════════════════════════════════════════════════════
-// ║  HomeScreen — post-onboarding landing
-// ╚══════════════════════════════════════════════════════════════════════
+// HomeScreen is the daily landing surface after onboarding.
 export interface User { name?: string }
 
 export function HomeScreen({
-  user, goalId, onRestart,
-}: { user?: User; goalId?: GoalId; onRestart?: () => void }) {
-  const goal = GOALS.find(g => g.id === goalId) || GOALS[0];
+  user, points = 320, streak = 2, onRestart, onStartMission,
+}: { user?: User; points?: number; streak?: number; onRestart?: () => void; onStartMission: () => void }) {
+  const displayName = user?.name || "Mia";
+  const modules = [
+    {
+      title: "LinkedIn Opener",
+      subtitle: "Warm first message",
+      meta: "Friendly alumni · 8 min",
+      icon: MessageCircle,
+    },
+    {
+      title: "Small Ask",
+      subtitle: "Ask without pressure",
+      meta: "Busy senior · 7 min",
+      icon: Handshake,
+    },
+  ];
+  const tabs = [
+    { label: "Home", icon: Home, active: true },
+    { label: "Coach", icon: MessageSquare, active: false },
+    { label: "Records", icon: NotebookTabs, active: false },
+    { label: "Me", icon: UserIcon, active: false },
+  ];
+
   return (
-    <div style={{
-      position: "absolute", inset: 0, overflow: "auto",
-      background: "linear-gradient(180deg, #f6f2e9 0%, #ebe5d7 100%)",
-      padding: "60px 18px 32px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 14,
-          background: "linear-gradient(135deg,var(--accent-purple-soft),var(--accent-purple-mid))",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "var(--text-on-dark)", fontWeight: 800, fontFamily: "'Playfair Display',serif",
-          fontSize: 20, boxShadow: "0 6px 14px rgba(90,74,217,.3)",
-        }}>{(user?.name || "U")[0].toUpperCase()}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "var(--fs-micro)", fontWeight: 700, color: "var(--text-ink-mute)", letterSpacing: ".22em" }}>WELCOME, ACTOR</div>
-          <div className="uply-serif" style={{ fontSize: 20, fontWeight: 700, color: "var(--text-ink)" }}>{user?.name || "Friend"}</div>
+    <div className={styles.homeScreen}>
+      <header className={styles.homeHeader}>
+        <div className={styles.avatar}>{displayName[0].toUpperCase()}</div>
+        <div className={styles.userBlock}>
+          <div className={styles.microLabel}>WELCOME BACK</div>
+          <div className={styles.userName}>{displayName}</div>
+        </div>
+        <div className={styles.scoreStack} aria-label="Current progress">
+          <div className={styles.scoreLine}><Star size={13} fill="currentColor" />{points} pts</div>
+          <div className={styles.scoreLine}><Flame size={13} fill="currentColor" />{streak}-day streak</div>
         </div>
         {onRestart && (
-          <button onClick={onRestart} style={{
-            padding: "7px 12px", borderRadius: 9999, border: "1px solid #d8d2c0",
-            background: "var(--bg-cream)", color: "var(--accent-purple-mid)", fontWeight: 700, fontSize: 12,
-            cursor: "pointer", fontFamily: "inherit",
-          }}>↻ Replay</button>
+          <button className={styles.replayButton} onClick={onRestart} aria-label="Replay onboarding" title="Replay">
+            <RotateCcw size={16} />
+          </button>
         )}
-      </div>
+      </header>
 
-      <div style={{
-        position: "relative",
-        background: "linear-gradient(135deg, #2a1f7a 0%, var(--accent-purple-mid) 100%)",
-        borderRadius: 22, padding: "20px 20px 22px",
-        color: "var(--text-on-dark)", overflow: "hidden",
-        boxShadow: "0 16px 40px rgba(8,4,40,.25)",
-      }}>
-        <div style={{ position: "absolute", top: -40, right: -30, width: 180, height: 180,
-          background: "radial-gradient(circle, rgba(255,247,214,.25), transparent 60%)" }} />
-        <ActLabel color="var(--accent-lavender)">YOUR FIRST SCENE</ActLabel>
-        <div className="uply-serif" style={{ fontSize: 24, fontWeight: 700, marginTop: 8, lineHeight: 1.2 }}>
-          {goal.title}
+      <button className={styles.todayCard} onClick={onStartMission}>
+        <div className={styles.todayCopy}>
+          <div className={styles.darkLabel}>TODAY'S SCRIPT</div>
+          <div className={styles.todayTitle}>Coffee chat practice</div>
+          <div className={styles.todaySub}>CS alum coffee chat · gentle pace · 10 min</div>
         </div>
-        <div style={{ fontSize: "var(--fs-caption)", color: "#d8d0f9", marginTop: 6 }}>{goal.sub}</div>
-        <div style={{ display: "flex", gap: 14, marginTop: 18, alignItems: "center" }}>
-          <div style={{ fontSize: 38 }}>{goal.emoji}</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} style={{ flex: 1, height: 5, borderRadius: 9999,
-                  background: i === 1 ? "var(--accent-gold)" : "rgba(255,255,255,.18)" }} />
-              ))}
-            </div>
-            <div style={{ fontSize: "var(--fs-micro)", color: "#d8d0f9", fontWeight: 600, letterSpacing: ".18em" }}>
-              {goal.scene} · 5 SCENES
-            </div>
-          </div>
+        <div className={styles.coffeeScene} aria-hidden="true">
+          <Coffee size={52} strokeWidth={1.8} />
+          <div className={styles.sceneGlow} />
         </div>
-        <button style={{
-          marginTop: 18, width: "100%", height: 48, borderRadius: 9999,
-          background: "var(--text-on-dark)", color: "var(--text-ink)", fontWeight: 800, fontSize: 15,
-          border: "none", cursor: "pointer", fontFamily: "inherit",
-          boxShadow: "0 6px 16px rgba(0,0,0,.18)",
-        }}>▶  Start Scene 1</button>
-      </div>
+        <span className={styles.homePrimaryButton}>
+          <Play size={16} fill="currentColor" />
+          Start Practice
+        </span>
+      </button>
 
-      <div style={{
-        marginTop: 14, background: "var(--bg-cream)", borderRadius: 18, padding: "14px 16px",
-        boxShadow: "0 4px 12px rgba(8,4,40,.06)",
-        display: "flex", alignItems: "center", gap: 14,
-      }}>
-        <div style={{ fontSize: 30 }}>🎭</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--accent-purple-mid)" }}>WARM-UP · 2 MIN</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-ink)", marginTop: 2 }}>Tonight's icebreaker line</div>
+      <section className={styles.moduleSection}>
+        <div className={styles.sectionTitle}>NETWORKING MODULES</div>
+        <div className={styles.moduleGrid}>
+          {modules.map((module) => {
+            const Icon = module.icon;
+            return (
+              <button className={styles.moduleCard} key={module.title} onClick={onStartMission}>
+                <span className={styles.moduleIcon}><Icon size={21} /></span>
+                <span className={styles.moduleTitle}>{module.title}</span>
+                <span className={styles.moduleSub}>{module.subtitle}</span>
+                <span className={styles.moduleMeta}>{module.meta}</span>
+                <span className={styles.rehearseButton}>
+                  <Play size={13} fill="currentColor" />
+                  Rehearse
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <div style={{ color: "var(--accent-purple-mid)", fontSize: 20 }}>→</div>
-      </div>
+      </section>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 14 }}>
-        {[{ n: "1", l: "SCENE DONE" }, { n: "🌙", l: "YOUR ROLE" }, { n: "T·17", l: "YOUR SEAT" }].map((s, i) => (
-          <div key={i} style={{
-            background: "var(--bg-cream)", borderRadius: 16, padding: "14px 10px", textAlign: "center",
-            boxShadow: "0 4px 12px rgba(8,4,40,.06)",
-          }}>
-            <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)" }}>{s.n}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".18em", color: "var(--text-ink-mute)", marginTop: 4 }}>{s.l}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 18 }}>
-        <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".28em", color: "var(--text-ink-mute)", marginBottom: 10, paddingLeft: 4 }}>YOUR CAST</div>
-        <div style={{
-          background: "var(--bg-cream)", borderRadius: 18, padding: "14px 16px",
-          display: "flex", alignItems: "center", gap: 14,
-          boxShadow: "0 4px 12px rgba(8,4,40,.06)",
-        }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%",
-            background: "radial-gradient(circle at 30% 30%,#c3b9f5,#7a6ee0 70%)", flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-ink)" }}>Maya Chen</div>
-            <div style={{ fontSize: 12, color: "#5d567f", marginTop: 2 }}>Connected · After Party</div>
-          </div>
-          <div style={{
-            padding: "6px 10px", borderRadius: 9999,
-            background: "var(--bg-lavender-soft)", color: "var(--accent-purple-mid)", fontWeight: 800, fontSize: 10, letterSpacing: ".16em",
-          }}>FOLLOWED ✓</div>
-        </div>
-      </div>
-
-      <div style={{ height: 80 }} />
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0, height: 80,
-        background: "linear-gradient(180deg, transparent, #ebe5d7 30%)",
-        display: "flex", alignItems: "flex-start", justifyContent: "center",
-        padding: "10px 18px 24px", pointerEvents: "none",
-      }}>
-        <div style={{
-          display: "flex", gap: 6, background: "var(--text-ink)", borderRadius: 9999, padding: 6,
-          boxShadow: "0 12px 30px rgba(8,4,40,.35)", pointerEvents: "auto",
-        }}>
-          {[{ icon: "🎭", label: "Stage", active: true }, { icon: "📜", label: "Scripts" },
-            { icon: "👥", label: "Cast" }, { icon: "⚙️", label: "You" }].map((t, i) => (
-            <div key={i} style={{
-              padding: "8px 14px", borderRadius: 9999,
-              background: t.active ? "var(--accent-purple-mid)" : "transparent",
-              color: "var(--text-on-dark)", display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, fontWeight: 700,
-            }}>
-              <span>{t.icon}</span>{t.active && t.label}
-            </div>
-          ))}
-        </div>
-      </div>
+      <div className={styles.homeSpacer} />
+      <nav className={styles.bottomNav} aria-label="Primary navigation">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.label}
+              className={tab.active ? styles.navButtonActive : styles.navButton}
+              aria-label={tab.label}
+              title={tab.label}
+            >
+              <Icon size={21} />
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

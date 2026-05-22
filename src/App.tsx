@@ -28,6 +28,17 @@ import {
   HomeScreen,
   type GoalId,
 } from "./pages/epilogue/Epilogue";
+import { MissionPage } from "./pages/mission/MissionPage";
+import { PracticePage } from "./pages/practice/PracticePage";
+import { MissionCompletePage } from "./pages/practice/MissionCompletePage";
+import { ReviewPage } from "./pages/practice/ReviewPage";
+import {
+  buildOnboardingProfile,
+  type MemoryCard,
+  type OnboardingProfile,
+  type PracticeSessionResult,
+  type TranscriptRecord,
+} from "./lib/onboardingProfile";
 
 type Step =
   // intro
@@ -37,7 +48,7 @@ type Step =
   // interlude
   | "analyzing" | "result" | "reflection"
   // epilogue
-  | "goal" | "slogan" | "home";
+  | "goal" | "slogan" | "home" | "mission" | "practice" | "mission-complete" | "review";
 
 interface OverlayState {
   userName: string;
@@ -51,7 +62,7 @@ const VALID_STEPS: Step[] = [
   "splash", "ticket", "login", "curtain",
   "after-party", "conversation", "linkedin",
   "analyzing", "result", "reflection",
-  "goal", "slogan", "home",
+  "goal", "slogan", "home", "mission", "practice", "mission-complete", "review",
 ];
 
 function readStepFromUrl(): Step {
@@ -62,7 +73,7 @@ function readStepFromUrl(): Step {
 
 function isStepLocked(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).has("step");
+  return new URLSearchParams(window.location.search).get("lockStep") === "1";
 }
 
 export default function App() {
@@ -70,9 +81,14 @@ export default function App() {
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
-  const [goalId, setGoalId] = useState<GoalId | null>(null);
-  // bucket is captured for future branching but not yet consumed downstream.
-  const [, setBucket] = useState<ReflectionBucket | null>(null);
+  const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
+  const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
+  const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
+  const [, setTranscriptRecords] = useState<TranscriptRecord[]>([]);
+  const [, setMemoryCards] = useState<MemoryCard[]>([]);
+  const [points, setPoints] = useState(320);
+  const [streak, setStreak] = useState(2);
+  const [lastReward, setLastReward] = useState({ scoreDelta: 25, streak: 2 });
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
 
@@ -105,9 +121,54 @@ export default function App() {
 
   const restartFlow = () => {
     setUserName(null);
-    setGoalId(null);
     setBucket(null);
+    setOnboardingProfile(null);
+    setSessionResult(null);
+    setTranscriptRecords([]);
+    setMemoryCards([]);
+    setPoints(320);
+    setStreak(2);
+    setLastReward({ scoreDelta: 25, streak: 2 });
     go("splash");
+  };
+
+  const pickGoal = (g: GoalId) => {
+    setOnboardingProfile(buildOnboardingProfile({
+      selectedGoal: g,
+      archetypeId: DEFAULT_ARCHETYPE,
+      reflectionBucket: bucket ?? "mid",
+    }));
+    go("slogan");
+  };
+
+  const completePractice = (result: PracticeSessionResult) => {
+    const nextStreak = streak + 1;
+    setSessionResult(result);
+    setPoints((value) => value + result.scoreDelta);
+    setStreak(nextStreak);
+    setLastReward({ scoreDelta: result.scoreDelta, streak: nextStreak });
+    setTranscriptRecords((records) => [
+      ...records,
+      {
+        id: result.id,
+        sceneTitle: result.sceneTitle,
+        partnerName: result.partnerName,
+        completionType: result.completionType,
+        createdAt: result.endedAt,
+        transcript: result.transcript,
+      },
+    ]);
+    go("mission-complete");
+  };
+
+  const exitPractice = (record: TranscriptRecord) => {
+    setTranscriptRecords((records) => [...records, record]);
+    go("home");
+  };
+
+  const finishReview = (card: MemoryCard) => {
+    setMemoryCards((cards) => [...cards, card]);
+    go("home");
   };
 
   useEffect(() => clearTimers, []);
@@ -233,7 +294,7 @@ export default function App() {
             {/* ── EPILOGUE (handoff) ── */}
             {step === "goal" && (
               <motion.div key="goal" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <GoalScreen onPick={(g) => { setGoalId(g); go("slogan"); }} />
+                <GoalScreen onPick={pickGoal} />
               </motion.div>
             )}
 
@@ -247,8 +308,51 @@ export default function App() {
               <motion.div key="home" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <HomeScreen
                   user={userName ? { name: userName } : undefined}
-                  goalId={goalId ?? undefined}
+                  points={points}
+                  streak={streak}
                   onRestart={restartFlow}
+                  onStartMission={() => go("mission")}
+                />
+              </motion.div>
+            )}
+
+            {step === "mission" && (
+              <motion.div key="mission" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <MissionPage
+                  profile={onboardingProfile}
+                  onBack={() => go("home", -1)}
+                  onStartPractice={() => go("practice")}
+                />
+              </motion.div>
+            )}
+
+            {step === "practice" && (
+              <motion.div key="practice" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <PracticePage
+                  profile={onboardingProfile}
+                  onExit={exitPractice}
+                  onComplete={completePractice}
+                />
+              </motion.div>
+            )}
+
+            {step === "mission-complete" && sessionResult && (
+              <motion.div key="mission-complete" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <MissionCompletePage
+                  scoreDelta={lastReward.scoreDelta}
+                  streak={lastReward.streak}
+                  onDone={() => go("review")}
+                />
+              </motion.div>
+            )}
+
+            {step === "review" && sessionResult && (
+              <motion.div key="review" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <ReviewPage
+                  result={sessionResult}
+                  streak={streak}
+                  onTryAgain={() => go("mission", -1)}
+                  onDone={finishReview}
                 />
               </motion.div>
             )}
