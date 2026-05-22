@@ -2,26 +2,28 @@
   position: absolute;
   inset: 0;
   border: none;
-  background: var(--gradient-primary);
-  color: var(--text-on-dark);
+  appearance: none;
+  background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-paper) 100%);
+  color: var(--text-primary);
   font-family: var(--font-body);
   display: grid;
   place-items: center;
   align-content: center;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   cursor: pointer;
   text-align: center;
+  padding: 0 var(--sp-5);
 }
 
 .mark {
-  width: 92px;
-  height: 92px;
+  width: 104px;
+  height: 104px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--accent-yellow-soft);
+  background: linear-gradient(180deg, var(--accent-yellow-soft), var(--accent-gold));
+  color: var(--text-primary);
   display: grid;
   place-items: center;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 10px 0 rgba(245, 158, 11, 0.32), 0 18px 36px rgba(40, 30, 110, 0.14);
   animation: uply-fade-up 360ms ease-out both;
 }
 
@@ -29,19 +31,24 @@
   font-family: var(--font-heading);
   font-size: var(--fs-display);
   font-weight: var(--fw-bold);
+  color: var(--text-primary);
+  line-height: 1.05;
   animation: uply-fade-up 360ms ease-out both;
 }
 
 .reward {
   display: grid;
   gap: var(--sp-2);
-  border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.18);
-  padding: var(--sp-4) var(--sp-6);
+  width: 100%;
+  max-width: 286px;
+  border-radius: var(--r-xl);
+  background: var(--bg-cream);
+  padding: var(--sp-4) var(--sp-5);
   font-family: var(--font-heading);
   font-size: var(--fs-body);
   font-weight: var(--fw-bold);
-  box-shadow: var(--shadow-soft);
+  color: var(--text-primary);
+  box-shadow: 0 10px 28px rgba(40, 30, 110, 0.12);
 }
 
 .reward span {
@@ -52,7 +59,7 @@
 }
 
 .hint {
-  color: var(--bg-lavender-soft);
+  color: var(--text-secondary);
   font-size: var(--fs-caption);
   font-weight: var(--fw-bold);
   letter-spacing: 0.12em;
