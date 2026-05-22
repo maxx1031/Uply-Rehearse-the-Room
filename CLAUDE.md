@@ -49,6 +49,42 @@
 - **截图归档**: `docs/iterations/<page>-v<n>-<date>.png`
 - **回滚优先级**: `git revert` > Vercel Promote 历史 deployment > 切回上一个 tag
 
+## Claude + Codex 双助手协作
+
+本项目同时由两个 AI 助手协助开发, 角色分工:
+
+| 角色 | 职责 |
+|---|---|
+| 用户 | 提需求, 拍板, 在两端之间转述结果 (commit hash / diff 等) |
+| Claude | 出方案, 把任务写成明确的可执行指令, review Codex 的 diff |
+| Codex | 执行代码改动, 跑 typecheck / build, 待 review pass 才 commit / push |
+
+### 任务流
+
+1. 用户和 Claude 讨论需求 / 设计 / 方案
+2. Claude 输出「给 Codex 的指令」: 明确到文件 / 函数 / 动作, 列出风险点和验收标准
+3. 用户把指令转给 Codex (或者用户直接跟 Codex 说目标也可以, Codex 自己拆)
+4. Codex 复述计划等确认 → 执行 → 跑 `pnpm typecheck` 或 `pnpm build` → 把 diff (或 `git diff --stat` + 关键文件全 diff) 贴出来
+5. Claude review diff, 不通过给返工指令, 通过让 Codex commit
+6. Codex commit 后 `git push`, 把 commit hash 报回用户
+7. Claude 可以 `git fetch && git show <hash>` 独立验证 (尤其当 Codex 改的范围比 review 时贴的 diff 多)
+
+### Codex 执行硬规范
+
+- **先读再改**: 动代码前把 CLAUDE.md 整篇读完, 按需读 `.design/tokens.css` / `components.md` / `patterns.md` / `assets/README.md`
+- **先复述再动手**: 拿到指令先回 "我打算改 X 文件做 Y, 风险是 Z" 等确认, 不要 cowboy 直接改
+- **typecheck / build 必跑**: 改完跑 `pnpm typecheck` (有则) 或 `pnpm build`, 把输出贴回来; 任何报错先停, 不要自己猜着改下去
+- **不私自 commit**: 默认 `git add` staged 但不 commit; Claude review pass 才 commit
+- **commit message 走模板**: 按本文件 "Git + Vercel 工作流" 的格式, 必须写 Reason
+- **遇到本文件 / TODO.md 之外的判断主动问**: 比如 "这个动效要不要", "这个文案怎么改" 这种, 不要自己拍
+
+### 给 Codex 的入会 briefing
+
+每次新开 Codex 会话, 用户会贴一段固定的入会指令 (包含上述分工和规范的简版). Codex 看到后应该:
+1. 确认读完 CLAUDE.md 和 TODO.md
+2. 报告当前 `git status` / 当前分支
+3. 等任务, 不要自己找事做
+
 ## 文风约束
 - **禁用破折号** (`—` `——`), 用逗号 / 句号 / 括号 / 分句替代
 - 同样适用于 commit message 和 PR body
