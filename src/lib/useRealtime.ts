@@ -160,7 +160,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
 
   const [status, setStatus] = useState<RealtimeStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [isAvailable, setIsAvailable] = useState<boolean>(true);
+  const [isAvailable, setIsAvailable] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -176,14 +176,12 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       try {
         const probe = await fetch(tokenEndpoint, { method: "POST" });
         if (cancelled) return;
-        if (probe.status === 503) {
-          setIsAvailable(false);
-        } else if (probe.ok) {
+        if (probe.ok) {
           // We just minted a token we won't use; that's fine, it'll expire in
           // ~60s. The cost of doing so is negligible.
           setIsAvailable(true);
         } else {
-          setIsAvailable(true); // unknown — let the user try; surface errors then
+          setIsAvailable(false);
         }
       } catch {
         if (!cancelled) setIsAvailable(false);
