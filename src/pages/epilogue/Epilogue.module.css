@@ -1,11 +1,17 @@
 .homeScreen {
   position: absolute;
   inset: 0;
-  overflow: auto;
+  overflow: hidden;
   background: linear-gradient(180deg, var(--bg-paper) 0%, var(--bg-cream) 100%);
   color: var(--text-primary);
   font-family: var(--font-body);
-  padding: 58px var(--sp-4) var(--sp-5);
+}
+
+.homeContent {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 58px var(--sp-4) 120px;
 }
 
 .homeHeader {
@@ -238,15 +244,12 @@
   margin-top: var(--sp-1);
 }
 
-.homeSpacer {
-  height: 98px;
-}
-
 .bottomNav {
   position: absolute;
   left: var(--sp-4);
   right: var(--sp-4);
   bottom: var(--sp-5);
+  z-index: 8;
   min-height: 60px;
   border-radius: var(--r-pill);
   background: var(--text-primary);

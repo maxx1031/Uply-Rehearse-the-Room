@@ -194,61 +194,62 @@ export function HomeScreen({
 
   return (
     <div className={styles.homeScreen}>
-      <header className={styles.homeHeader}>
-        <div className={styles.avatar}>{displayName[0].toUpperCase()}</div>
-        <div className={styles.userBlock}>
-          <div className={styles.microLabel}>WELCOME BACK</div>
-          <div className={styles.userName}>{displayName}</div>
-        </div>
-        <div className={styles.scoreStack} aria-label="Current progress">
-          <div className={styles.scoreLine}><Star size={13} fill="currentColor" />{points} pts</div>
-          <div className={styles.scoreLine}><Flame size={13} fill="currentColor" />{streak}-day streak</div>
-        </div>
-        {onRestart && (
-          <button className={styles.replayButton} onClick={onRestart} aria-label="Replay onboarding" title="Replay">
-            <RotateCcw size={16} />
-          </button>
-        )}
-      </header>
+      <div className={styles.homeContent}>
+        <header className={styles.homeHeader}>
+          <div className={styles.avatar}>{displayName[0].toUpperCase()}</div>
+          <div className={styles.userBlock}>
+            <div className={styles.microLabel}>WELCOME BACK</div>
+            <div className={styles.userName}>{displayName}</div>
+          </div>
+          <div className={styles.scoreStack} aria-label="Current progress">
+            <div className={styles.scoreLine}><Star size={13} fill="currentColor" />{points} pts</div>
+            <div className={styles.scoreLine}><Flame size={13} fill="currentColor" />{streak}-day streak</div>
+          </div>
+          {onRestart && (
+            <button className={styles.replayButton} onClick={onRestart} aria-label="Replay onboarding" title="Replay">
+              <RotateCcw size={16} />
+            </button>
+          )}
+        </header>
 
-      <button className={styles.todayCard} onClick={onStartMission}>
-        <div className={styles.todayCopy}>
-          <div className={styles.darkLabel}>TODAY'S SCRIPT</div>
-          <div className={styles.todayTitle}>Coffee chat practice</div>
-          <div className={styles.todaySub}>CS alum coffee chat · gentle pace · 10 min</div>
-        </div>
-        <div className={styles.coffeeScene} aria-hidden="true">
-          <Coffee size={52} strokeWidth={1.8} />
-          <div className={styles.sceneGlow} />
-        </div>
-        <span className={styles.homePrimaryButton}>
-          <Play size={16} fill="currentColor" />
-          Start Practice
-        </span>
-      </button>
+        <button className={styles.todayCard} onClick={onStartMission}>
+          <div className={styles.todayCopy}>
+            <div className={styles.darkLabel}>TODAY'S SCRIPT</div>
+            <div className={styles.todayTitle}>Coffee chat practice</div>
+            <div className={styles.todaySub}>CS alum coffee chat · gentle pace · 10 min</div>
+          </div>
+          <div className={styles.coffeeScene} aria-hidden="true">
+            <Coffee size={52} strokeWidth={1.8} />
+            <div className={styles.sceneGlow} />
+          </div>
+          <span className={styles.homePrimaryButton}>
+            <Play size={16} fill="currentColor" />
+            Start Practice
+          </span>
+        </button>
 
-      <section className={styles.moduleSection}>
-        <div className={styles.sectionTitle}>NETWORKING MODULES</div>
-        <div className={styles.moduleGrid}>
-          {modules.map((module) => {
-            const Icon = module.icon;
-            return (
-              <button className={styles.moduleCard} key={module.title} onClick={onStartMission}>
-                <span className={styles.moduleIcon}><Icon size={21} /></span>
-                <span className={styles.moduleTitle}>{module.title}</span>
-                <span className={styles.moduleSub}>{module.subtitle}</span>
-                <span className={styles.moduleMeta}>{module.meta}</span>
-                <span className={styles.rehearseButton}>
-                  <Play size={13} fill="currentColor" />
-                  Rehearse
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+        <section className={styles.moduleSection}>
+          <div className={styles.sectionTitle}>NETWORKING MODULES</div>
+          <div className={styles.moduleGrid}>
+            {modules.map((module) => {
+              const Icon = module.icon;
+              return (
+                <button className={styles.moduleCard} key={module.title} onClick={onStartMission}>
+                  <span className={styles.moduleIcon}><Icon size={21} /></span>
+                  <span className={styles.moduleTitle}>{module.title}</span>
+                  <span className={styles.moduleSub}>{module.subtitle}</span>
+                  <span className={styles.moduleMeta}>{module.meta}</span>
+                  <span className={styles.rehearseButton}>
+                    <Play size={13} fill="currentColor" />
+                    Rehearse
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
-      <div className={styles.homeSpacer} />
       <nav className={styles.bottomNav} aria-label="Primary navigation">
         {tabs.map((tab) => {
           const Icon = tab.icon;
