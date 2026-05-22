@@ -2,7 +2,7 @@
  * Uply Onboarding — INTERLUDE screens
  *
  * Flow:
- *   LinkedInScreen → AnalyzingScreen     (loading)
+ *   ConversationScreen → AnalyzingScreen (loading)
  *                  → ResultScreen        (archetype reveal)
  *                  → ReflectionScreen    (does this match how you show up?)
  *

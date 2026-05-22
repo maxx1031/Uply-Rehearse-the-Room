@@ -10,7 +10,7 @@ the full ACT I → INTERLUDE → EPILOGUE pipeline.
 uply/
 ├─ styles.css          ← keyframes + font import + color tokens (import once)
 ├─ UplyUI.tsx          ← shared primitives (buttons, chips, figures, mic, etc.)
-├─ ActI.tsx            ← StageScreen, ConversationScreen, LinkedInScreen
+├─ ActI.tsx            ← StageScreen, ConversationScreen
 ├─ Interlude.tsx       ← AnalyzingScreen, ResultScreen, ReflectionScreen
 ├─ Epilogue.tsx        ← GoalScreen, SloganScreen, HomeScreen
 └─ OnboardingFlow.tsx  ← wrapper state machine that chains everything
@@ -43,7 +43,7 @@ If you want to integrate piece-by-piece (recommended when slotting into
 your existing animated wrapper), import the screens directly:
 
 ```tsx
-import { StageScreen, ConversationScreen, LinkedInScreen } from "./uply/ActI";
+import { StageScreen, ConversationScreen } from "./uply/ActI";
 import { AnalyzingScreen, ResultScreen, ReflectionScreen } from "./uply/Interlude";
 import { GoalScreen, SloganScreen, HomeScreen } from "./uply/Epilogue";
 ```
@@ -63,12 +63,9 @@ StageScreen
 ConversationScreen
   props: { onComplete, onSkip: () => void }
   fires: onComplete        → after the user picks the "Can I follow you on
-                             LinkedIn?" trigger choice + Maya accepts
+                             LinkedIn?" trigger choice + Maya accepts,
+                             then route directly to AnalyzingScreen
          onSkip            → user taps the top-right "End scene ✕" chip
-
-LinkedInScreen
-  props: { onContinue: () => void }
-  fires: onContinue        → "End of Act I" CTA tap (auto-appears after ~2.8s)
 
 INTERLUDE
 ─────────

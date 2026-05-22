@@ -4,7 +4,7 @@
  * Flow:
  *   curtain → StageScreen (after-party encounter)
  *           → ConversationScreen (dialog with Maya)
- *           → LinkedInScreen (connection confirmed)
+ *           → analyzing (profile loading)
  *
  * Each screen renders inside an absolutely-positioned full-bleed container.
  * Drop them into your phone-frame's screen slot.
@@ -12,7 +12,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   SolidFigure, Chip,
-  MicButton, TypingDots, PrimaryBtn,
+  MicButton, TypingDots,
 } from "@/components/ui/UplyUI";
 import { useRealtime } from "@/lib/useRealtime";
 import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
@@ -784,88 +784,6 @@ export function ConversationScreen({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ╔══════════════════════════════════════════════════════════════════════
-// ║  LinkedInScreen — connection-accepted result animation
-// ╚══════════════════════════════════════════════════════════════════════
-export function LinkedInScreen({ onContinue }: { onContinue: () => void }) {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 1400);
-    const t2 = setTimeout(() => setStep(2), 2800);
-    return () => { [t1, t2].forEach(clearTimeout); };
-  }, []);
-  return (
-    <div style={{ position: "absolute", inset: 0, background: "#f3f2ef", display: "flex", flexDirection: "column" }}>
-      <div style={{ background: "var(--brand-linkedin)", color: "var(--text-on-dark)", padding: "48px 18px 12px", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 6, background: "var(--text-on-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "var(--brand-linkedin)", fontSize: "var(--fs-h2)", fontFamily: "serif" }}>in</div>
-        <div style={{ flex: 1, height: 32, borderRadius: 4, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", padding: "0 10px", fontSize: "var(--fs-caption)", fontWeight: 500, opacity: .9 }}>
-          <span style={{ opacity: .7 }}>🔍</span><span style={{ marginLeft: 8, opacity: .8 }}>Maya Chen</span>
-        </div>
-      </div>
-      <div style={{ flex: 1, padding: "20px 18px", overflow: "auto" }}>
-        <div style={{ background: "var(--text-on-dark)", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
-          <div style={{ height: 80, background: "linear-gradient(120deg,var(--accent-purple-mid),var(--accent-purple-soft))" }} />
-          <div style={{ padding: "0 18px 18px", position: "relative" }}>
-            <div style={{
-              width: 88, height: 88, borderRadius: "50%",
-              background: "radial-gradient(circle at 30% 30%,#c3b9f5,#7a6ee0 70%)",
-              border: "4px solid var(--text-on-dark)", marginTop: -44,
-            }} />
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontWeight: 700, fontSize: 20, color: "#000" }}>Maya Chen</div>
-              <div style={{ color: "#000", fontSize: 14, marginTop: 2 }}>Incoming PM @ Handoff · CS @ University · she/her</div>
-              <div style={{ color: "#666", fontSize: "var(--fs-caption)", marginTop: 6 }}>San Francisco Bay Area · 312 followers</div>
-            </div>
-            <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
-              {step >= 1 ? (
-                <button style={{
-                  padding: "7px 16px", borderRadius: 9999, border: "none",
-                  background: "var(--accent-purple-mid)", color: "var(--text-on-dark)", fontWeight: 700, fontSize: 14,
-                  display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit",
-                  boxShadow: "0 4px 14px rgba(90,74,217,.35)",
-                }}>
-                  <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  Following
-                </button>
-              ) : (
-                <button style={{
-                  padding: "7px 16px", borderRadius: 9999, border: "1px solid var(--brand-linkedin)",
-                  background: "var(--text-on-dark)", color: "var(--brand-linkedin)", fontWeight: 700, fontSize: 14,
-                  fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6,
-                }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", border: "1.5px solid var(--brand-linkedin)", borderTopColor: "transparent", animation: "uply-spin 1s linear infinite" }} />
-                  Pending
-                </button>
-              )}
-              <button style={{ padding: "7px 16px", borderRadius: 9999, border: "1px solid var(--brand-linkedin)", background: "var(--text-on-dark)", color: "var(--brand-linkedin)", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>Message</button>
-            </div>
-          </div>
-        </div>
-        {step >= 1 && (
-          <div className="uply-fade-up" style={{
-            marginTop: 14, padding: "14px 16px", borderRadius: 12,
-            background: "#e6f4ea", border: "1px solid #b6dfc1",
-            display: "flex", gap: 12, alignItems: "center",
-          }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2e7d32", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 14 14"><path d="M2 7 L6 11 L12 3" stroke="var(--text-on-dark)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#1b5e20" }}>Maya accepted your invitation</div>
-              <div style={{ fontSize: 12.5, color: "#3f6f44", marginTop: 2 }}>You're now connected on LinkedIn.</div>
-            </div>
-          </div>
-        )}
-      </div>
-      {step >= 2 && (
-        <div className="uply-fade-up" style={{ padding: "14px 18px 26px", background: "linear-gradient(180deg, transparent, #f3f2ef 50%)" }}>
-          <PrimaryBtn onClick={onContinue}>End of Act I</PrimaryBtn>
-        </div>
-      )}
     </div>
   );
 }

@@ -8,9 +8,9 @@ import { LoginScreen } from "./pages/intro/LoginScreen";
 import { TicketConfirmOverlay } from "./pages/intro/TicketConfirmScreen";
 import { CurtainScreen } from "./pages/intro/CurtainScreen";
 
-// act-i (new after-party scene + handoff conversation/linkedin)
+// act-i (new after-party scene + handoff conversation)
 import { AfterPartyScene } from "./pages/act-i/AfterPartyScene";
-import { ConversationScreen, LinkedInScreen } from "./pages/act-i/ActI";
+import { ConversationScreen } from "./pages/act-i/ActI";
 
 // interlude (handoff)
 import {
@@ -44,7 +44,7 @@ type Step =
   // intro
   | "splash" | "ticket" | "login" | "curtain"
   // act-i
-  | "after-party" | "conversation" | "linkedin"
+  | "after-party" | "conversation"
   // interlude
   | "analyzing" | "result" | "reflection"
   // epilogue
@@ -60,7 +60,7 @@ const DEFAULT_ARCHETYPE: ArchetypeId = "quiet-observer";
 
 const VALID_STEPS: Step[] = [
   "splash", "ticket", "login", "curtain",
-  "after-party", "conversation", "linkedin",
+  "after-party", "conversation",
   "analyzing", "result", "reflection",
   "goal", "slogan", "home", "mission", "practice", "mission-complete", "review",
 ];
@@ -260,15 +260,9 @@ export default function App() {
             {step === "conversation" && (
               <motion.div key="conversation" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <ConversationScreen
-                  onComplete={() => go("linkedin")}
+                  onComplete={() => go("analyzing")}
                   onSkip={() => go("goal")}
                 />
-              </motion.div>
-            )}
-
-            {step === "linkedin" && (
-              <motion.div key="linkedin" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <LinkedInScreen onContinue={() => go("analyzing")} />
               </motion.div>
             )}
 
