@@ -15,6 +15,7 @@ import {
   MicButton, TypingDots, PrimaryBtn,
 } from "@/components/ui/UplyUI";
 import { useRealtime } from "@/lib/useRealtime";
+import { logTurn } from "@/lib/conversationLog";
 import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
 
 // ╔══════════════════════════════════════════════════════════════════════
@@ -249,6 +250,10 @@ export function ConversationScreen({
 
   // ── Realtime voice ──────────────────────────────────────────────
   const [userText, setUserText] = useState("");
+  const [holding, setHolding] = useState(false);
+  // Released the mic but the transcript hasn't come back yet → keep the user
+  // bubble up (showing dots) so their words don't vanish during the gap.
+  const [awaitingUser, setAwaitingUser] = useState(false);
   const [, setMayaSpeaking] = useState(false);
   // 互斥: 同时只显一个气泡 (当前说话方). user 开口 → "user"; Maya 回应 → "maya".
   const [activeBubble, setActiveBubble] = useState<"maya" | "user" | null>(null);
@@ -273,20 +278,31 @@ export function ConversationScreen({
       setActiveBubble("user");
       setUserText("");
     }
-    // Maya starts a new response → switch bubble to Maya, hide user's
-    if (et === "response.created") {
-      setActiveBubble("maya");
-    }
     // user speech → streaming transcript (delta) then final (completed).
     // Match by suffix so beta/GA event-name differences both work.
-    // NOTE: do NOT flip activeBubble here — the completed event can arrive late
-    // (after Maya already started), which would wrongly hide Maya's bubble.
-    // activeBubble only switches on speech_started / response.created.
     if (et.endsWith("input_audio_transcription.delta") && typeof evt.delta === "string") {
+      setActiveBubble("user");
       setUserText((t) => t + evt.delta);
     }
     if (et.endsWith("input_audio_transcription.completed") && typeof evt.transcript === "string") {
+      setActiveBubble("user");
+      setAwaitingUser(false);
       setUserText(evt.transcript.trim());
+      logTurn("user", evt.transcript);
+    }
+    // Maya actually starts talking (first transcript delta) → now hand the
+    // bubble to her. We wait for the delta (not response.created) so the user's
+    // transcript, which arrives async after release, gets a chance to show.
+    if (et.endsWith("output_audio_transcript.delta") || et === "response.audio_transcript.delta") {
+      setActiveBubble("maya");
+      setAwaitingUser(false);
+    }
+    // Maya's reply finished → store her line, and clear the user's bubble so it
+    // doesn't linger all the way to the next turn.
+    if ((et.endsWith("output_audio_transcript.done") || et === "response.audio_transcript.done") && typeof evt.transcript === "string") {
+      logTurn("maya", evt.transcript);
+      setUserText("");
+      setAwaitingUser(false);
     }
     // mark_milestone tool call → advance checklist
     if (evt.type === "response.function_call_arguments.done" && evt.name === "mark_milestone") {
@@ -395,14 +411,15 @@ export function ConversationScreen({
       }} />
       <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
 
-        {/* Maya name tag (chest) — visible in dialog and complete phases */}
+        {/* Maya name tag (above head) — lavender pill, light border (ref image) */}
         {inDialog && (
           <div style={{
-            position: "absolute", top: "44%", left: "50%", transform: "translateX(-50%)",
-            background: "rgba(255,255,255,0.92)", backdropFilter: "blur(6px)",
-            borderRadius: 8, padding: "4px 10px",
+            position: "absolute", top: "26%", left: "50%", transform: "translateX(-50%)",
+            background: "rgba(150,140,205,0.82)", backdropFilter: "blur(6px)",
+            border: "1.5px solid rgba(255,255,255,0.55)",
+            borderRadius: 999, padding: "5px 14px",
             fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".18em",
-            color: "var(--accent-purple-mid)",
+            color: "#FFFFFF",
             boxShadow: "0 4px 12px rgba(40,30,110,.18)",
             zIndex: 4,
           }}>
@@ -463,8 +480,13 @@ export function ConversationScreen({
         {/* In-dialog persistent: top scene chip + task checklist */}
         {inDialog && (
           <>
-            <div style={{ position: "absolute", top: 54, left: "50%", transform: "translateX(-50%)", zIndex: 8 }}>
-              <Chip>🎓 After Party</Chip>
+            <div style={{
+              position: "absolute", top: 54, left: "50%", transform: "translateX(-50%)", zIndex: 8,
+              fontSize: 19, fontWeight: 800, letterSpacing: ".01em",
+              color: "var(--accent-purple-mid)", whiteSpace: "nowrap",
+              textShadow: "0 1px 6px rgba(255,255,255,0.7)",
+            }}>
+              • After Party •
             </div>
 
             {(() => {
@@ -506,7 +528,7 @@ export function ConversationScreen({
                     const bg = done
                       ? "rgba(255,255,255,0.78)"
                       : isNow
-                      ? "var(--text-on-dark)"
+                      ? "var(--bg-lavender-soft)"
                       : "var(--bg-lavender-soft)";
                     const border = isNow ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,0.08)";
 
@@ -530,27 +552,17 @@ export function ConversationScreen({
                           </span>
                         ) : (
                           <span style={{
-                            width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                            background: isNow ? "var(--bg-lavender-soft)" : "rgba(255,255,255,0.7)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 11,
-                          }}>{t.icon}</span>
+                            width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+                            background: "transparent",
+                            border: "2px solid var(--accent-purple-mid)",
+                          }} />
                         )}
                         <span style={{
                           fontSize: 11.5, fontWeight: 700, lineHeight: 1.25,
                           flex: 1, minWidth: 0,
-                          color: done ? "var(--text-ink-mute)" : "var(--text-ink)",
+                          color: done ? "var(--text-ink-mute)" : "var(--accent-purple-mid)",
                           textDecoration: done ? "line-through" : "none",
                         }}>{t.label}</span>
-                        {isNow && (
-                          <span style={{
-                            fontSize: 8.5, fontWeight: 800, letterSpacing: ".14em",
-                            color: "#8a5a30",
-                            background: "var(--accent-gold)",
-                            padding: "2px 6px", borderRadius: 999,
-                            flexShrink: 0,
-                          }}>NOW</span>
-                        )}
                       </div>
                     );
                   })}
@@ -563,39 +575,45 @@ export function ConversationScreen({
         {/* ── VOICE phase (realtime) ── */}
         {phase === "voice" && (
           <>
-            {/* Maya bubble (NPC, 紫边, 中部偏左) — 仅当 Maya 是当前说话方 */}
-            {activeBubble === "maya" && rt.transcript && (
+            {/* Maya bubble — centered, frosted, translucent border. Lingers until
+                her next reply (set in useRealtime), so it coexists with the user's. */}
+            {rt.transcript && (
               <div className="uply-fade-up" style={{
-                position: "absolute", top: "33%", left: 18, right: 70,
-                display: "flex", justifyContent: "flex-start", zIndex: 7,
+                position: "absolute", top: "30%", left: 0, right: 0, zIndex: 7,
+                display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
-                  maxWidth: 240,
-                  background: "#FFFFFF", border: "2px solid var(--text-accent)",
-                  borderRadius: 16, padding: "12px 16px",
-                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
-                  boxShadow: "0 8px 24px rgba(8,4,40,.18)",
+                  maxWidth: 330, width: "100%",
+                  background: "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+                  border: "1.5px solid rgba(168,156,245,0.7)",
+                  borderRadius: 20, padding: "13px 18px",
+                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  boxShadow: "0 10px 30px rgba(8,4,40,.18)",
                 }}>{rt.transcript}</div>
               </div>
             )}
 
-            {/* User bubble (黄边, 底部偏右) — 仅当用户是当前说话方 */}
-            {activeBubble === "user" && userText && (
+            {/* User bubble — centered, frosted, soft yellow translucent border.
+                Persists (with text) until the next press, so both bubbles coexist. */}
+            {(holding || awaitingUser || userText) && (
               <div className="uply-fade-up" style={{
-                position: "absolute", bottom: 150, left: 70, right: 18, zIndex: 8,
-                display: "flex", justifyContent: "flex-end",
+                position: "absolute", bottom: 138, left: 0, right: 0, zIndex: 8,
+                display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
-                  maxWidth: 240,
-                  background: "#FFFFFF", border: "2px solid var(--accent-yellow-soft)",
-                  borderRadius: 16, padding: "12px 16px",
-                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
-                  boxShadow: "0 8px 24px rgba(8,4,40,.18)",
-                }}>{userText}</div>
+                  maxWidth: 330, width: "100%",
+                  background: "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+                  border: "1.5px solid rgba(245,205,110,0.6)",
+                  borderRadius: 20, padding: "13px 18px",
+                  color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  boxShadow: "0 10px 30px rgba(8,4,40,.18)",
+                }}>{userText || <TypingDots />}</div>
               </div>
             )}
 
-            {/* Bottom: mic (active ripple = listening). No "speaking" status text. */}
+            {/* Bottom: push-to-talk mic. Hold to speak, release to send. */}
             <div style={{
               position: "absolute", bottom: 36, left: 0, right: 0, zIndex: 9,
               display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -612,8 +630,47 @@ export function ConversationScreen({
                   textShadow: "0 1px 4px rgba(0,0,0,0.6)",
                 }}>{rt.error?.slice(0, 60) ?? "Something went wrong"}</div>
               )}
-              <div onClick={() => { if (rt.status === "idle" || rt.status === "error") rt.start(); }}>
-                <MicButton active={rt.status === "active"} size={64} />
+              {rt.status === "active" && (
+                <div style={{
+                  fontSize: "var(--fs-caption)", fontWeight: 700, color: "var(--text-on-dark)",
+                  textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                }}>{holding ? "Listening… release to send" : "Hold to talk"}</div>
+              )}
+              <div
+                onPointerDown={(e) => {
+                  if (rt.status === "idle" || rt.status === "error") { rt.start(); return; }
+                  if (rt.status !== "active" || holding) return;
+                  e.currentTarget.setPointerCapture?.(e.pointerId);
+                  setHolding(true);
+                  setActiveBubble("user");
+                  setUserText("");
+                  rt.beginTurn();
+                }}
+                onPointerUp={() => {
+                  if (!holding) return;
+                  setHolding(false);
+                  setAwaitingUser(true);
+                  rt.endTurn();
+                }}
+                onPointerCancel={() => {
+                  if (!holding) return;
+                  setHolding(false);
+                  setAwaitingUser(true);
+                  rt.endTurn();
+                }}
+                style={{ touchAction: "none", userSelect: "none", cursor: rt.status === "active" ? "pointer" : "default" }}
+              >
+                {/* Light-purple cylinder button — flat top + solid side wall for
+                    smooth depth (not a sphere). Presses down when held. */}
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: "rgba(90,74,217,0.6)",
+                  boxShadow: holding
+                    ? "0 2px 0 #3f33a3, 0 4px 10px rgba(90,74,217,.35)"
+                    : "0 6px 0 #3f33a3, 0 10px 18px rgba(90,74,217,.4)",
+                  transform: holding ? "translateY(4px)" : "translateY(0)",
+                  transition: "transform .12s ease, box-shadow .12s ease",
+                }} />
               </div>
             </div>
           </>

@@ -25,6 +25,12 @@ export interface UseRealtimeReturn {
   transcript: string;
   start: () => Promise<void>;
   stop: () => void;
+  /** Push-to-talk: open the mic, clear any stale buffered audio, interrupt Maya
+   *  if she's mid-sentence. Call on press-down. */
+  beginTurn: () => void;
+  /** Push-to-talk: commit the buffered audio and ask Maya to respond, then mute
+   *  the mic. Call on release. */
+  endTurn: () => void;
   /** Send a raw event over the data channel (e.g. function_call_output, response.create). */
   sendEvent: (event: unknown) => void;
 }
@@ -70,6 +76,8 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
   const [status, setStatus] = useState<RealtimeStatus>("idle");
   const [transcript, setTranscript] = useState<string>("");
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Index into MOCK_SCRIPT, advanced one assistant + one user turn per press.
+  const cursorRef = useRef<number>(0);
 
   const cleanup = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -82,58 +90,68 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     cleanup();
     setStatus("idle");
     setTranscript("");
+    cursorRef.current = 0;
   }, [cleanup]);
+
+  // Play a scripted assistant turn with streamed transcript deltas.
+  const playAssistant = useCallback((text: string) => {
+    opts.onEvent?.({ type: "response.created" });
+    opts.onSpeakingChange?.(true);
+    const chunks = text.match(/.{1,18}(\s|$)/g) ?? [text];
+    let accumulated = "";
+    chunks.forEach((chunk, i) => {
+      const dT = setTimeout(() => {
+        accumulated += chunk;
+        setTranscript(accumulated);
+        opts.onEvent?.({ type: "response.audio_transcript.delta", delta: chunk });
+      }, i * 220);
+      timersRef.current.push(dT);
+    });
+    const doneT = setTimeout(() => {
+      opts.onSpeakingChange?.(false);
+      opts.onEvent?.({ type: "response.audio_transcript.done", transcript: text });
+      opts.onEvent?.({ type: "response.done" });
+    }, chunks.length * 220 + 200);
+    timersRef.current.push(doneT);
+  }, [opts]);
 
   const start = useCallback(async () => {
     setTranscript("");
+    cursorRef.current = 0;
     setStatus("requesting-token");
     const t1 = setTimeout(() => setStatus("connecting"), 300);
-    const t2 = setTimeout(() => setStatus("active"), 700);
-    timersRef.current.push(t1, t2);
-
-    // Schedule the scripted turns.
-    let cursor = 700;
-    MOCK_SCRIPT.forEach((turn) => {
-      cursor += turn.afterMs;
-      const at = cursor;
-      if (turn.role === "user") {
-        const t = setTimeout(() => {
-          opts.onEvent?.({ type: "input_audio_buffer.speech_started" });
-          const stopT = setTimeout(() => {
-            opts.onEvent?.({ type: "input_audio_buffer.speech_stopped" });
-            opts.onEvent?.({
-              type: "conversation.item.input_audio_transcription.completed",
-              transcript: turn.text,
-            });
-          }, 1100);
-          timersRef.current.push(stopT);
-        }, at);
-        timersRef.current.push(t);
-      } else {
-        const startT = setTimeout(() => {
-          opts.onSpeakingChange?.(true);
-          // Stream a few transcript deltas for a typing-like effect.
-          const chunks = turn.text.match(/.{1,18}(\s|$)/g) ?? [turn.text];
-          let accumulated = "";
-          chunks.forEach((chunk, i) => {
-            const dT = setTimeout(() => {
-              accumulated += chunk;
-              setTranscript(accumulated);
-              opts.onEvent?.({ type: "response.audio_transcript.delta", delta: chunk });
-            }, i * 240);
-            timersRef.current.push(dT);
-          });
-          const doneT = setTimeout(() => {
-            opts.onSpeakingChange?.(false);
-            setTranscript("");
-            opts.onEvent?.({ type: "response.audio_transcript.done", transcript: turn.text });
-          }, chunks.length * 240 + 200);
-          timersRef.current.push(doneT);
-        }, at);
-        timersRef.current.push(startT);
+    const t2 = setTimeout(() => {
+      setStatus("active");
+      // Maya's opening line, mirroring the real opening response.create.
+      const first = MOCK_SCRIPT[0];
+      if (first?.role === "assistant") {
+        cursorRef.current = 1;
+        playAssistant(first.text);
       }
-    });
+    }, 700);
+    timersRef.current.push(t1, t2);
+  }, [playAssistant]);
+
+  const beginTurn = useCallback(() => {
+    setTranscript("");
+    opts.onEvent?.({ type: "input_audio_buffer.speech_started" });
   }, [opts]);
+
+  const endTurn = useCallback(() => {
+    // Emit the next scripted user line, then Maya's following reply.
+    const userTurn = MOCK_SCRIPT[cursorRef.current];
+    const userText = userTurn?.role === "user" ? userTurn.text : "Mm-hmm, yeah.";
+    if (userTurn?.role === "user") cursorRef.current += 1;
+    opts.onEvent?.({
+      type: "conversation.item.input_audio_transcription.completed",
+      transcript: userText,
+    });
+    const reply = MOCK_SCRIPT[cursorRef.current];
+    const replyText = reply?.role === "assistant" ? reply.text : "Haha, totally. So tell me more!";
+    if (reply?.role === "assistant") cursorRef.current += 1;
+    const t = setTimeout(() => playAssistant(replyText), 500);
+    timersRef.current.push(t);
+  }, [opts, playAssistant]);
 
   return {
     status,
@@ -142,6 +160,8 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     transcript,
     start,
     stop,
+    beginTurn,
+    endTurn,
     sendEvent: () => {},
   };
 }
@@ -167,6 +187,11 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   const dcRef = useRef<RTCDataChannel | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  // True between response.created and response.done — lets beginTurn() barge in.
+  const respondingRef = useRef<boolean>(false);
+  // Timestamp of the last beginTurn — guards against committing a sub-100ms
+  // buffer (which errors as input_audio_buffer_commit_empty).
+  const turnStartRef = useRef<number>(0);
 
   // Probe the token endpoint once on mount so we can hide the mic button if
   // the server hasn't been configured yet.
@@ -213,6 +238,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     pcRef.current = null;
     dcRef.current = null;
     micStreamRef.current = null;
+    respondingRef.current = false;
   }, []);
 
   const stop = useCallback(() => {
@@ -228,6 +254,32 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       dc.send(JSON.stringify(event));
     }
   }, []);
+
+  const beginTurn = useCallback(() => {
+    // Barge-in: if Maya is talking, cut her off so the user can take the floor.
+    if (respondingRef.current) {
+      sendEvent({ type: "response.cancel" });
+      respondingRef.current = false;
+    }
+    setTranscript("");
+    turnStartRef.current = Date.now();
+    // Discard everything buffered before the press; the mic keeps streaming, so
+    // the press→release window is what gets committed.
+    sendEvent({ type: "input_audio_buffer.clear" });
+  }, [sendEvent]);
+
+  const endTurn = useCallback(() => {
+    // Commit the captured audio (→ transcription) and ask Maya to reply. Wait
+    // out the 100ms minimum so a fast tap doesn't commit an empty buffer.
+    const elapsed = Date.now() - turnStartRef.current;
+    const commitAndRespond = () => {
+      respondingRef.current = true;
+      sendEvent({ type: "input_audio_buffer.commit" });
+      sendEvent({ type: "response.create" });
+    };
+    if (elapsed >= 200) commitAndRespond();
+    else setTimeout(commitAndRespond, 200 - elapsed);
+  }, [sendEvent]);
 
   useEffect(() => {
     return () => cleanup();
@@ -279,11 +331,20 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       // Outbound audio (user's mic) → first track on the peer.
       const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = mic;
+      // Mic streams continuously over the media track (WebRTC suppresses muted
+      // tracks as silence, so we must NOT gate with track.enabled). Turns are
+      // delimited by input_audio_buffer.clear (press) / .commit (release).
       pc.addTrack(mic.getTracks()[0]);
 
       // Data channel for JSON events (transcripts, function calls, errors).
       const dc = pc.createDataChannel("oai-events");
       dcRef.current = dc;
+      // With server VAD off, the model stays silent until asked. Kick off Maya's
+      // opening line as soon as the channel is ready.
+      dc.addEventListener("open", () => {
+        respondingRef.current = true;
+        dc.send(JSON.stringify({ type: "response.create" }));
+      });
       dc.addEventListener("message", (e) => {
         try {
           const evt = JSON.parse(e.data);
@@ -297,9 +358,17 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
           } else if (t.endsWith("output_audio_transcript.done") || t === "response.audio_transcript.done") {
             if (typeof evt.transcript === "string") setTranscript(evt.transcript);
           } else if (t === "response.created") {
+            respondingRef.current = true;
             setTranscript("");
+          } else if (t === "response.done") {
+            respondingRef.current = false;
           } else if (t === "error") {
-            setError(evt.error?.message ?? "Unknown realtime error");
+            // A too-short tap commits an empty buffer — harmless, don't alarm.
+            if (evt.error?.code === "input_audio_buffer_commit_empty") {
+              respondingRef.current = false;
+            } else {
+              setError(evt.error?.message ?? "Unknown realtime error");
+            }
           }
         } catch {
           // Non-JSON message — ignore.
@@ -344,5 +413,5 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     }
   }, [tokenEndpoint, cleanup, opts]);
 
-  return { status, error, isAvailable, transcript, start, stop, sendEvent };
+  return { status, error, isAvailable, transcript, start, stop, beginTurn, endTurn, sendEvent };
 }

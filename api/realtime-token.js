@@ -85,8 +85,15 @@ export default async function handler(req, res) {
           model: "gpt-realtime",
           instructions: SYSTEM_PROMPT,
           audio: {
-            // Transcribe the user's mic so the UI can show live user captions.
-            input: { transcription: { model: "gpt-4o-mini-transcribe" } },
+            input: {
+              // Transcribe the user's mic so the UI can show captions. Deltas
+              // stream in as the transcription model processes the committed
+              // audio, so the user's words appear progressively after release.
+              transcription: { model: "gpt-4o-mini-transcribe" },
+              // Push-to-talk: no server VAD. The client commits the buffer on
+              // mic release, which kicks off transcription + Maya's reply.
+              turn_detection: null,
+            },
             output: { voice: "marin" },
           },
           tools: TOOLS,
