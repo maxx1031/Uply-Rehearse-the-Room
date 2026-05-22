@@ -110,10 +110,10 @@ export function TicketScreen({ onClaim, onLogin }: Props) {
                       UPLY THEATER
                     </span>
                   </div>
-                  <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "var(--fs-caption)", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
+                  <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--fs-caption)", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
                     Now Showing
                   </div>
-                  <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "26px", fontWeight: 700, color: "white", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
+                  <div style={{ fontFamily: "var(--font-heading)", fontSize: "26px", fontWeight: 600, color: "white", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
                     First Encounter
                   </div>
                 </div>

@@ -161,10 +161,10 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
                     UPLY THEATER
                   </span>
                 </div>
-                <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "var(--fs-micro)", fontWeight: 600, color: "rgba(255,255,255,0.72)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 3 }}>
+                <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--fs-micro)", fontWeight: 600, color: "rgba(255,255,255,0.72)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 3 }}>
                   Now Showing
                 </div>
-                <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "22px", fontWeight: 700, color: "white", lineHeight: 1.25 }}>
+                <div style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 600, color: "white", lineHeight: 1.25 }}>
                   {showTitle}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export function TicketConfirmOverlay({ userName, showTitle, exiting }: Props) {
                 <div style={{ fontSize: "10px", color: "#b0aed4", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3 }}>
                   Ticket Holder
                 </div>
-                <div style={{ fontSize: "var(--fs-h2)", fontWeight: 700, color: "var(--bg-deep-night)", fontFamily: "'Georgia','Times New Roman',serif" }}>
+                <div style={{ fontSize: "var(--fs-h2)", fontWeight: 600, color: "var(--bg-deep-night)", fontFamily: "var(--font-heading)" }}>
                   {userName || "Member"}
                 </div>
               </div>
