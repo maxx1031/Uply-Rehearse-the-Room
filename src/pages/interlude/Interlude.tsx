@@ -248,78 +248,151 @@ export function ResultScreen({
 }
 
 // ╔══════════════════════════════════════════════════════════════════════
-// ║  ReflectionScreen — "Does this reflect how you actually show up?"
-// ║  Slider with three feedback buckets (left / mid / right).
+// ║  ReflectionScreen: "Does this reflect how you actually show up?"
+// ║  Five-point self-check that maps back to three practice buckets.
 // ╚══════════════════════════════════════════════════════════════════════
 export type ReflectionBucket = "left" | "mid" | "right";
+
+type ReflectionPoint = {
+  label: string;
+  bucket: ReflectionBucket;
+  title: string;
+  body: string;
+};
+
+const REFLECTION_POINTS: ReflectionPoint[] = [
+  {
+    label: "No",
+    bucket: "right",
+    title: "Got it. This was more rehearsal than reality.",
+    body: "We will use the next scene to find a voice that feels more like you, with extra support before any big move.",
+  },
+  {
+    label: "A little",
+    bucket: "right",
+    title: "There are a few true signals here.",
+    body: "Some parts fit, but the full picture is still wider. The next practice will give you room to try a different rhythm.",
+  },
+  {
+    label: "Somewhat",
+    bucket: "mid",
+    title: "Somewhere between rehearsal and reality",
+    body: "Some of this is you, and some is the version you are practicing toward. That gap is a useful place to train.",
+  },
+  {
+    label: "Mostly",
+    bucket: "left",
+    title: "This is close to how you usually show up.",
+    body: "We will build from your natural style, then add one small stretch so the next ask feels clearer.",
+  },
+  {
+    label: "Yes",
+    bucket: "left",
+    title: "Good news. We already know each other a little.",
+    body: "What showed up on stage maps closely to your real-life style. The next scene can build from here.",
+  },
+];
 
 export function ReflectionScreen({
   onContinue,
 }: { onContinue: (bucket: ReflectionBucket) => void }) {
-  const [val, setVal] = useState(50);
-  const [submitted, setSubmitted] = useState(false);
-
-  const bucket: ReflectionBucket = val < 33 ? "left" : val > 66 ? "right" : "mid";
-  const feedback: Record<ReflectionBucket, { title: string; body: string }> = {
-    left:  { title: "Good news — we already know each other a little 🎯", body: "What you played on stage tonight maps closely to how you usually show up. We'll build from here." },
-    mid:   { title: "Somewhere between rehearsal and reality 🪞", body: "Some of this is you; some is the version you wish were you. We'll work in that gap — it's the most useful place to practice." },
-    right: { title: "Then there's so much to discover ✨", body: "What we saw tonight isn't the whole you. The coming scenes will give you space to try on other voices." },
-  };
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selected = selectedIndex == null ? null : REFLECTION_POINTS[selectedIndex];
 
   return (
     <div style={{
       position: "absolute", inset: 0, overflow: "auto",
       background: "linear-gradient(180deg, #f6f2e9 0%, #ebe5d7 100%)",
-      padding: "70px 24px 40px",
-      display: "flex", flexDirection: "column",
+      padding: "62px 24px 28px",
+      display: "flex", flexDirection: "column", minHeight: "100%",
     }}>
       <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel>
-      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
+      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 27, fontWeight: 600, lineHeight: 1.15, marginTop: 10, maxWidth: 320 }}>
         Does this reflect how you actually show up?
       </div>
       <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8 }}>
-        Drag the marker — there's no wrong answer.
+        Pick the point that feels closest. There is no wrong answer.
       </div>
 
-      <div style={{ marginTop: 42, position: "relative" }}>
+      <div style={{ marginTop: 46, position: "relative", padding: "0 2px 8px" }}>
         <div style={{
-          height: 8, borderRadius: 9999,
+          position: "absolute", left: 12, right: 12, top: 15,
+          height: 7, borderRadius: 9999,
           background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
           boxShadow: "inset 0 1px 3px rgba(40,30,110,.18)",
         }} />
-        <input type="range" min={0} max={100} value={val}
-          onChange={e => setVal(+e.target.value)} disabled={submitted}
-          style={{ position: "absolute", top: -12, left: 0, width: "100%", height: 32, opacity: 0, cursor: "pointer" }} />
-        <div style={{
-          position: "absolute", top: -8, left: `${val}%`, transform: "translateX(-50%)",
-          width: 24, height: 24, borderRadius: "50%",
-          background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(107,99,212,.4), 0 0 0 2px var(--accent-purple-mid)",
-          transition: submitted ? "left .4s ease" : "none", pointerEvents: "none",
-        }} />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18,
-          fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--text-ink-mute)" }}>
-          <span>NOT AT ALL</span><span>SOMEWHERE BETWEEN</span><span>EXACTLY ME</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 0, position: "relative", zIndex: 1 }}>
+          {REFLECTION_POINTS.map((point, index) => {
+            const active = selectedIndex === index;
+            return (
+              <button
+                key={point.label}
+                onClick={() => setSelectedIndex(index)}
+                aria-pressed={active}
+                style={{
+                  border: "none", background: "transparent", padding: 0,
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                  color: active ? "var(--accent-purple-mid)" : "var(--text-ink-mute)",
+                  fontFamily: "inherit", cursor: "pointer", minWidth: 0,
+                }}
+              >
+                <span style={{
+                  width: active ? 28 : 18, height: active ? 28 : 18,
+                  borderRadius: "50%",
+                  background: active ? "var(--text-on-dark)" : "var(--accent-purple-soft)",
+                  boxShadow: active
+                    ? "0 6px 18px rgba(107,99,212,.38), 0 0 0 2px var(--accent-purple-mid)"
+                    : "0 3px 8px rgba(107,99,212,.22)",
+                  transition: "width 160ms ease, height 160ms ease, box-shadow 160ms ease",
+                }} />
+                <span style={{
+                  minHeight: 26,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  textAlign: "center",
+                  maxWidth: 64,
+                }}>
+                  {point.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {submitted ? (
+      {selected ? (
         <div className="uply-fade-up" style={{
-          marginTop: 32, padding: "18px 18px",
+          marginTop: 34, padding: "18px 18px",
           background: "var(--bg-cream)",
           borderRadius: 18, color: "var(--text-ink)",
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
+          <ActLabel color="var(--accent-purple-mid)">SYSTEM REPLY</ActLabel>
           <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
-            {feedback[bucket].title}
+            {selected.title}
           </div>
-          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{feedback[bucket].body}</div>
+          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{selected.body}</div>
         </div>
-      ) : <div style={{ flex: 1 }} />}
+      ) : (
+        <div style={{
+          marginTop: 34, minHeight: 132, borderRadius: 18,
+          background: "rgba(255,255,255,.42)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--text-ink-mute)", fontSize: 13, fontWeight: 700,
+          textAlign: "center", padding: "0 24px",
+        }}>
+          Choose one point to unlock your note.
+        </div>
+      )}
 
-      <div style={{ marginTop: 24, paddingBottom: 8 }}>
-        {submitted
-          ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue</PrimaryBtn>
-          : <PrimaryBtn onClick={() => setSubmitted(true)}>Submit my read</PrimaryBtn>}
+      <div style={{ marginTop: "auto", paddingTop: 24, paddingBottom: 8 }}>
+        <PrimaryBtn
+          disabled={!selected}
+          onClick={() => selected && onContinue(selected.bucket)}
+        >
+          Next
+        </PrimaryBtn>
       </div>
     </div>
   );
