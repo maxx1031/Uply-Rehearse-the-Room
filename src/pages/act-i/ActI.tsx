@@ -733,9 +733,6 @@ export function ConversationScreen({
               boxShadow: "0 24px 60px rgba(8,4,40,.32)",
             }}>
               <div style={{ fontSize: 36 }}>🎉</div>
-              <div style={{ fontSize: "var(--fs-micro)", fontWeight: 800, letterSpacing: ".22em", color: "var(--accent-purple-mid)", marginTop: 8 }}>
-                MISSION COMPLETE
-              </div>
               <div className="uply-serif" style={{ fontSize: 22, fontWeight: 700, color: "var(--text-ink)", lineHeight: 1.2, marginTop: 6 }}>
                 Connected with {MAYA_NAME}
               </div>
