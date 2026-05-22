@@ -208,6 +208,13 @@ const MISSION_DESC_SHORT = "A senior you'd seen at the library is at the party t
 
 const MAYA_NAME = "Maya";
 
+function isMockMode(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  const mock = params.get("mock");
+  return mock === "1" || mock === "true";
+}
+
 export function ConversationScreen({
   onComplete, onSkip,
 }: { onComplete: () => void; onSkip: () => void }) {
@@ -222,6 +229,7 @@ export function ConversationScreen({
   const variant = readVariant();
   const tasks = variant === "b" ? TASKS_B : TASKS_A;
   const mstyle = readMissionStyle();
+  const mockMode = isMockMode();
 
   // mission-card config (3 saved schemes): colors + font sizes + desc length
   const missionCfg = mstyle === "classic"
@@ -308,7 +316,16 @@ export function ConversationScreen({
     }
   }, [milestoneTaskId]);
 
-  const rt = useRealtime({ onEvent: handleRtEvent, onSpeakingChange: setMayaSpeaking });
+  const rt = useRealtime({
+    onEvent: handleRtEvent,
+    onSpeakingChange: setMayaSpeaking,
+    mockFunctionCall: {
+      name: "mark_milestone",
+      callId: "mock_mark_linkedin",
+      arguments: { stage: "linkedin" },
+      afterMs: 800,
+    },
+  });
   rtRef.current = rt;
 
   const playNpcBeat = (i: number) => {
@@ -341,6 +358,11 @@ export function ConversationScreen({
   }, [phase, countdown]);
 
   const startMission = () => {
+    if (mockMode) {
+      setPhase("countdown");
+      setCountdown(1);
+      return;
+    }
     if (rt.isAvailable) {
       setPhase("voice");
       rt.start();
@@ -614,6 +636,22 @@ export function ConversationScreen({
               )}
               <div onClick={() => { if (rt.status === "idle" || rt.status === "error") rt.start(); }}>
                 <MicButton active={rt.status === "active"} size={64} />
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => { rt.stop(); setPhase("countdown"); setCountdown(1); }} style={{
+                  height: 34, borderRadius: 999, border: "none",
+                  padding: "0 12px", background: "rgba(255,255,255,0.86)",
+                  color: "var(--text-ink)", fontWeight: 800, fontSize: "var(--fs-micro)",
+                  fontFamily: "inherit", cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(40,30,110,0.16)",
+                }}>Tap choices</button>
+                <button onClick={() => { rt.stop(); onSkip(); }} style={{
+                  height: 34, borderRadius: 999, border: "none",
+                  padding: "0 12px", background: "rgba(255,255,255,0.68)",
+                  color: "var(--text-ink-mute)", fontWeight: 800, fontSize: "var(--fs-micro)",
+                  fontFamily: "inherit", cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(40,30,110,0.12)",
+                }}>Skip</button>
               </div>
             </div>
           </>

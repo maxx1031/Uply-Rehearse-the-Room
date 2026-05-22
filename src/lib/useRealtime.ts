@@ -14,11 +14,19 @@ export type MockRealtimeTurn = {
   afterMs: number;
 };
 
+export type MockRealtimeFunctionCall = {
+  name: string;
+  arguments: unknown;
+  callId?: string;
+  afterMs?: number;
+};
+
 export interface UseRealtimeOptions {
   tokenEndpoint?: string;
   tokenRequestBody?: unknown;
   probeOnMount?: boolean;
   mockScript?: MockRealtimeTurn[];
+  mockFunctionCall?: MockRealtimeFunctionCall;
   mockFinishArguments?: unknown;
   onEvent?: (event: any) => void;
   onSpeakingChange?: (speaking: boolean) => void;
@@ -133,15 +141,25 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
       timersRef.current.push(assistantStarted);
     });
 
-    if (opts.mockFinishArguments) {
+    const mockFunctionCall = opts.mockFunctionCall ??
+      (opts.mockFinishArguments
+        ? {
+            name: "finish_practice",
+            callId: "mock_finish_practice",
+            arguments: opts.mockFinishArguments,
+            afterMs: 1900,
+          }
+        : null);
+
+    if (mockFunctionCall) {
       const finish = setTimeout(() => {
         opts.onEvent?.({
           type: "response.function_call_arguments.done",
-          name: "finish_practice",
-          call_id: "mock_finish_practice",
-          arguments: JSON.stringify(opts.mockFinishArguments),
+          name: mockFunctionCall.name,
+          call_id: mockFunctionCall.callId ?? `mock_${mockFunctionCall.name}`,
+          arguments: JSON.stringify(mockFunctionCall.arguments),
         });
-      }, cursor + 1900);
+      }, cursor + (mockFunctionCall.afterMs ?? 1900));
       timersRef.current.push(finish);
     }
   }, [cleanup, opts]);
