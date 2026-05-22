@@ -33,6 +33,8 @@ import { PracticePage } from "./pages/practice/PracticePage";
 import { MissionCompletePage } from "./pages/practice/MissionCompletePage";
 import { ReviewPage } from "./pages/practice/ReviewPage";
 import {
+  buildDefaultOnboardingProfile,
+  buildFallbackReviewDraft,
   buildOnboardingProfile,
   type MemoryCard,
   type OnboardingProfile,
@@ -76,19 +78,70 @@ function isStepLocked(): boolean {
   return new URLSearchParams(window.location.search).get("lockStep") === "1";
 }
 
+function isMockMode(): boolean {
+  if (typeof window === "undefined") return false;
+  const mock = new URLSearchParams(window.location.search).get("mock");
+  return mock === "1" || mock === "true";
+}
+
+function buildMockPracticeResult(): PracticeSessionResult {
+  const now = new Date().toISOString();
+  const profile = buildDefaultOnboardingProfile();
+  const transcript = [
+    {
+      id: "mock_user_1",
+      speaker: "user" as const,
+      text: profile.firstLessonPromptSeed.suggestedOpener,
+      createdAt: now,
+    },
+    {
+      id: "mock_assistant_1",
+      speaker: "assistant" as const,
+      text: "That is a great question. I am happy to share how I got started.",
+      createdAt: now,
+    },
+    {
+      id: "mock_user_2",
+      speaker: "user" as const,
+      text: "Could I send you one quick question later about how you found your first role?",
+      createdAt: now,
+    },
+  ];
+
+  return {
+    id: "mock_practice_result",
+    sceneTitle: profile.firstLessonPromptSeed.sceneTitle,
+    partnerName: profile.firstLessonPromptSeed.partnerName,
+    completionType: "natural",
+    startedAt: now,
+    endedAt: now,
+    durationSeconds: 180,
+    transcript,
+    reviewDraft: buildFallbackReviewDraft(transcript, profile),
+    scoreDelta: 25,
+  };
+}
+
+function readInitialPracticeResult(): PracticeSessionResult | null {
+  if (!isMockMode()) return null;
+  const step = readStepFromUrl();
+  return step === "mission-complete" || step === "review" ? buildMockPracticeResult() : null;
+}
+
 export default function App() {
+  const initialPracticeResultRef = useRef<PracticeSessionResult | null>(readInitialPracticeResult());
   const [step, setStep] = useState<Step>(readStepFromUrl);
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
-  const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
+  const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(initialPracticeResultRef.current);
   const [, setTranscriptRecords] = useState<TranscriptRecord[]>([]);
   const [, setMemoryCards] = useState<MemoryCard[]>([]);
   const [points, setPoints] = useState(320);
-  const [streak, setStreak] = useState(2);
-  const [lastReward, setLastReward] = useState({ scoreDelta: 25, streak: 2 });
+  const [streak, setStreak] = useState(() => (initialPracticeResultRef.current ? 3 : 2));
+  const [lastReward, setLastReward] = useState(() => ({ scoreDelta: 25, streak: initialPracticeResultRef.current ? 3 : 2 }));
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
 
