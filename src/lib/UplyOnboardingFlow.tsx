@@ -7,7 +7,7 @@
  *
  * Linear flow:
  *   ┌────── ACT I ──────┐  ┌──── INTERLUDE ────┐  ┌──── EPILOGUE ─────┐
- *   stage → conversation → linkedin → analyzing → result → reflection → goal → slogan → home
+ *   stage → conversation → analyzing → result → reflection → goal → slogan → home
  *
  * Branching from your existing app:
  *   <CurtainScreen onDone={() => start("stage")} />
@@ -16,7 +16,7 @@
  */
 import { useState } from "react";
 
-import { StageScreen, ConversationScreen, LinkedInScreen } from "@/pages/act-i/ActI";
+import { StageScreen, ConversationScreen } from "@/pages/act-i/ActI";
 import {
   AnalyzingScreen, ResultScreen, ReflectionScreen,
   ArchetypeId, ReflectionBucket,
@@ -26,7 +26,6 @@ import { GoalScreen, SloganScreen, HomeScreen, GoalId, User } from "@/pages/epil
 export type OnboardingStep =
   | "stage"        // ACT I — illustrated after-party scene
   | "conversation" // ACT I — dialogue with Maya
-  | "linkedin"     // ACT I — LinkedIn connection confirmed
   | "analyzing"    // INTERLUDE — reviewing the tape
   | "result"       // INTERLUDE — archetype reveal
   | "reflection"   // INTERLUDE — does this match the real you?
@@ -66,11 +65,9 @@ export default function UplyOnboardingFlow({
       return <StageScreen onMicTap={() => go("conversation")} />;
     case "conversation":
       return <ConversationScreen
-        onComplete={() => go("linkedin")}
+        onComplete={() => go("analyzing")}
         onSkip={() => go("analyzing")}
       />;
-    case "linkedin":
-      return <LinkedInScreen onContinue={() => go("analyzing")} />;
     case "analyzing":
       return <AnalyzingScreen onDone={() => go("result")} />;
     case "result":
@@ -85,7 +82,7 @@ export default function UplyOnboardingFlow({
         else go("home");
       }} />;
     case "home":
-      return <HomeScreen user={user} goalId={goalId} onRestart={() => go("stage")} />;
+      return <HomeScreen user={user} onRestart={() => go("stage")} onStartMission={() => go("stage")} />;
   }
 }
 

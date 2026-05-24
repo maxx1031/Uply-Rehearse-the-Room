@@ -8,6 +8,9 @@ export type RealtimeStatus =
   | "ending"
   | "error";
 
+/** Scripted assistant/user turn used by the practice page's mock script. */
+export type MockRealtimeTurn = { role: "assistant" | "user"; text: string; afterMs?: number };
+
 export interface UseRealtimeOptions {
   /** Path to the serverless function that mints the ephemeral token. */
   tokenEndpoint?: string;
@@ -15,6 +18,16 @@ export interface UseRealtimeOptions {
   onEvent?: (event: any) => void;
   /** Called when the model starts/stops speaking (audio output activity). */
   onSpeakingChange?: (speaking: boolean) => void;
+  /** No-op here; accepted for compatibility with the practice page. */
+  probeOnMount?: boolean;
+  /** No-op here; accepted for compatibility with the practice page. */
+  tokenRequestBody?: unknown;
+  /** No-op here; accepted for compatibility with the practice page. */
+  mockScript?: MockRealtimeTurn[];
+  /** No-op here; accepted for compatibility with the practice page. */
+  mockFinishArguments?: unknown;
+  /** No-op here; accepted for compatibility with the practice page. */
+  mockFunctionCall?: unknown;
 }
 
 export interface UseRealtimeReturn {
@@ -33,6 +46,8 @@ export interface UseRealtimeReturn {
   endTurn: () => void;
   /** Send a raw event over the data channel (e.g. function_call_output, response.create). */
   sendEvent: (event: unknown) => void;
+  /** Practice-page compatibility shim: toggles the mic track's enabled flag. */
+  setInputEnabled: (enabled: boolean) => void;
 }
 
 /**
@@ -163,6 +178,7 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     beginTurn,
     endTurn,
     sendEvent: () => {},
+    setInputEnabled: () => {},
   };
 }
 
@@ -413,5 +429,8 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     }
   }, [tokenEndpoint, cleanup, opts]);
 
-  return { status, error, isAvailable, transcript, start, stop, beginTurn, endTurn, sendEvent };
+  const setInputEnabled = (enabled: boolean) => {
+    micStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = enabled; });
+  };
+  return { status, error, isAvailable, transcript, start, stop, beginTurn, endTurn, sendEvent, setInputEnabled };
 }

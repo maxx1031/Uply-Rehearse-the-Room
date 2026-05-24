@@ -240,10 +240,10 @@ export type ReflectionBucket = "left" | "mid" | "right";
 export function ReflectionScreen({
   onContinue,
 }: { onContinue: (bucket: ReflectionBucket) => void }) {
-  const [val, setVal] = useState(50);
-  const [submitted, setSubmitted] = useState(false);
+  // 5 discrete points (0..4), No on the left to Yes! on the right. null = unset.
+  const [selected, setSelected] = useState<number | null>(null);
 
-  const bucket: ReflectionBucket = val < 33 ? "left" : val > 66 ? "right" : "mid";
+  const bucketOf = (v: number): ReflectionBucket => (v <= 1 ? "left" : v === 2 ? "mid" : "right");
   const feedback: Record<ReflectionBucket, { title: string; body: string }> = {
     left:  { title: "Good news — we already know each other a little 🎯", body: "What you played on stage tonight maps closely to how you usually show up. We'll build from here." },
     mid:   { title: "Somewhere between rehearsal and reality 🪞", body: "Some of this is you; some is the version you wish were you. We'll work in that gap — it's the most useful place to practice." },
@@ -265,45 +265,66 @@ export function ReflectionScreen({
         Drag the marker — there's no wrong answer.
       </div>
 
-      <div style={{ marginTop: 42, position: "relative" }}>
-        <div style={{
-          height: 8, borderRadius: 9999,
-          background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
-          boxShadow: "inset 0 1px 3px rgba(40,30,110,.18)",
-        }} />
-        <input type="range" min={0} max={100} value={val}
-          onChange={e => setVal(+e.target.value)} disabled={submitted}
-          style={{ position: "absolute", top: -12, left: 0, width: "100%", height: 32, opacity: 0, cursor: "pointer" }} />
-        <div style={{
-          position: "absolute", top: -8, left: `${val}%`, transform: "translateX(-50%)",
-          width: 24, height: 24, borderRadius: "50%",
-          background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(107,99,212,.4), 0 0 0 2px var(--accent-purple-mid)",
-          transition: submitted ? "left .4s ease" : "none", pointerEvents: "none",
-        }} />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18,
-          fontSize: "var(--fs-micro)", fontWeight: 700, letterSpacing: ".22em", color: "var(--text-ink-mute)" }}>
-          <span>NOT AT ALL</span><span>SOMEWHERE BETWEEN</span><span>EXACTLY ME</span>
+      <div style={{ marginTop: 36 }}>
+        {/* No / Yes! end labels (handwritten-ish) */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: "0 2px", marginBottom: 6 }}>
+          <span className="uply-serif" style={{ fontSize: 26, fontWeight: 700, fontStyle: "italic", color: "var(--accent-purple-mid)" }}>No</span>
+          <span className="uply-serif" style={{ fontSize: 26, fontWeight: 700, fontStyle: "italic", color: "var(--accent-purple-mid)" }}>Yes!</span>
+        </div>
+
+        {/* track + selected marker */}
+        <div style={{ position: "relative", height: 24 }}>
+          <div style={{
+            position: "absolute", top: 8, left: 0, right: 0, height: 8, borderRadius: 9999,
+            background: "linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-lavender) 50%, var(--accent-purple-mid) 100%)",
+            boxShadow: "inset 0 1px 3px rgba(40,30,110,.18)",
+          }} />
+          {selected !== null && (
+            <div style={{
+              position: "absolute", top: 0, left: `${(selected + 0.5) * 20}%`, transform: "translateX(-50%)",
+              width: 24, height: 24, borderRadius: "50%",
+              background: "var(--text-on-dark)", boxShadow: "0 4px 14px rgba(107,99,212,.4), 0 0 0 2px var(--accent-purple-mid)",
+              transition: "left .25s ease",
+            }} />
+          )}
+        </div>
+
+        {/* 5 discrete tick dots (tap to pick) */}
+        <div style={{ display: "flex", marginTop: 8 }}>
+          {[0, 1, 2, 3, 4].map(v => (
+            <button key={v} onClick={() => setSelected(v)} aria-label={`option ${v + 1}`} style={{
+              flex: 1, display: "flex", justifyContent: "center", alignItems: "center",
+              background: "none", border: "none", cursor: "pointer", padding: "8px 0",
+            }}>
+              <span style={{
+                width: 14, height: 14, borderRadius: "50%",
+                background: selected === v ? "var(--accent-purple-mid)" : "var(--accent-lavender)",
+                boxShadow: selected === v ? "0 0 0 4px rgba(124,108,230,.25)" : "none",
+                transition: "background .15s ease, box-shadow .15s ease",
+              }} />
+            </button>
+          ))}
         </div>
       </div>
 
-      {submitted ? (
+      {selected !== null && (
         <div className="uply-fade-up" style={{
-          marginTop: 32, padding: "18px 18px",
+          marginTop: 24, padding: "18px 18px",
           background: "var(--bg-cream)",
           borderRadius: 18, color: "var(--text-ink)",
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
           <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
-            {feedback[bucket].title}
+            {feedback[bucketOf(selected)].title}
           </div>
-          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{feedback[bucket].body}</div>
+          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{feedback[bucketOf(selected)].body}</div>
         </div>
-      ) : <div style={{ flex: 1 }} />}
+      )}
+
+      <div style={{ flex: 1 }} />
 
       <div style={{ marginTop: 24, paddingBottom: 8 }}>
-        {submitted
-          ? <PrimaryBtn onClick={() => onContinue(bucket)}>Continue</PrimaryBtn>
-          : <PrimaryBtn onClick={() => setSubmitted(true)}>Submit my read</PrimaryBtn>}
+        <PrimaryBtn disabled={selected === null} onClick={() => selected !== null && onContinue(bucketOf(selected))}>Next →</PrimaryBtn>
       </div>
     </div>
   );

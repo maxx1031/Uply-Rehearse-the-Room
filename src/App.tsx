@@ -8,9 +8,9 @@ import { LoginScreen } from "./pages/intro/LoginScreen";
 import { TicketConfirmOverlay } from "./pages/intro/TicketConfirmScreen";
 import { CurtainScreen } from "./pages/intro/CurtainScreen";
 
-// act-i (new after-party scene + handoff conversation/linkedin)
+// act-i (new after-party scene + conversation)
 import { AfterPartyScene } from "./pages/act-i/AfterPartyScene";
-import { ConversationScreen, LinkedInScreen } from "./pages/act-i/ActI";
+import { ConversationScreen } from "./pages/act-i/ActI";
 
 // interlude (handoff)
 import {
@@ -25,22 +25,29 @@ import {
 import {
   GoalScreen,
   SloganScreen,
-  HomeScreen,
   type GoalId,
 } from "./pages/epilogue/Epilogue";
+import { HomeScreen } from "./pages/home/HomeScreen";
 import { ProfileScreen } from "./pages/profile/ProfileScreen";
+import { MissionPage } from "./pages/mission/MissionPage";
+import { PracticePage } from "./pages/practice/PracticePage";
+import { MissionCompletePage } from "./pages/practice/MissionCompletePage";
+import { ReviewPage } from "./pages/practice/ReviewPage";
+import { buildDefaultOnboardingProfile, type PracticeSessionResult } from "./lib/onboardingProfile";
 
 type Step =
   // intro
   | "splash" | "ticket" | "login" | "curtain"
   // act-i
-  | "after-party" | "conversation" | "linkedin"
+  | "after-party" | "conversation"
   // interlude
   | "analyzing" | "result" | "reflection"
   // epilogue
   | "goal" | "slogan" | "home"
   // profile
-  | "profile";
+  | "profile"
+  // practice loop (new)
+  | "mission" | "practice" | "mission-complete" | "review";
 
 interface OverlayState {
   userName: string;
@@ -52,10 +59,11 @@ const DEFAULT_ARCHETYPE: ArchetypeId = "quiet-observer";
 
 const VALID_STEPS: Step[] = [
   "splash", "ticket", "login", "curtain",
-  "after-party", "conversation", "linkedin",
+  "after-party", "conversation",
   "analyzing", "result", "reflection",
   "goal", "slogan", "home",
   "profile",
+  "mission", "practice", "mission-complete", "review",
 ];
 
 function readStepFromUrl(): Step {
@@ -73,8 +81,9 @@ export default function App() {
   const [step, setStep] = useState<Step>(readStepFromUrl);
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [goalId, setGoalId] = useState<GoalId | null>(null);
+  const [, setUserName] = useState<string | null>(null);
+  const [, setGoalId] = useState<GoalId | null>(null);
+  const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
   // bucket is captured for future branching but not yet consumed downstream.
   const [, setBucket] = useState<ReflectionBucket | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -203,15 +212,9 @@ export default function App() {
             {step === "conversation" && (
               <motion.div key="conversation" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <ConversationScreen
-                  onComplete={() => go("linkedin")}
+                  onComplete={() => go("analyzing")}
                   onSkip={() => go("goal")}
                 />
-              </motion.div>
-            )}
-
-            {step === "linkedin" && (
-              <motion.div key="linkedin" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <LinkedInScreen onContinue={() => go("analyzing")} />
               </motion.div>
             )}
 
@@ -250,9 +253,8 @@ export default function App() {
             {step === "home" && (
               <motion.div key="home" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <HomeScreen
-                  user={userName ? { name: userName } : undefined}
-                  goalId={goalId ?? undefined}
                   onRestart={restartFlow}
+                  onStartMission={() => go("mission")}
                 />
               </motion.div>
             )}
@@ -260,6 +262,43 @@ export default function App() {
             {step === "profile" && (
               <motion.div key="profile" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
                 <ProfileScreen onBack={() => go("home", -1)} />
+              </motion.div>
+            )}
+
+            {step === "mission" && (
+              <motion.div key="mission" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
+                <MissionPage
+                  profile={buildDefaultOnboardingProfile()}
+                  onBack={() => go("home", -1)}
+                  onStartPractice={() => go("practice")}
+                />
+              </motion.div>
+            )}
+
+            {step === "practice" && (
+              <motion.div key="practice" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <PracticePage
+                  profile={buildDefaultOnboardingProfile()}
+                  onExit={() => go("home", -1)}
+                  onComplete={(result: PracticeSessionResult) => { setSessionResult(result); go("mission-complete"); }}
+                />
+              </motion.div>
+            )}
+
+            {step === "mission-complete" && (
+              <motion.div key="mission-complete" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <MissionCompletePage scoreDelta={120} streak={3} onDone={() => go("review")} />
+              </motion.div>
+            )}
+
+            {step === "review" && sessionResult && (
+              <motion.div key="review" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
+                <ReviewPage
+                  result={sessionResult}
+                  streak={3}
+                  onTryAgain={() => go("practice")}
+                  onDone={() => go("home", -1)}
+                />
               </motion.div>
             )}
           </AnimatePresence>
