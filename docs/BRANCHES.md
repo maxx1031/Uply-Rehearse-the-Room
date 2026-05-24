@@ -10,7 +10,7 @@
 
 | 模块 | 谁 | 分支 | 状态 |
 |---|---|---|---|
-| home(4-tab)+ Learn + Review + 5 点 reflection + 删 LinkedIn + 练习闭环 | max | `feat/review-v5-update` | ✅ |
+| home(4-tab)+ Learn + Review + 5 点 reflection + 删 LinkedIn + 练习闭环 + home/review UI 视觉统一(黄气泡+76 圆) | max | `feat/review-v5-update` | ✅ |
 | goal 屏按钮三态(草稿) | max | `page/goal-style-unify` | 🟡 |
 | 其它(intro / conversation / result / profile / 真语音) | max | `main` | ✅(已合) |
 

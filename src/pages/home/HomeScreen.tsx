@@ -188,7 +188,7 @@ export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
               style={{ margin: "0 16px 22px", display: "flex", alignItems: "center", gap: 10 }}
             >
               {/* Bubble — narrowed so left edge ~aligns with Networking label */}
-              <div style={{ flex: 1, position: "relative", marginLeft: 4 }}>
+              <div style={{ flex: 1, position: "relative", marginLeft: 44 }}>
                 <div style={{
                   background: "#FFCF4A",
                   borderRadius: 18,

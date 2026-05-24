@@ -158,46 +158,43 @@ export function ReviewScreen() {
       {/* ── Empty scene cards grid (future content) ── */}
       <div style={{ padding: "0 16px", minHeight: 120, flexShrink: 0 }} />
 
-      {/* ── Megaphone module — yellow pill banner with megaphone head attached ── */}
+      {/* ── Megaphone module — yellow rounded bubble with megaphone head on right ── */}
       <div style={{
         marginTop: "auto",
-        padding: "24px 24px 130px",
+        padding: "24px 16px 130px",
         flexShrink: 0,
         pointerEvents: "none",
       }}>
-        <div style={{ position: "relative", height: 110, width: "100%" }}>
-          {/* Yellow pill bar — sits behind, leaves room for megaphone head on right */}
-          <div style={{
-            position: "absolute",
-            top: "50%",
-            left: 0,
-            right: 90,
-            transform: "translateY(-50%)",
-            height: 56,
-            borderRadius: 999,
-            background: "#FFCF4A",
-            boxShadow: "0 6px 16px rgba(255,200,80,0.35)",
-            overflow: "hidden",
-          }}>
-            {/* Subtle white wavy decoration inside the bar */}
-            <svg width="100%" height="56" viewBox="0 0 200 56" preserveAspectRatio="none" style={{ position: "absolute", inset: 0 }}>
-              <path d="M10 28 Q 25 18, 40 28 T 70 28 T 100 28 T 130 28 T 160 28 T 190 28" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-              <path d="M14 38 Q 30 30, 46 38 T 76 38 T 106 38 T 136 38 T 166 38" stroke="rgba(255,255,255,0.5)" strokeWidth="2" fill="none" strokeLinecap="round" />
-            </svg>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Yellow bubble — matches home page Luna bubble */}
+          <div style={{ flex: 1, position: "relative", marginLeft: 44 }}>
+            <div style={{
+              background: "#FFCF4A",
+              borderRadius: 18,
+              padding: "13px 16px",
+            }}>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 400, fontSize: "15px", color: "#2a1f0e", lineHeight: 1.45 }}>
+                You're not "being fake", you're prepping!
+              </div>
+            </div>
+            {/* Tail pointing right toward megaphone */}
+            <div style={{
+              position: "absolute",
+              right: -10,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 0, height: 0,
+              borderTop: "9px solid transparent",
+              borderBottom: "9px solid transparent",
+              borderLeft: "11px solid #FFCF4A",
+            }} />
           </div>
-          {/* Megaphone head — anchors the right side, smaller than the bar */}
+          {/* Megaphone head — same size as home avatar */}
           <img
             src={megaphone}
             alt=""
             aria-hidden
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: 140, height: "auto",
-              display: "block",
-            }}
+            style={{ width: 76, height: 76, objectFit: "contain", flexShrink: 0, display: "block" }}
           />
         </div>
       </div>
