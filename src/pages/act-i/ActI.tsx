@@ -211,9 +211,12 @@ const MISSION_DESC_SHORT = "A senior you'd seen at the library is at the party t
 const MAYA_NAME = "Maya";
 
 export function ConversationScreen({
-  onComplete, onSkip,
-}: { onComplete: () => void; onSkip: () => void }) {
+  onComplete, onSkip, onDebugSkip,
+}: { onComplete: () => void; onSkip: () => void; onDebugSkip?: () => void }) {
   const [phase, setPhase] = useState<Phase>("mission");
+  // ?debug=1 → show a small floating "skip to analyzing" button so we can
+  // jump past the live voice conversation while iterating downstream screens.
+  const DEBUG = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debug") === "1";
   const [beat, setBeat] = useState(-1);
   const [history, setHistory] = useState<{ who: "npc" | "me"; text: string }[]>([]);
   const [countdown, setCountdown] = useState(3);
@@ -397,6 +400,18 @@ export function ConversationScreen({
     <div style={{
       position: "absolute", inset: 0, overflow: "hidden",
     }}>
+      {/* Debug skip — only when ?debug=1. Jumps past the live conversation. */}
+      {DEBUG && onDebugSkip && (
+        <button
+          onClick={onDebugSkip}
+          style={{
+            position: "absolute", top: 8, right: 8, zIndex: 999,
+            padding: "4px 10px", borderRadius: 999, border: "none",
+            background: "rgba(0,0,0,0.65)", color: "#fff",
+            fontFamily: "monospace", fontSize: 11, cursor: "pointer",
+          }}
+        >skip → analyzing</button>
+      )}
       {/* Scene background */}
       <img
         src={sceneBg}

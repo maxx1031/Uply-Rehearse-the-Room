@@ -214,6 +214,7 @@ export default function App() {
                 <ConversationScreen
                   onComplete={() => go("analyzing")}
                   onSkip={() => go("goal")}
+                  onDebugSkip={() => { lockedRef.current = false; go("analyzing"); }}
                 />
               </motion.div>
             )}
