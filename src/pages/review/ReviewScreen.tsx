@@ -1,11 +1,138 @@
 import { useState } from "react";
-import { Plus, Mic, ArrowUp, Clock } from "lucide-react";
+import { Plus, Mic, ArrowUp, Clock, ChevronLeft, ChevronRight, User, MapPin } from "lucide-react";
 import bg55 from "@/assets/imports/55.png";
 import megaphone from "@/assets/imports/you2.png";
+import { ConversationScreen } from "./ConversationScreen";
 
 // Single source of truth for the page's brand purple. Used by the input
 // frame, dividers and any other accent. Keeps the screen visually unified.
 const BRAND_PURPLE = "#5b52cc";
+
+const HISTORY_DATA = [
+  {
+    period: "Previous 7 days",
+    records: [
+      { target: "Alumni",    location: "LinkedIn", time: "2 days ago",  title: "Reached out to CS senior on LinkedIn" },
+      { target: "Recruiter", location: "Email",    time: "4 days ago",  title: "Follow-up after first-round interview" },
+      { target: "Professor", location: "Campus",   time: "6 days ago",  title: "Asked for a research opportunity intro" },
+    ],
+  },
+  {
+    period: "Previous 30 days",
+    records: [
+      { target: "Alumni",    location: "Café",     time: "2 weeks ago", title: "Coffee chat with marketing lead" },
+      { target: "Senior",    location: "Event",    time: "3 weeks ago", title: "Met at career fair, sent follow-up" },
+      { target: "Recruiter", location: "LinkedIn", time: "3 weeks ago", title: "LinkedIn connection message sent" },
+      { target: "Peer",      location: "Campus",   time: "4 weeks ago", title: "Study group networking ask" },
+    ],
+  },
+  {
+    period: "April",
+    records: [
+      { target: "Alumni",    location: "Zoom",   time: "Apr 28", title: "Virtual informational interview prep" },
+      { target: "Recruiter", location: "Email",  time: "Apr 22", title: "Cold email to startup founder" },
+      { target: "Senior",    location: "Campus", time: "Apr 17", title: "Bumped into lab senior, asked for chat" },
+    ],
+  },
+];
+
+function Tag({ icon: Icon, label, bg, color }: { icon: React.ElementType; label: string; bg: string; color: string }) {
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      background: bg, borderRadius: 20,
+      padding: "3px 8px",
+    }}>
+      <Icon size={10} color={color} strokeWidth={2} />
+      <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, fontSize: "10px", color, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function HistoryPanel({ onClose, onOpenConversation }: { onClose: () => void; onOpenConversation: (idx: number) => void }) {
+  return (
+    <div
+      style={{
+        position: "absolute", inset: 0, zIndex: 40,
+        background: "#f0ede8", display: "flex", flexDirection: "column",
+      }}
+    >
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "52px 20px 16px", flexShrink: 0,
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: "white", border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <ChevronLeft size={18} color="#1a1830" strokeWidth={2} />
+        </button>
+
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ flex: 1, height: 1, background: "#d4cfea" }} />
+          <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, fontSize: "11px", color: "#9896b8", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+            Previous Sessions
+          </span>
+          <div style={{ flex: 1, height: 1, background: "#d4cfea" }} />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", padding: "0 16px 110px" } as React.CSSProperties}>
+        {(() => {
+          let globalIdx = 0;
+          return HISTORY_DATA.map((section) => (
+            <div key={section.period} style={{ marginBottom: 24 }}>
+              <div style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "18px", color: "#1a1830", marginBottom: 10 }}>
+                {section.period}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {section.records.map((rec) => {
+                  const idx = globalIdx++;
+                  const clickable = idx < 3;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => clickable && onOpenConversation(idx)}
+                      style={{
+                        background: "white",
+                        borderRadius: 16,
+                        padding: "12px 14px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                        border: "1px solid rgba(210,200,245,0.5)",
+                        cursor: clickable ? "pointer" : "default",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <Tag icon={User}   label={rec.target}   bg="#f0edff" color="#6B63D4" />
+                          <Tag icon={MapPin} label={rec.location} bg="#fff8ec" color="#c47a0e" />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "12px", color: "#b8b4d0" }}>{rec.time}</span>
+                          {clickable && <ChevronRight size={13} color="#c4c0d8" strokeWidth={2} />}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830", lineHeight: 1.4 }}>
+                        {rec.title}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ));
+        })()}
+      </div>
+    </div>
+  );
+}
 
 function HistoryButton({ onClick }: { onClick: () => void }) {
   return (
@@ -30,6 +157,7 @@ function HistoryButton({ onClick }: { onClick: () => void }) {
 export function ReviewScreen() {
   const [text, setText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [convIndex, setConvIndex] = useState<number | null>(null);
 
   return (
     <div
@@ -43,21 +171,15 @@ export function ReviewScreen() {
         scrollbarWidth: "none",
       } as React.CSSProperties}
     >
-      <HistoryButton onClick={() => setShowHistory(true)} />
-      {showHistory && (
-        <div
-          onClick={() => setShowHistory(false)}
-          style={{
-            position: "absolute", inset: 0, zIndex: 40,
-            background: "rgba(20,15,60,0.55)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-          }}
-        >
-          <div style={{ color: "white", fontFamily: "'Fredoka', sans-serif", fontSize: 18 }}>
-            History (stub — tap to close)
-          </div>
-        </div>
+      {!showHistory && <HistoryButton onClick={() => setShowHistory(true)} />}
+      {showHistory && convIndex === null && (
+        <HistoryPanel
+          onClose={() => setShowHistory(false)}
+          onOpenConversation={(idx) => setConvIndex(idx)}
+        />
+      )}
+      {convIndex !== null && (
+        <ConversationScreen index={convIndex} onBack={() => setConvIndex(null)} />
       )}
       {/* ── Hero: studio illustration, deeper purple mood + bottom gradient ── */}
       <div style={{
