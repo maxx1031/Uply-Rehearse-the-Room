@@ -86,6 +86,7 @@ export default function App() {
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
   // bucket is captured for future branching but not yet consumed downstream.
   const [, setBucket] = useState<ReflectionBucket | null>(null);
+  const [curtainOpen, setCurtainOpen] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
 
@@ -102,18 +103,23 @@ export default function App() {
 
   const showTicket = (name: string, showTitle: string) => {
     setUserName(name);
-    setOverlay({ userName: name, showTitle, exiting: false });
+    setCurtainOpen(false);
+    go("curtain");
 
     const t1 = setTimeout(() => {
-      setOverlay((prev) => (prev ? { ...prev, exiting: true } : null));
-    }, 3000);
+      setOverlay({ userName: name, showTitle, exiting: false });
+    }, 400);
 
     const t2 = setTimeout(() => {
-      setOverlay(null);
-      go("curtain");
-    }, 3800);
+      setOverlay((prev) => (prev ? { ...prev, exiting: true } : null));
+    }, 3400);
 
-    timersRef.current = [t1, t2];
+    const t3 = setTimeout(() => {
+      setOverlay(null);
+      setCurtainOpen(true);
+    }, 4200);
+
+    timersRef.current = [t1, t2, t3];
   };
 
   const restartFlow = () => {
@@ -198,7 +204,7 @@ export default function App() {
 
             {step === "curtain" && (
               <motion.div key="curtain" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
-                <CurtainScreen onDone={() => go("after-party")} startOpen />
+                <CurtainScreen onDone={() => go("after-party")} startOpen={curtainOpen} />
               </motion.div>
             )}
 
