@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { User, MessageCircle, ScrollText, Drama, Play, MessageSquare, Handshake, Mail, RotateCcw, Users } from "lucide-react";
+import { User, MessageCircle, ScrollText, Drama, Play, MessageSquare, Coffee, HeartHandshake, Sparkles, Users } from "lucide-react";
 import statCalendar from "@/assets/imports/1.png";
 import statStar from "@/assets/imports/3.png";
 import sceneImg from "@/assets/imports/Gemini_Generated_Image_lbtprrlbtprrlbtp.png";
@@ -12,10 +12,10 @@ import { ReviewScreen } from "@/pages/review/ReviewScreen";
 type Tab = "home" | "learn" | "review" | "profile";
 
 const MODULES = [
-  { Icon: MessageSquare, title: "LinkedIn Opener",   subtitle: "Warm first message",   type: "Friendly alumni", duration: "8 min", accent: "#6B63D4", bg: "#f3f1ff" },
-  { Icon: Handshake,     title: "Small Ask",         subtitle: "Ask without pressure", type: "Busy senior",     duration: "7 min", accent: "#F59E0B", bg: "#fffbeb" },
-  { Icon: Mail,          title: "Follow Up",         subtitle: "Gentle second touch",  type: "Neutral contact", duration: "6 min", accent: "#5b52cc", bg: "#eeeaff" },
-  { Icon: RotateCcw,     title: "No Reply Recovery", subtitle: "Reset and try again",  type: "Cold contact",    duration: "5 min", accent: "#10B981", bg: "#f0fdf4" },
+  { Icon: MessageSquare,  title: "LinkedIn Opener",     subtitle: "Warm first message",        type: "Friendly alumni",  duration: "8 min", accent: "#6B63D4", bg: "#f3f1ff" },
+  { Icon: Coffee,         title: "Coffee Chat Invite",  subtitle: "Ask for 15 min over coffee", type: "Busy alum PM",     duration: "7 min", accent: "#F59E0B", bg: "#fffbeb" },
+  { Icon: HeartHandshake, title: "Post-Chat Thank You", subtitle: "Recap and stay in touch",   type: "Recent mentor",    duration: "6 min", accent: "#5b52cc", bg: "#eeeaff" },
+  { Icon: Sparkles,       title: "Quiet Reconnect",     subtitle: "Restart after months silent", type: "Old classmate",  duration: "5 min", accent: "#10B981", bg: "#f0fdf4" },
 ];
 
 const TAB_ITEMS: { icon: React.ElementType; key: Tab }[] = [
