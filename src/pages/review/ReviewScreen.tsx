@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Mic, ArrowUp } from "lucide-react";
+import { Plus, Mic, ArrowUp, Clock } from "lucide-react";
 import bg55 from "@/assets/imports/55.png";
 import megaphone from "@/assets/imports/you2.png";
 
@@ -7,12 +7,34 @@ import megaphone from "@/assets/imports/you2.png";
 // frame, dividers and any other accent. Keeps the screen visually unified.
 const BRAND_PURPLE = "#5b52cc";
 
+function HistoryButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="History"
+      style={{
+        position: "absolute", top: 52, right: 20, zIndex: 30,
+        width: 36, height: 36, borderRadius: "50%",
+        background: "rgba(255,255,255,0.18)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <Clock size={17} color="white" strokeWidth={2} />
+    </button>
+  );
+}
+
 export function ReviewScreen() {
   const [text, setText] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   return (
     <div
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "column",
         height: "100%",
@@ -21,6 +43,22 @@ export function ReviewScreen() {
         scrollbarWidth: "none",
       } as React.CSSProperties}
     >
+      <HistoryButton onClick={() => setShowHistory(true)} />
+      {showHistory && (
+        <div
+          onClick={() => setShowHistory(false)}
+          style={{
+            position: "absolute", inset: 0, zIndex: 40,
+            background: "rgba(20,15,60,0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ color: "white", fontFamily: "'Fredoka', sans-serif", fontSize: 18 }}>
+            History (stub — tap to close)
+          </div>
+        </div>
+      )}
       {/* ── Hero: studio illustration, deeper purple mood + bottom gradient ── */}
       <div style={{
         height: "34vh",
@@ -38,10 +76,16 @@ export function ReviewScreen() {
             display: "block",
           }}
         />
-        {/* Purple tint overlay — deeper purple #3d2fb5, strong atmosphere */}
+        {/* Top purple gradient — mid depth, unified with Profile hero */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: "78%",
+          background: "linear-gradient(180deg, #5b52cc 0%, rgba(91,82,204,0.92) 30%, rgba(124,115,230,0.55) 65%, rgba(124,115,230,0.22) 88%, rgba(107,99,212,0) 100%)",
+          pointerEvents: "none",
+        }} />
+        {/* Bottom atmosphere — cinematic depth */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(61,47,181,0.22) 0%, rgba(61,47,181,0.38) 60%, rgba(61,47,181,0.58) 100%)",
+          background: "linear-gradient(180deg, rgba(40,30,110,0) 50%, rgba(40,30,110,0.22) 100%)",
           pointerEvents: "none",
         }} />
         {/* Bottom gradient fade into page bg, for smooth hand-off */}
