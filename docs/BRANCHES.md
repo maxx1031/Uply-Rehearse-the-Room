@@ -10,9 +10,8 @@
 
 | 模块 | 谁 | 分支 | 状态 |
 |---|---|---|---|
-| home(4-tab)+ Learn + Review + 5 点 reflection + 删 LinkedIn + 练习闭环 + home/review UI 视觉统一(黄气泡+76 圆) | max | `feat/review-v5-update` | ✅ |
+| review 输入页 + 笔记入口 (Clock 按钮 + Previous Sessions 列表 + Conversation 详情) | max | `feat/review-input-page` | ✅(已合 main) |
 | goal 屏按钮三态(草稿) | max | `page/goal-style-unify` | 🟡 |
-| 其它(intro / conversation / result / profile / 真语音) | max | `main` | ✅(已合) |
 
 ## 规则
 1. 改之前在表里写自己那行,标 🟡
@@ -22,5 +21,23 @@
 
 ---
 
-并排看多个分支:`git worktree`,已起的端口
-- 5173 当前分支 · 5174 main · 5175 PR · 5176 (4) 预览
+## 当前在跑的端口 (并排看用)
+
+| 端口 | 目录 | 分支 | 启动方式 | 备注 |
+|---|---|---|---|---|
+| 5182 | `uply-review` | `feat/review-input-page` (= main) | `npm run dev -- --port 5182 --strictPort` | **最新版本**,vite 内置 `/api/realtime-token` 中间件 |
+| 5179 | `uply-ab` | `try/voice-merge` | `npm run dev -- --port 5179` | 同 main, 早一些 |
+| 5173 | `uply` | `feat/review-v5-update` | `npm run dev` | 旧基线 |
+| 5174 | `uply-main` | `save/voice-wip-2026-05-24` (备份) | `npm run dev -- --port 5174` | 旧 voice 备份 |
+| 3000 | `uply-main` | 同上 | `vercel dev --listen 3000` | 演示真 vercel dev 流程 |
+| 5180 | Downloads `Onboarding界面设计 (4)` | n/a | `npm run dev -- --port 5180` | 设计稿参考 (4) |
+| 5181 | Downloads `Onboarding界面设计 (5)` | n/a | `npm run dev -- --port 5181` | 设计稿参考 (5) |
+
+## 跑 main 最干净的方式
+
+```bash
+cd /Users/max/Max1031/Max_lab/uply-review   # 主 worktree, 当前 = main
+npm run dev -- --port 5182 --strictPort
+```
+
+vite 内置的 `localRealtimeTokenApi()` 插件会自动处理 `/api/realtime-token`,需要 `.env.local` 里有 `OPENAI_API_KEY` (`vercel env pull .env.local` 可拉取)。
