@@ -198,7 +198,7 @@ export default function App() {
 
             {step === "curtain" && (
               <motion.div key="curtain" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
-                <CurtainScreen onDone={() => go("after-party")} />
+                <CurtainScreen onDone={() => go("after-party")} startOpen />
               </motion.div>
             )}
 

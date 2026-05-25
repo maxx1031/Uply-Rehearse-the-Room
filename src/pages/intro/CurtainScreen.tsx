@@ -3,20 +3,20 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface Props {
   onDone: () => void;
+  startOpen: boolean;
 }
 
-export function CurtainScreen({ onDone }: Props) {
+export function CurtainScreen({ onDone, startOpen }: Props) {
   const [phase, setPhase] = useState<"closed" | "opening" | "lit" | "done">("closed");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("opening"), 300);
-    // Curtain fully open → lights start coming up
-    const t2 = setTimeout(() => setPhase("lit"), 3000);
-    // Transition out
-    const t3 = setTimeout(() => setPhase("done"), 4200);
-    const t4 = setTimeout(onDone, 4600);
+    if (!startOpen) return;
+    const t1 = setTimeout(() => setPhase("opening"), 100);
+    const t2 = setTimeout(() => setPhase("lit"), 2800);
+    const t3 = setTimeout(() => setPhase("done"), 4000);
+    const t4 = setTimeout(onDone, 4400);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
-  }, [onDone]);
+  }, [startOpen, onDone]);
 
   const isOpen = phase === "opening" || phase === "lit" || phase === "done";
   const isLit = phase === "lit" || phase === "done";
