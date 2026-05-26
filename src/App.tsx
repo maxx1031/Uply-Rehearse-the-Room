@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 // intro (from vercel build)
@@ -33,7 +33,11 @@ import { MissionPage } from "./pages/mission/MissionPage";
 import { PracticePage } from "./pages/practice/PracticePage";
 import { MissionCompletePage } from "./pages/practice/MissionCompletePage";
 import { ReviewPage } from "./pages/practice/ReviewPage";
-import { buildDefaultOnboardingProfile, type PracticeSessionResult } from "./lib/onboardingProfile";
+import {
+  buildDefaultOnboardingProfile,
+  buildOnboardingProfile,
+  type PracticeSessionResult,
+} from "./lib/onboardingProfile";
 
 type Step =
   // intro
@@ -82,10 +86,18 @@ export default function App() {
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
   const [, setUserName] = useState<string | null>(null);
-  const [, setGoalId] = useState<GoalId | null>(null);
+  const [goalId, setGoalId] = useState<GoalId | null>(null);
+  const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
-  // bucket is captured for future branching but not yet consumed downstream.
-  const [, setBucket] = useState<ReflectionBucket | null>(null);
+
+  const onboardingProfile = useMemo(() => {
+    if (!goalId) return buildDefaultOnboardingProfile();
+    return buildOnboardingProfile({
+      selectedGoal: goalId,
+      archetypeId: DEFAULT_ARCHETYPE,
+      reflectionBucket: bucket ?? "mid",
+    });
+  }, [goalId, bucket]);
   const [curtainOpen, setCurtainOpen] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
@@ -275,7 +287,7 @@ export default function App() {
             {step === "mission" && (
               <motion.div key="mission" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
                 <MissionPage
-                  profile={buildDefaultOnboardingProfile()}
+                  profile={onboardingProfile}
                   onBack={() => go("home", -1)}
                   onStartPractice={() => go("practice")}
                 />
@@ -285,7 +297,7 @@ export default function App() {
             {step === "practice" && (
               <motion.div key="practice" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <PracticePage
-                  profile={buildDefaultOnboardingProfile()}
+                  profile={onboardingProfile}
                   onExit={() => go("home", -1)}
                   onComplete={(result: PracticeSessionResult) => { setSessionResult(result); go("mission-complete"); }}
                 />
