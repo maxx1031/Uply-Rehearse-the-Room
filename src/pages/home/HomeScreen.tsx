@@ -8,12 +8,13 @@ import you2Img from "@/assets/imports/you2.png";
 import { ProfileScreen } from "@/pages/profile/ProfileScreen";
 import { LearnScreen } from "@/pages/learn/LearnScreen";
 import { ReviewScreen } from "@/pages/review/ReviewScreen";
+import { FIRST_LESSON_SCENE_TITLE, FIRST_LESSON_PARTNER_SHORT_ROLE } from "@/lib/onboardingProfile";
 
 type Tab = "home" | "learn" | "review" | "profile";
 
 const MODULES = [
   { Icon: MessageSquare,  title: "LinkedIn Opener",     subtitle: "Warm first message",        type: "Friendly alumni",  duration: "8 min", accent: "#6B63D4", bg: "#f3f1ff" },
-  { Icon: Coffee,         title: "Coffee Chat Invite",  subtitle: "Ask for 15 min over coffee", type: "Busy alum PM",     duration: "7 min", accent: "#F59E0B", bg: "#fffbeb" },
+  { Icon: Coffee,         title: "AI PM Coffee Chat",   subtitle: "Ask one focused AI question", type: FIRST_LESSON_PARTNER_SHORT_ROLE, duration: "10 min", accent: "#F59E0B", bg: "#fffbeb" },
   { Icon: HeartHandshake, title: "Post-Chat Thank You", subtitle: "Recap and stay in touch",   type: "Recent mentor",    duration: "6 min", accent: "#5b52cc", bg: "#eeeaff" },
   { Icon: Sparkles,       title: "Quiet Reconnect",     subtitle: "Restart after months silent", type: "Old classmate",  duration: "5 min", accent: "#10B981", bg: "#f0fdf4" },
 ];
@@ -123,7 +124,7 @@ export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
                 {/* Title row */}
                 <div style={{ padding: "12px 14px 8px" }}>
                   <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 400, fontSize: "13px", color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>
-                    Ask for a coffee chat
+                    {FIRST_LESSON_SCENE_TITLE}
                   </div>
                 </div>
 

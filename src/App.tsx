@@ -74,7 +74,7 @@ function readStepFromUrl(): Step {
 
 function isStepLocked(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).has("step");
+  return new URLSearchParams(window.location.search).get("lockStep") === "1";
 }
 
 export default function App() {

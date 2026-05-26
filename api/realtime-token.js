@@ -8,7 +8,7 @@
 //
 // Env required: OPENAI_API_KEY (set via `vercel env add OPENAI_API_KEY`).
 
-const SYSTEM_PROMPT = `You are Maya, a warm, approachable senior university student. The user just finished giving a class presentation, and you've come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
+const ONBOARDING_SYSTEM_PROMPT = `You are Maya, a warm, approachable senior university student. The user just finished giving a class presentation, and you've come over to chat at the after-party outside the Science Building. You vaguely recognize them from the library.
 
 PERSONA
 - Warm, curious, encouraging, genuine. A bit older / more experienced, but never condescending.
@@ -36,7 +36,7 @@ RULES
 - Don't break character. Don't say you're an AI unless directly asked.
 - If the user is silent for a while, prompt them with a friendly follow-up question.`;
 
-const TOOLS = [
+const ONBOARDING_TOOLS = [
   {
     type: "function",
     name: "mark_milestone",
@@ -57,6 +57,95 @@ const TOOLS = [
   },
 ];
 
+const MISSION_TOOLS = [
+  {
+    type: "function",
+    name: "finish_practice",
+    description:
+      "End the practice after the user has built rapport and made a clear small ask, set a follow-up, or reached a natural close.",
+    parameters: {
+      type: "object",
+      properties: {
+        reason: {
+          type: "string",
+          description: "Short reason the practice is ready to finish.",
+        },
+      },
+      required: ["reason"],
+    },
+  },
+];
+
+function normalizeRequestBody(body) {
+  if (!body) return {};
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return {};
+    }
+  }
+  return typeof body === "object" ? body : {};
+}
+
+function readString(value, fallback) {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function readStringList(value) {
+  return Array.isArray(value)
+    ? value.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
+    : [];
+}
+
+function renderList(label, items) {
+  if (!items.length) return [];
+  return [label, ...items.map((item) => `- ${item}`)];
+}
+
+function buildMissionPrompt(body) {
+  const seed = body?.promptSeed && typeof body.promptSeed === "object" ? body.promptSeed : {};
+  const partnerName = readString(seed.partnerName, "Jordan Lee");
+  const partnerRole = readString(seed.partnerRole, "Applied AI PM at a small AI startup");
+  const sceneTitle = readString(seed.sceneTitle, "Coffee chat practice");
+  const openingContext = readString(
+    seed.openingContext,
+    `The user is meeting ${partnerName}, a ${partnerRole}, for a short campus coffee chat.`,
+  );
+  const suggestedOpener = readString(seed.suggestedOpener, "I heard you work on applied AI products and wanted to ask what that actually looks like day to day.");
+  const userGoal = readString(seed.userGoal, "Practice one warm opener and one specific AI PM ask.");
+  const partnerStyle = readString(seed.partnerStyle, "Warm, specific, lightly curious, never pushy");
+  const basePrompt = readString(
+    seed.systemPrompt,
+    `You are ${partnerName}, a warm applied AI product manager in a short coffee chat practice.`,
+  );
+  const coachFocus = readStringList(seed.coachFocus);
+  const tasks = readStringList(seed.tasks);
+  const successCriteria = readStringList(seed.successCriteria);
+
+  return [
+    basePrompt,
+    "",
+    "MISSION CONTEXT",
+    `Scene title: ${sceneTitle}`,
+    `Partner: ${partnerName}, ${partnerRole}`,
+    `Partner style: ${partnerStyle}`,
+    `User goal: ${userGoal}`,
+    `Opening context: ${openingContext}`,
+    `Suggested user opener: ${suggestedOpener}`,
+    "",
+    ...renderList("TASKS", tasks),
+    "",
+    ...renderList("COACHING FOCUS", coachFocus),
+    "",
+    ...renderList("SUCCESS CRITERIA", successCriteria),
+    "",
+    "COMPLETION TOOL",
+    "Use the finish_practice tool according to the finish rules in the role prompt.",
+    "When calling finish_practice, provide only reason. Do not provide review content or scoring.",
+  ].join("\n");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST" && req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
@@ -75,6 +164,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    const body = normalizeRequestBody(req.body);
+    const isMission = body.flow === "mission";
     const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
@@ -84,8 +175,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         session: {
           type: "realtime",
-          model: "gpt-realtime",
-          instructions: SYSTEM_PROMPT,
+          model: isMission ? "gpt-realtime-2" : "gpt-realtime",
+          instructions: isMission ? buildMissionPrompt(body) : ONBOARDING_SYSTEM_PROMPT,
           audio: {
             input: {
               // Transcribe the user's mic so the UI can show captions. Deltas
@@ -98,7 +189,7 @@ export default async function handler(req, res) {
             },
             output: { voice: "marin" },
           },
-          tools: TOOLS,
+          tools: isMission ? MISSION_TOOLS : ONBOARDING_TOOLS,
           tool_choice: "auto",
         },
       }),

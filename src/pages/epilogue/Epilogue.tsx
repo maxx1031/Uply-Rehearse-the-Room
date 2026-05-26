@@ -23,6 +23,11 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { ActLabel, PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
+import {
+  FIRST_LESSON_PARTNER_SHORT_ROLE,
+  FIRST_LESSON_SCENE_SUBTITLE,
+  FIRST_LESSON_SCENE_TITLE,
+} from "@/lib/onboardingProfile";
 import styles from "./Epilogue.module.css";
 
 // ─────────────────────────────────────────────────────────────
@@ -179,9 +184,9 @@ export function HomeScreen({
       icon: MessageCircle,
     },
     {
-      title: "Small Ask",
-      subtitle: "Ask without pressure",
-      meta: "Busy senior · 7 min",
+      title: "AI PM Coffee Chat",
+      subtitle: "Ask one focused AI question",
+      meta: `${FIRST_LESSON_PARTNER_SHORT_ROLE} · 10 min`,
       icon: Handshake,
     },
   ];
@@ -215,8 +220,8 @@ export function HomeScreen({
         <button className={styles.todayCard} onClick={onStartMission}>
           <div className={styles.todayCopy}>
             <div className={styles.darkLabel}>TODAY'S SCRIPT</div>
-            <div className={styles.todayTitle}>Coffee chat practice</div>
-            <div className={styles.todaySub}>CS alum coffee chat · gentle pace · 10 min</div>
+            <div className={styles.todayTitle}>{FIRST_LESSON_SCENE_TITLE}</div>
+            <div className={styles.todaySub}>{FIRST_LESSON_SCENE_SUBTITLE}</div>
           </div>
           <div className={styles.coffeeScene} aria-hidden="true">
             <Coffee size={52} strokeWidth={1.8} />

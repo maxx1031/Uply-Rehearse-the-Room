@@ -192,6 +192,13 @@
   justify-content: center;
   gap: var(--sp-2);
   font-size: var(--fs-body);
+  touch-action: none;
+  user-select: none;
+}
+
+.micButtonRecording {
+  transform: translateY(4px);
+  box-shadow: var(--shadow-btn-pressed);
 }
 
 .pauseLayer,
