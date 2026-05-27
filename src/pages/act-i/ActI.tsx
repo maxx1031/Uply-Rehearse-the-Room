@@ -262,6 +262,44 @@ export function ConversationScreen({
   // 互斥: 同时只显一个气泡 (当前说话方). user 开口 → "user"; Maya 回应 → "maya".
   const [, setActiveBubble] = useState<"maya" | "user" | null>(null);
   const rtRef = useRef<ReturnType<typeof useRealtime> | null>(null);
+  const linkedinCloseRequestedRef = useRef(false);
+  const linkedinClosePendingRef = useRef(false);
+  const linkedinWrapTranscriptDoneRef = useRef(false);
+  const mayaSpeakingRef = useRef(false);
+  const mayaSpeakingSignalSeenRef = useRef(false);
+  const linkedinCompletionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLinkedInCompletionTimer = useCallback(() => {
+    if (!linkedinCompletionTimerRef.current) return;
+    clearTimeout(linkedinCompletionTimerRef.current);
+    linkedinCompletionTimerRef.current = null;
+  }, []);
+
+  const finishVoiceScene = useCallback(() => {
+    clearLinkedInCompletionTimer();
+    linkedinClosePendingRef.current = false;
+    linkedinWrapTranscriptDoneRef.current = false;
+    rtRef.current?.stop();
+    setPhase("complete");
+  }, [clearLinkedInCompletionTimer]);
+
+  const scheduleLinkedInCompletion = useCallback((delayMs = 1200) => {
+    if (!linkedinCloseRequestedRef.current || !linkedinWrapTranscriptDoneRef.current) return;
+    if (mayaSpeakingSignalSeenRef.current && mayaSpeakingRef.current) return;
+    clearLinkedInCompletionTimer();
+    linkedinCompletionTimerRef.current = setTimeout(finishVoiceScene, delayMs);
+  }, [clearLinkedInCompletionTimer, finishVoiceScene]);
+
+  const handleMayaSpeakingChange = useCallback((speaking: boolean) => {
+    mayaSpeakingSignalSeenRef.current = true;
+    mayaSpeakingRef.current = speaking;
+    setMayaSpeaking(speaking);
+    if (!speaking) scheduleLinkedInCompletion();
+  }, [scheduleLinkedInCompletion]);
+
+  useEffect(() => {
+    return () => clearLinkedInCompletionTimer();
+  }, [clearLinkedInCompletionTimer]);
 
   // map a milestone stage → checklist task id (depends on variant)
   const milestoneTaskId = useCallback((stage: string): string | undefined => {
@@ -307,6 +345,11 @@ export function ConversationScreen({
       logTurn("maya", evt.transcript);
       setUserText("");
       setAwaitingUser(false);
+      if (linkedinClosePendingRef.current) {
+        linkedinClosePendingRef.current = false;
+        linkedinWrapTranscriptDoneRef.current = true;
+        scheduleLinkedInCompletion();
+      }
     }
     // mark_milestone tool call → advance checklist. We match the arguments.done
     // event by suffix and do NOT require evt.name (the GA event often omits it);
@@ -319,18 +362,38 @@ export function ConversationScreen({
       // ack the tool call so Maya can keep talking
       rt?.sendEvent({
         type: "conversation.item.create",
-        item: { type: "function_call_output", call_id: evt.call_id, output: JSON.stringify({ ok: true }) },
+        item: {
+          type: "function_call_output",
+          call_id: evt.call_id,
+          output: JSON.stringify(stage === "linkedin"
+            ? {
+                ok: true,
+                next: "Say one brief warm wrap-up line confirming the LinkedIn connection. Do not ask another question or call mark_milestone again.",
+              }
+            : { ok: true }),
+        },
       });
       if (stage === "linkedin") {
-        // let Maya finish her goodbye, then end the scene
-        setTimeout(() => { rt?.stop(); setPhase("complete"); }, 2600);
+        if (linkedinCloseRequestedRef.current) return;
+        linkedinCloseRequestedRef.current = true;
+        linkedinClosePendingRef.current = true;
+        linkedinWrapTranscriptDoneRef.current = false;
+        rt?.sendEvent({
+          type: "response.create",
+          response: {
+            instructions: "Say one brief warm in-character wrap-up line confirming the LinkedIn connection. Do not ask another question. Do not call mark_milestone again.",
+            tool_choice: "none",
+          },
+        });
+        clearLinkedInCompletionTimer();
+        linkedinCompletionTimerRef.current = setTimeout(finishVoiceScene, 18000);
       } else {
         rt?.sendEvent({ type: "response.create" });
       }
     }
-  }, [milestoneTaskId]);
+  }, [clearLinkedInCompletionTimer, finishVoiceScene, milestoneTaskId, scheduleLinkedInCompletion]);
 
-  const rt = useRealtime({ onEvent: handleRtEvent, onSpeakingChange: setMayaSpeaking });
+  const rt = useRealtime({ onEvent: handleRtEvent, onSpeakingChange: handleMayaSpeakingChange });
   rtRef.current = rt;
 
   const playNpcBeat = (i: number) => {
@@ -363,6 +426,12 @@ export function ConversationScreen({
   }, [phase, countdown]);
 
   const startMission = () => {
+    linkedinCloseRequestedRef.current = false;
+    linkedinClosePendingRef.current = false;
+    linkedinWrapTranscriptDoneRef.current = false;
+    mayaSpeakingRef.current = false;
+    mayaSpeakingSignalSeenRef.current = false;
+    clearLinkedInCompletionTimer();
     if (rt.isAvailable) {
       setPhase("voice");
       rt.start();
@@ -381,9 +450,9 @@ export function ConversationScreen({
         markTask(variant === "b" ? "ask" : "linkedin");
         setPhase("ending-npc-typing");
         setTimeout(() => {
-          setHistory(h => [...h, { who: "npc", text: "Of course! Let me add you right now 🌟" }]);
+          setHistory(h => [...h, { who: "npc", text: "Of course, let's connect. This was really nice, and I'll see you around the library." }]);
           setPhase("ending");
-          setTimeout(() => setPhase("complete"), 1600);
+          setTimeout(() => setPhase("complete"), 2600);
         }, 1100);
       } else {
         playNpcBeat(c.next!);
