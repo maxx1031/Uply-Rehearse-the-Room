@@ -27,7 +27,7 @@ import {
   SloganScreen,
   type GoalId,
 } from "./pages/epilogue/Epilogue";
-import { HomeScreen } from "./pages/home/HomeScreen";
+import { HomeScreen, type HomeTab } from "./pages/home/HomeScreen";
 import { ProfileScreen } from "./pages/profile/ProfileScreen";
 import { MissionPage } from "./pages/mission/MissionPage";
 import { PracticePage } from "./pages/practice/PracticePage";
@@ -36,9 +36,27 @@ import { ReviewPage } from "./pages/practice/ReviewPage";
 import {
   buildDefaultOnboardingProfile,
   buildOnboardingProfile,
+  type MemoryCard,
   type PracticeSessionResult,
+  type TranscriptRecord,
 } from "./lib/onboardingProfile";
 import { loadStoredUserName, persistUserName, PROFILE_CONSTANTS } from "./lib/profileConfig";
+import {
+  applyLessonMemory,
+  buildCourseReviewDraft,
+  buildInitialCourseProgress,
+  buildInitialIntroMemory,
+  buildLessonMemoryCard,
+  buildLessonPromptSeed,
+  completeLesson,
+  getLessonById,
+  getNextLessonId,
+  SELF_INTRO_LESSONS,
+  type CourseLessonId,
+  type CourseProgress,
+  type IntroMemory,
+  type LessonMemoryCard,
+} from "./lib/selfIntroCourse";
 
 type Step =
   // intro
@@ -71,6 +89,10 @@ const VALID_STEPS: Step[] = [
   "mission", "practice", "mission-complete", "review",
 ];
 const COMPLETED_LESSONS_STORAGE_KEY = "uply.completedLessons";
+const COURSE_PROGRESS_STORAGE_KEY = "uply.courseProgress";
+const INTRO_MEMORY_STORAGE_KEY = "uply.introMemory";
+const COURSE_SCORE_STORAGE_KEY = "uply.courseScore";
+const COURSE_STREAK_STORAGE_KEY = "uply.courseStreak";
 const HOME_TODO_STORAGE_KEY = "uply.review.todos";
 const DEFAULT_HOME_TODOS = [
   "Review one LinkedIn opener before noon",
@@ -94,6 +116,112 @@ function persistCompletedLessonCount(value: number): void {
   window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, String(safeValue));
 }
 
+function progressFromCompletedCount(count: number): CourseProgress {
+  const safeCount = Math.max(0, Math.min(5, Math.floor(count)));
+  const completedLessonIds = SELF_INTRO_LESSONS.slice(0, safeCount).map((lesson) => lesson.id);
+  const currentLessonId = SELF_INTRO_LESSONS[Math.min(safeCount, SELF_INTRO_LESSONS.length - 1)].id;
+  return {
+    ...buildInitialCourseProgress(),
+    currentLessonId,
+    completedLessonIds,
+  };
+}
+
+function normalizeCourseProgress(value: unknown): CourseProgress | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Partial<CourseProgress>;
+  const lessonIds = new Set<CourseLessonId>(SELF_INTRO_LESSONS.map((lesson) => lesson.id));
+  const completedLessonIds = Array.isArray(raw.completedLessonIds)
+    ? raw.completedLessonIds.filter((id): id is CourseLessonId => lessonIds.has(id as CourseLessonId))
+    : [];
+  const currentLessonId = lessonIds.has(raw.currentLessonId as CourseLessonId)
+    ? raw.currentLessonId as CourseLessonId
+    : SELF_INTRO_LESSONS[Math.min(completedLessonIds.length, SELF_INTRO_LESSONS.length - 1)].id;
+  return {
+    themeId: "alumni-coffee-intro",
+    currentLessonId,
+    completedLessonIds,
+    lastPracticedAt: typeof raw.lastPracticedAt === "string" ? raw.lastPracticedAt : null,
+  };
+}
+
+function loadCourseProgress(): CourseProgress {
+  if (typeof window === "undefined") return buildInitialCourseProgress();
+  const raw = window.localStorage.getItem(COURSE_PROGRESS_STORAGE_KEY);
+  if (raw) {
+    try {
+      const parsed = normalizeCourseProgress(JSON.parse(raw));
+      if (parsed) return parsed;
+    } catch {}
+  }
+  return progressFromCompletedCount(loadCompletedLessonCount());
+}
+
+function persistCourseProgress(progress: CourseProgress): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(COURSE_PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+  persistCompletedLessonCount(progress.completedLessonIds.length);
+}
+
+function normalizeLessonCards(value: unknown): LessonMemoryCard[] {
+  if (!Array.isArray(value)) return [];
+  const lessonIds = new Set<CourseLessonId>(SELF_INTRO_LESSONS.map((lesson) => lesson.id));
+  return value.filter((item): item is LessonMemoryCard => {
+    if (!item || typeof item !== "object") return false;
+    const raw = item as Partial<LessonMemoryCard>;
+    return (
+      typeof raw.id === "string" &&
+      lessonIds.has(raw.lessonId as CourseLessonId) &&
+      typeof raw.label === "string" &&
+      typeof raw.value === "string" &&
+      typeof raw.createdAt === "string"
+    );
+  });
+}
+
+function normalizeIntroMemory(value: unknown): IntroMemory | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Partial<IntroMemory>;
+  return {
+    identityAnchor: typeof raw.identityAnchor === "string" ? raw.identityAnchor : null,
+    professionalAnchor: typeof raw.professionalAnchor === "string" ? raw.professionalAnchor : null,
+    curiosityHook: typeof raw.curiosityHook === "string" ? raw.curiosityHook : null,
+    customizedIntro: typeof raw.customizedIntro === "string" ? raw.customizedIntro : null,
+    finalIntro: typeof raw.finalIntro === "string" ? raw.finalIntro : null,
+    nextSmallAsk: typeof raw.nextSmallAsk === "string" ? raw.nextSmallAsk : null,
+    lessonCards: normalizeLessonCards(raw.lessonCards),
+  };
+}
+
+function loadIntroMemory(): IntroMemory {
+  if (typeof window === "undefined") return buildInitialIntroMemory();
+  const raw = window.localStorage.getItem(INTRO_MEMORY_STORAGE_KEY);
+  if (!raw) return buildInitialIntroMemory();
+  try {
+    return normalizeIntroMemory(JSON.parse(raw)) ?? buildInitialIntroMemory();
+  } catch {
+    return buildInitialIntroMemory();
+  }
+}
+
+function persistIntroMemory(memory: IntroMemory): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(INTRO_MEMORY_STORAGE_KEY, JSON.stringify(memory));
+}
+
+function loadStoredNumber(key: string, fallback: number): number {
+  if (typeof window === "undefined") return fallback;
+  const raw = window.localStorage.getItem(key);
+  if (raw === null) return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function persistStoredNumber(key: string, value: number): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, String(value));
+}
+
 function readStepFromUrl(): Step {
   if (typeof window === "undefined") return "splash";
   const param = new URLSearchParams(window.location.search).get("step");
@@ -113,7 +241,14 @@ export default function App() {
   const [goalId, setGoalId] = useState<GoalId | null>(null);
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
-  const [completedLessons, setCompletedLessons] = useState<number>(() => loadCompletedLessonCount());
+  const [courseProgress, setCourseProgress] = useState<CourseProgress>(() => loadCourseProgress());
+  const [introMemory, setIntroMemory] = useState<IntroMemory>(() => loadIntroMemory());
+  const [activeLessonId, setActiveLessonId] = useState<CourseLessonId>(() => courseProgress.currentLessonId);
+  const [homeInitialTab, setHomeInitialTab] = useState<HomeTab>("home");
+  const [score, setScore] = useState<number>(() => loadStoredNumber(COURSE_SCORE_STORAGE_KEY, 14000));
+  const [streak, setStreak] = useState<number>(() => loadStoredNumber(COURSE_STREAK_STORAGE_KEY, 10));
+  const [, setTranscriptRecords] = useState<TranscriptRecord[]>([]);
+  const [, setMemoryCards] = useState<MemoryCard[]>([]);
   const debugModeEnabled =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
@@ -130,6 +265,15 @@ export default function App() {
       reflectionBucket: profileBucket,
     });
   }, [goalId, bucket]);
+  const activeLesson = useMemo(() => getLessonById(activeLessonId), [activeLessonId]);
+  const activePromptSeed = useMemo(
+    () => buildLessonPromptSeed(activeLesson, introMemory),
+    [activeLesson, introMemory],
+  );
+  const courseProfile = useMemo(
+    () => ({ ...onboardingProfile, firstLessonPromptSeed: activePromptSeed }),
+    [activePromptSeed, onboardingProfile],
+  );
   const [curtainOpen, setCurtainOpen] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
@@ -173,27 +317,75 @@ export default function App() {
   };
 
   const restartFlow = () => {
+    const resetProgress = buildInitialCourseProgress();
+    const resetMemory = buildInitialIntroMemory();
     setUserName(PROFILE_CONSTANTS.defaultUserName);
     persistUserName(PROFILE_CONSTANTS.defaultUserName);
     setGoalId(null);
     setBucket(null);
-    setCompletedLessons(0);
-    persistCompletedLessonCount(0);
+    setCourseProgress(resetProgress);
+    setIntroMemory(resetMemory);
+    setActiveLessonId(resetProgress.currentLessonId);
+    setHomeInitialTab("home");
+    setScore(14000);
+    setStreak(10);
+    persistCourseProgress(resetProgress);
+    persistIntroMemory(resetMemory);
+    persistStoredNumber(COURSE_SCORE_STORAGE_KEY, 14000);
+    persistStoredNumber(COURSE_STREAK_STORAGE_KEY, 10);
     go("splash");
   };
 
-  const handleLearnLessonComplete = () => {
-    setCompletedLessons((prev) => {
-      const next = Math.min(5, prev + 1);
-      persistCompletedLessonCount(next);
-      return next;
-    });
+  const handleSetCompletedLessons = (value: number) => {
+    const nextProgress = progressFromCompletedCount(value);
+    setCourseProgress(nextProgress);
+    setActiveLessonId(nextProgress.currentLessonId);
+    setHomeInitialTab("learn");
+    persistCourseProgress(nextProgress);
   };
 
-  const handleSetCompletedLessons = (value: number) => {
-    const next = Math.max(0, Math.min(5, Math.floor(value)));
-    setCompletedLessons(next);
-    persistCompletedLessonCount(next);
+  const startLesson = (lessonId: CourseLessonId) => {
+    setActiveLessonId(lessonId);
+    setHomeInitialTab("learn");
+    go("mission");
+  };
+
+  const handlePracticeComplete = (result: PracticeSessionResult) => {
+    const completedAt = new Date().toISOString();
+    const card = buildLessonMemoryCard(activeLesson, result.transcript);
+    const nextMemory = applyLessonMemory(introMemory, activeLesson, card);
+    const nextProgress = completeLesson(courseProgress, activeLesson.id, completedAt);
+    const reviewDraft = activeLesson.isChallenge
+      ? buildCourseReviewDraft(nextMemory, result.reviewDraft)
+      : result.reviewDraft;
+    const nextScore = score + activeLesson.scoreDelta;
+    const nextStreak = streak + 1;
+
+    setIntroMemory(nextMemory);
+    setCourseProgress(nextProgress);
+    setScore(nextScore);
+    setStreak(nextStreak);
+    setSessionResult({ ...result, scoreDelta: activeLesson.scoreDelta, reviewDraft });
+    persistIntroMemory(nextMemory);
+    persistCourseProgress(nextProgress);
+    persistStoredNumber(COURSE_SCORE_STORAGE_KEY, nextScore);
+    persistStoredNumber(COURSE_STREAK_STORAGE_KEY, nextStreak);
+    go("mission-complete");
+  };
+
+  const goCourseMap = () => {
+    setHomeInitialTab("learn");
+    go("home", -1);
+  };
+
+  const goNextLesson = () => {
+    const nextLessonId = getNextLessonId(activeLesson.id);
+    if (!nextLessonId) {
+      goCourseMap();
+      return;
+    }
+    setActiveLessonId(nextLessonId);
+    go("mission", 1);
   };
 
   useEffect(() => clearTimers, []);
@@ -329,11 +521,14 @@ export default function App() {
                 <HomeScreen
                   userName={userName}
                   onRestart={restartFlow}
-                  completedLessons={completedLessons}
-                  onLearnLessonComplete={handleLearnLessonComplete}
+                  progress={courseProgress}
+                  memory={introMemory}
+                  score={score}
+                  streak={streak}
+                  initialTab={homeInitialTab}
                   debugModeEnabled={debugModeEnabled}
                   onSetCompletedLessons={handleSetCompletedLessons}
-                  onStartMission={() => go("mission")}
+                  onStartLesson={(lessonId) => startLesson(lessonId)}
                 />
               </motion.div>
             )}
@@ -347,7 +542,9 @@ export default function App() {
             {step === "mission" && (
               <motion.div key="mission" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
                 <MissionPage
-                  profile={onboardingProfile}
+                  profile={courseProfile}
+                  lesson={activeLesson}
+                  memory={introMemory}
                   onBack={() => go("home", -1)}
                   onStartPractice={() => go("practice")}
                 />
@@ -357,24 +554,18 @@ export default function App() {
             {step === "practice" && (
               <motion.div key="practice" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <PracticePage
-                  profile={onboardingProfile}
-                  onExit={() => go("home", -1)}
-                  onComplete={(result: PracticeSessionResult) => {
-                    setSessionResult(result);
-                    setCompletedLessons((prev) => {
-                      const next = Math.min(5, prev + 1);
-                      persistCompletedLessonCount(next);
-                      return next;
-                    });
-                    go("mission-complete");
-                  }}
+                  profile={courseProfile}
+                  lesson={activeLesson}
+                  memory={introMemory}
+                  onExit={(record) => { setTranscriptRecords((records) => [record, ...records]); go("home", -1); }}
+                  onComplete={handlePracticeComplete}
                 />
               </motion.div>
             )}
 
             {step === "mission-complete" && (
               <motion.div key="mission-complete" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <MissionCompletePage scoreDelta={120} streak={3} onDone={() => go("review")} />
+                <MissionCompletePage scoreDelta={activeLesson.scoreDelta} streak={streak} onDone={goNextLesson} />
               </motion.div>
             )}
 
@@ -382,9 +573,9 @@ export default function App() {
               <motion.div key="review" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <ReviewPage
                   result={sessionResult}
-                  streak={3}
+                  streak={streak}
                   onTryAgain={() => go("practice")}
-                  onDone={() => go("home", -1)}
+                  onDone={(card) => { setMemoryCards((cards) => [card, ...cards]); goCourseMap(); }}
                 />
               </motion.div>
             )}

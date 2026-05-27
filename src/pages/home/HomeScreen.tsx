@@ -10,10 +10,18 @@ import { LearnScreen } from "../learn/LearnScreen";
 import { ReviewScreen } from "@/pages/review/ReviewScreen";
 import { FIRST_LESSON_SCENE_TITLE } from "@/lib/onboardingProfile";
 import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
+import {
+  buildInitialCourseProgress,
+  buildInitialIntroMemory,
+  getCurrentLesson,
+  type CourseLessonId,
+  type CourseProgress,
+  type IntroMemory,
+} from "@/lib/selfIntroCourse";
 
-type Tab = "home" | "learn" | "review" | "profile";
+export type HomeTab = "home" | "learn" | "review" | "profile";
 
-const TAB_ITEMS: { icon: React.ElementType; key: Tab }[] = [
+const TAB_ITEMS: { icon: React.ElementType; key: HomeTab }[] = [
   { icon: Drama,         key: "home"    },
   { icon: ScrollText,    key: "learn"   },
   { icon: MessageCircle, key: "review"  },
@@ -51,25 +59,38 @@ interface HomeScreenProps {
   /** Tap a module card or the featured scene play button. App routes this to
    *  the practice / conversation flow. */
   onStartMission?: () => void;
-  onLearnLessonComplete?: () => void;
   debugModeEnabled?: boolean;
   onSetCompletedLessons?: (value: number) => void;
   /** Optional restart of the whole onboarding (kept for legacy parity). */
   onRestart?: () => void;
   userName?: string;
-  completedLessons?: number;
+  progress?: CourseProgress;
+  memory?: IntroMemory;
+  score?: number;
+  streak?: number;
+  initialTab?: HomeTab;
+  onStartLesson?: (lessonId: CourseLessonId) => void;
 }
 
 export function HomeScreen({
   onStartMission,
-  onLearnLessonComplete,
   debugModeEnabled = false,
   onSetCompletedLessons,
   userName = PROFILE_CONSTANTS.defaultUserName,
-  completedLessons = 0,
+  progress = buildInitialCourseProgress(),
+  memory = buildInitialIntroMemory(),
+  score = 14000,
+  streak = 10,
+  initialTab = "home",
+  onStartLesson,
 }: HomeScreenProps = {}) {
-  const [activeTab, setActiveTab] = useState<Tab>("home");
+  void onStartMission;
+  const [activeTab, setActiveTab] = useState<HomeTab>(initialTab);
   const [todos, setTodos] = useState<Array<{ id: number; text: string; date: string }>>([]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -129,11 +150,11 @@ export function HomeScreen({
           <ProfileScreen userName={userName} onBack={() => setActiveTab("home")} />
         ) : activeTab === "learn" ? (
           <LearnScreen
-            onStartLevel={onStartMission}
-            onLessonComplete={onLearnLessonComplete}
+            progress={progress}
+            memory={memory}
+            onStartLesson={onStartLesson ?? (() => {})}
             debugModeEnabled={debugModeEnabled}
             onSetCompletedLessons={onSetCompletedLessons}
-            completedLessons={completedLessons}
           />
         ) : activeTab === "review" ? (
           <ReviewScreen />
@@ -172,10 +193,10 @@ export function HomeScreen({
                 boxShadow: "0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 <img src={statCalendar} alt="" aria-hidden style={{ width: 16, height: 16, objectFit: "contain" }} />
-                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{PROFILE_CONSTANTS.homeActiveDays}</span>
+                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{streak} days</span>
                 <div style={{ width: 1, height: 12, background: "#c8c4d8" }} />
                 <img src={statStar} alt="" aria-hidden style={{ width: 16, height: 16, objectFit: "contain" }} />
-                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{PROFILE_CONSTANTS.homePoints}</span>
+                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{score.toLocaleString()}</span>
               </div>
             </motion.div>
 
@@ -223,7 +244,7 @@ export function HomeScreen({
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     <button
-                      onClick={() => onStartMission?.()}
+                      onClick={() => onStartLesson?.(getCurrentLesson(progress).id)}
                       style={{
                         width: 68, height: 68, borderRadius: "50%",
                         background: "rgba(255,255,255,0.28)",

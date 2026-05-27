@@ -12,10 +12,12 @@ import lessonP3 from "@/assets/lesson/p3.png";
 import lessonP4 from "@/assets/lesson/p4.png";
 import lessonP5 from "@/assets/lesson/p5.png";
 import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
-import { buildDefaultOnboardingProfile } from "@/lib/onboardingProfile";
-import { getLessonByCompletedLessons } from "@/lib/selfIntroCourse";
-import { MissionPage } from "@/pages/mission/MissionPage";
-import { MissionCompletePage } from "@/pages/practice/MissionCompletePage";
+import {
+  getCurrentLesson,
+  type CourseLessonId,
+  type CourseProgress,
+  type IntroMemory,
+} from "@/lib/selfIntroCourse";
 import map0 from "@/assets/Map/Map0.png";
 import map1 from "@/assets/Map/Map 1.png";
 import map2 from "@/assets/Map/Map 2.png";
@@ -24,10 +26,9 @@ import map4 from "@/assets/Map/Map 4.png";
 import map5 from "@/assets/Map/Map 5.png";
 
 interface LearnScreenProps {
-  /** Tap map → App routes to MissionPage → PracticePage. */
-  onStartLevel?: () => void;
-  completedLessons?: number;
-  onLessonComplete?: () => void;
+  progress: CourseProgress;
+  memory: IntroMemory;
+  onStartLesson: (lessonId: CourseLessonId) => void;
   debugModeEnabled?: boolean;
   onSetCompletedLessons?: (value: number) => void;
 }
@@ -237,18 +238,19 @@ function NextPhaseDivider() {
 }
 
 export function LearnScreen({
-  onStartLevel,
-  onLessonComplete,
-  completedLessons = 0,
+  progress,
+  memory,
+  onStartLesson,
   debugModeEnabled = false,
   onSetCompletedLessons,
-}: LearnScreenProps = {}) {
-  const stage = clampCompletedLessons(completedLessons ?? 0);
+}: LearnScreenProps) {
+  void memory;
+  const stage = clampCompletedLessons(progress.completedLessonIds.length);
   const mapSrc = MAP_STAGES[stage];
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [activeStickyPart, setActiveStickyPart] = useState<number>(1);
-  const [flowStep, setFlowStep] = useState<"map" | "onboarding-preview" | "mission" | "after-party" | "mission-complete">("map");
-  const lesson = getLessonByCompletedLessons(stage);
+  const [flowStep, setFlowStep] = useState<"map" | "onboarding-preview">("map");
+  const lesson = getCurrentLesson(progress);
   const previewBackgroundSrc = stage <= 2 ? lessonBgEarly : lessonBgLate;
   const lessonCharacterSrc = LESSON_P_IMAGES[lesson.level as keyof typeof LESSON_P_IMAGES] ?? lessonP1;
   const lessonSceneLabel = lesson.level <= 3 ? "Orientation chat" : "Alumni chat";
@@ -273,45 +275,7 @@ export function LearnScreen({
     setFlowStep("onboarding-preview");
   };
 
-  const handleMissionStart = () => {
-    setFlowStep("after-party");
-  };
-
-  const handleMissionCompleteDone = () => {
-    if (onLessonComplete) {
-      onLessonComplete();
-      setFlowStep("map");
-      return;
-    }
-    onStartLevel?.();
-  };
-
-  if (flowStep === "mission") {
-    return (
-      <MissionPage
-        profile={buildDefaultOnboardingProfile()}
-        missionLabel={`LEVEL ${lesson.level} REHEARSAL`}
-        missionTitle={lesson.title}
-        missionSubtitle={lesson.subtitle}
-        partnerName={lesson.persona.name}
-        partnerRole={lesson.persona.displayRole}
-        partnerStyle={lesson.persona.voice}
-        sceneLabel={lesson.level <= 3 ? "Orientation chat" : "Alumni chat"}
-        taskTitle="Today's task"
-        taskDescription={lesson.userTask}
-        taskHint={lesson.supportLabel}
-        startButtonText="Start rehearsal"
-        onBack={() => setFlowStep("map")}
-        onStartPractice={handleMissionStart}
-      />
-    );
-  }
-
-  if (flowStep === "mission-complete") {
-    return <MissionCompletePage scoreDelta={120} streak={3} onDone={handleMissionCompleteDone} />;
-  }
-
-  if (flowStep === "onboarding-preview" || flowStep === "after-party") {
+  if (flowStep === "onboarding-preview") {
     const UI = {
       headerTop: 56,
       headerLeft: 64,
@@ -332,22 +296,14 @@ export function LearnScreen({
       hintSize: 12,
     } as const;
 
-    const isFormalDialogueStage = flowStep === "after-party";
+    const isFormalDialogueStage = false;
     const formalTopChipText = `· Level ${lesson.level} · ${lesson.title} ·`;
     const formalTaskChipText = `Challenge · ${lesson.shortTitle}`;
     const handleBack = () => {
-      if (isFormalDialogueStage) {
-        setFlowStep("mission");
-        return;
-      }
       setFlowStep("map");
     };
     const handleTaskContinue = () => {
-      if (isFormalDialogueStage) {
-        setFlowStep("mission-complete");
-        return;
-      }
-      setFlowStep("mission");
+      onStartLesson(lesson.id);
     };
 
     return (
@@ -643,7 +599,7 @@ export function LearnScreen({
               boxShadow: "0 8px 18px rgba(84,70,178,0.34)",
             }}
           >
-            {isFormalDialogueStage ? "Finish this lesson" : "Start first lesson"}
+            {isFormalDialogueStage ? "Finish this lesson" : "Start rehearsal"}
           </button>
         </div>
       </div>
