@@ -131,12 +131,12 @@ export default function App() {
 
     const t2 = setTimeout(() => {
       setOverlay((prev) => (prev ? { ...prev, exiting: true } : null));
-    }, 900);
+    }, 1100);
 
     const t3 = setTimeout(() => {
       setOverlay(null);
       setCurtainOpen(true);
-    }, 1250);
+    }, 1550);
 
     timersRef.current = [t1, t2, t3];
   };
