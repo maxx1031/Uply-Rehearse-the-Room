@@ -6,7 +6,7 @@ import statStar from "@/assets/imports/3.png";
 import sceneImg from "@/assets/imports/Gemini_Generated_Image_lbtprrlbtprrlbtp.png";
 import you2Img from "@/assets/imports/you2.png";
 import { ProfileScreen } from "@/pages/profile/ProfileScreen";
-import { LearnScreen } from "@/pages/learn/LearnScreen";
+import { LearnScreen } from "../learn/LearnScreen";
 import { ReviewScreen } from "@/pages/review/ReviewScreen";
 import { FIRST_LESSON_SCENE_TITLE } from "@/lib/onboardingProfile";
 import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
@@ -54,9 +54,14 @@ interface HomeScreenProps {
   /** Optional restart of the whole onboarding (kept for legacy parity). */
   onRestart?: () => void;
   userName?: string;
+  completedLessons?: number;
 }
 
-export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaultUserName }: HomeScreenProps = {}) {
+export function HomeScreen({
+  onStartMission,
+  userName = PROFILE_CONSTANTS.defaultUserName,
+  completedLessons = 0,
+}: HomeScreenProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [todos, setTodos] = useState<Array<{ id: number; text: string; date: string }>>([]);
 
@@ -64,21 +69,27 @@ export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaul
     if (typeof window === "undefined") return;
     const loadTodos = () => {
       const raw = window.localStorage.getItem(HOME_TODO_STORAGE_KEY);
-      let nextTodoTexts = DEFAULT_HOME_TODOS;
       if (!raw) {
         setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
         window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify(DEFAULT_HOME_TODOS));
       } else {
         try {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length) {
-            nextTodoTexts = [...parsed, ...DEFAULT_HOME_TODOS].slice(0, 8);
-            setTodos(nextTodoTexts.map((text, idx) => ({ id: idx + 1, text, date: idx < parsed.length ? "Added from review" : "Added today" })));
+          if (Array.isArray(parsed)) {
+            setTodos(
+              parsed.map((text, idx) => ({
+                id: idx + 1,
+                text: String(text),
+                date: "Added from review",
+              })),
+            );
           } else {
             setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
+            window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify(DEFAULT_HOME_TODOS));
           }
         } catch {
           setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
+          window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify(DEFAULT_HOME_TODOS));
         }
       }
     };
@@ -89,7 +100,19 @@ export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaul
   }, []);
 
   const handleCompleteTodo = (id: number) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    setTodos((prev) => {
+      const nextTodos = prev.filter((todo) => todo.id !== id);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          HOME_TODO_STORAGE_KEY,
+          JSON.stringify(nextTodos.map((todo) => todo.text)),
+        );
+        window.dispatchEvent(
+          new CustomEvent("uply:todos-updated", { detail: nextTodos.map((todo) => todo.text) }),
+        );
+      }
+      return nextTodos;
+    });
   };
 
   return (
@@ -99,7 +122,7 @@ export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaul
         {activeTab === "profile" ? (
           <ProfileScreen userName={userName} onBack={() => setActiveTab("home")} />
         ) : activeTab === "learn" ? (
-          <LearnScreen onStartLevel={onStartMission} />
+          <LearnScreen onStartLevel={onStartMission} completedLessons={completedLessons} />
         ) : activeTab === "review" ? (
           <ReviewScreen />
         ) : (

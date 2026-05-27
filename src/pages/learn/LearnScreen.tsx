@@ -3,257 +3,34 @@ import statCalendar from "@/assets/imports/1.png";
 import statSapphire from "@/assets/imports/2.png";
 import statStar     from "@/assets/imports/3.png";
 import statMask     from "@/assets/imports/4.png";
-import propDoc      from "@/assets/imports/7.png";  // 文档: 写自我介绍
-import propEnvelope from "@/assets/imports/5.png";  // 信封: 发出去
-import propCoffee   from "@/assets/imports/6.png";  // 咖啡: 见面聊
+import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
+import map0 from "@/assets/Map/Map0.png";
+import map1 from "@/assets/Map/Map 1.png";
+import map2 from "@/assets/Map/Map 2.png";
+import map3 from "@/assets/Map/Map 3.png";
+import map4 from "@/assets/Map/Map 4.png";
+import map5 from "@/assets/Map/Map 5.png";
 
 interface LearnScreenProps {
-  /** Tap any non-locked frame → App routes to MissionPage → PracticePage. */
+  /** Tap map → App routes to MissionPage → PracticePage. */
   onStartLevel?: () => void;
+  completedLessons?: number;
 }
 
 const STATS = [
-  { img: statCalendar, value: "36 days"  },
+  { img: statCalendar, value: PROFILE_CONSTANTS.homeActiveDays },
   { img: statSapphire, value: "Sapphire" },
   { img: statStar,     value: "14,000"   },
   { img: statMask,     value: "95min"    },
 ];
+const MAP_STAGES = [map0, map1, map2, map3, map4, map5] as const;
 
-/* ─── Film strip palette (flat solid purple, per reference image 2) ── */
-const STRIP_C  = "#5249cc";
-const ACTIVE_C = "#b8d147";   // lime green for "current" frame
-// All non-active frames render as solid white (matches reference image 1 —
-// done vs locked is behavior, not color).
-const FRAME_WHITE = "#ffffff";
-
-/* ─── Body sizing ────────────────────────────────────────────── */
-const FW   = 60;     // white frame width
-const FH   = 72;     // white frame height
-const FGAP = 10;     // gap between frames
-const SW   = 84;     // strip body total width (frame + side sprocket tracks)
-const VPAD = 10;     // body inner top/bottom padding
-const HW   = 7;      // sprocket hole width
-const HH   = 9;      // sprocket hole height
-const HR   = 1.2;    // sprocket hole corner radius
-
-/* ─── Curl sizing — L-shape hook, flat single color ─────────── */
-const CT    = 60;    // curl thickness (= frame width, narrower than body)
-const ARM_E = 56;    // arm extends right past leg's right edge
-const LEG_E = 22;    // leg extends below arm bottom (gives the hook its "drop")
-const TIP_R = 10;    // rounded tip radius
-const INR   = 4;     // inner concave corner radius
-const OUTR  = 4;     // other outer corners
-const CURL_OVERLAP = 1; // 1px overlap into body to hide seam
-
-const CURL_OFFSET_X = (SW - CT) / 2;  // center curl on body
-const CURL_W = CT + ARM_E;            // total curl width
-const CURL_H = CT + LEG_E;            // total curl height
-
-type LevelStatus = "done" | "active" | "locked";
-interface Level { status: LevelStatus }
-
-// Phase 1 · Part 1 — Self Introduction.
-// 4 段胶片 (3 个工具图标分隔), 围绕 CS master 找 RA 语境的"自我介绍"渐进梯度:
-//   Segment 1 (5): observe / warm-up
-//   ✒️ pen
-//   Segment 2 (5): write your intro — first frame active
-//   ✂️ scissors
-//   Segment 3 (4): edit / refine
-//   🎤 mic
-//   Segment 4 (5): speak it out
-//
-// 进度规则: 前 5 个完成 → segment 2 第 1 帧 active → 后续全部 locked
-const SEGMENT_SIZES = [5, 5, 4, 5] as const;
-const ACTIVE_FLAT_INDEX = 5; // global index across all segments
-
-function buildLevels(): Level[][] {
-  let idx = 0;
-  return SEGMENT_SIZES.map((n) =>
-    Array.from({ length: n }, () => {
-      const status: LevelStatus =
-        idx < ACTIVE_FLAT_INDEX ? "done" :
-        idx === ACTIVE_FLAT_INDEX ? "active" : "locked";
-      idx += 1;
-      return { status };
-    })
-  );
+function clampCompletedLessons(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (value <= 0) return 0;
+  if (value >= 5) return 5;
+  return Math.floor(value);
 }
-
-const SEGMENTS = buildLevels();
-
-// 4 段胶片之间穿插 3 个紫色道具 (来自 art-assets/UI icon, 已 mirror 到 src/assets/imports):
-//   Segment 1 (observe) → 📄 写自我介绍 → Segment 2 (write)
-//                       → ✉️ 发出去      → Segment 3 (send/edit)
-//                       → ☕ 见面聊       → Segment 4 (speak)
-const DIVIDER_IMAGES = [propDoc, propEnvelope, propCoffee];
-
-/* ───────────────────────────────────────────────────────────────
- * SVG path helpers for L-shaped curls (per reference image 2).
- *
- * Curl bounding box: CURL_W × CURL_H
- *   - Vertical leg: x = [0, CT], y = [0, CT + LEG_E]
- *   - Horizontal arm: x = [0, CT + ARM_E], y = [0, CT]
- *   - Tip (right end): rounded by TIP_R
- *   - Inner concave corner (arm meets leg): rounded by INR
- *   - Outer corners (attachment side): small radius OUTR
- * ─────────────────────────────────────────────────────────────── */
-function topCurlPath(): string {
-  const W = CURL_W;
-  const H = CURL_H;
-  return [
-    `M ${OUTR} 0`,
-    `L ${W - TIP_R} 0`,
-    `A ${TIP_R} ${TIP_R} 0 0 1 ${W} ${TIP_R}`,
-    `L ${W} ${CT - TIP_R}`,
-    `A ${TIP_R} ${TIP_R} 0 0 1 ${W - TIP_R} ${CT}`,
-    `L ${CT + INR} ${CT}`,
-    `A ${INR} ${INR} 0 0 0 ${CT} ${CT + INR}`,
-    `L ${CT} ${H}`,
-    `L 0 ${H}`,
-    `L 0 ${OUTR}`,
-    `A ${OUTR} ${OUTR} 0 0 1 ${OUTR} 0`,
-    `Z`,
-  ].join(" ");
-}
-
-function bottomCurlPath(): string {
-  const W = CURL_W;
-  const H = CURL_H;
-  // Mirror of top curl across horizontal axis; attachment line at y=0.
-  return [
-    `M ${OUTR} ${H}`,
-    `L ${W - TIP_R} ${H}`,
-    `A ${TIP_R} ${TIP_R} 0 0 0 ${W} ${H - TIP_R}`,
-    `L ${W} ${LEG_E + TIP_R}`,
-    `A ${TIP_R} ${TIP_R} 0 0 0 ${W - TIP_R} ${LEG_E}`,
-    `L ${CT + INR} ${LEG_E}`,
-    `A ${INR} ${INR} 0 0 1 ${CT} ${LEG_E - INR}`,
-    `L ${CT} 0`,
-    `L 0 0`,
-    `L 0 ${H - OUTR}`,
-    `A ${OUTR} ${OUTR} 0 0 0 ${OUTR} ${H}`,
-    `Z`,
-  ].join(" ");
-}
-
-const TOP_CURL_D = topCurlPath();
-const BOTTOM_CURL_D = bottomCurlPath();
-
-/* ─── A single film strip segment, rendered as one SVG ───────── */
-function FilmSegment({ frames, onTap }: { frames: Level[]; onTap?: () => void }) {
-  const bodyH = frames.length * (FH + FGAP) - FGAP + VPAD * 2;
-  const inset = (SW - FW) / 2;
-
-  // Sprocket holes: 2 per frame slot (top + bottom of each frame), aligned.
-  const holeCount = frames.length * 2;
-  const holeStride = (bodyH - VPAD - HH) / Math.max(1, holeCount - 1);
-
-  // Total SVG size: body + curl arm extending right + curls above/below
-  const totalW = SW + ARM_E + CURL_OFFSET_X;
-  const visibleCurlH = CURL_H - CURL_OVERLAP;
-  const totalH = visibleCurlH + bodyH + visibleCurlH;
-  const bodyY = visibleCurlH;
-  const bottomCurlY = bodyY + bodyH - CURL_OVERLAP;
-  const leftHoleX = (inset - HW) / 2;
-  const rightHoleX = SW - inset + (inset - HW) / 2;
-
-  return (
-    <svg
-      width={totalW}
-      height={totalH}
-      viewBox={`0 0 ${totalW} ${totalH}`}
-      style={{ display: "block", overflow: "visible" }}
-    >
-      {/* Top curl */}
-      <g transform={`translate(${CURL_OFFSET_X}, 0)`}>
-        <path d={TOP_CURL_D} fill={STRIP_C} />
-      </g>
-
-      {/* Body rectangle */}
-      <rect x={0} y={bodyY} width={SW} height={bodyH} fill={STRIP_C} />
-
-      {/* Sprocket holes (left + right columns) */}
-      {Array.from({ length: holeCount }).map((_, i) => {
-        const hy = bodyY + VPAD / 2 + i * holeStride;
-        return (
-          <g key={`h-${i}`}>
-            <rect x={leftHoleX}  y={hy} width={HW} height={HH} rx={HR} fill="rgba(255,255,255,0.92)" />
-            <rect x={rightHoleX} y={hy} width={HW} height={HH} rx={HR} fill="rgba(255,255,255,0.92)" />
-          </g>
-        );
-      })}
-
-      {/* Level frames (clickable) */}
-      {frames.map((f, i) => {
-        const fy = bodyY + VPAD + i * (FH + FGAP);
-        const locked = f.status === "locked";
-        const active = f.status === "active";
-        const fill = active ? ACTIVE_C : FRAME_WHITE;
-        return (
-          <g key={i}>
-            {active && (
-              <rect
-                x={inset - 2}
-                y={fy - 2}
-                width={FW + 4}
-                height={FH + 4}
-                rx={5}
-                fill="none"
-                stroke="rgba(184,209,71,0.55)"
-                strokeWidth={1.5}
-              />
-            )}
-            <rect
-              x={inset}
-              y={fy}
-              width={FW}
-              height={FH}
-              rx={3}
-              fill={fill}
-              onClick={locked ? undefined : onTap}
-              style={{
-                cursor: locked ? "not-allowed" : "pointer",
-                pointerEvents: locked ? "none" : "auto",
-              }}
-              role="button"
-              aria-label={`Level (${f.status})`}
-            />
-          </g>
-        );
-      })}
-
-      {/* Bottom curl */}
-      <g transform={`translate(${CURL_OFFSET_X}, ${bottomCurlY})`}>
-        <path d={BOTTOM_CURL_D} fill={STRIP_C} />
-      </g>
-    </svg>
-  );
-}
-
-/* ─── Decorative purple-themed prop between film segments ─── */
-function Divider({ img, tilt }: { img: string; tilt: number }) {
-  return (
-    <div style={{
-      display: "flex", justifyContent: "center", alignItems: "center",
-      padding: "8px 0 12px",
-      paddingRight: 40,  // 让道具略偏左, 与左侧胶片节奏对齐
-    }}>
-      <img
-        src={img}
-        alt=""
-        aria-hidden
-        style={{
-          width: 64, height: 64, objectFit: "contain",
-          transform: `rotate(${tilt}deg)`,
-          filter: "drop-shadow(0 4px 8px rgba(40,30,110,0.18))",
-        }}
-      />
-    </div>
-  );
-}
-
-// 每个道具略微倾斜, 制造手绘随性感
-const DIVIDER_TILTS = [-8, 6, -4];
 
 /* ─── Phases — 4 个阶段, 只有 Phase 1 unlocked ─────────────── */
 type PhaseStatus = "active" | "locked";
@@ -379,7 +156,10 @@ function NextPhaseDivider() {
   );
 }
 
-export function LearnScreen({ onStartLevel }: LearnScreenProps = {}) {
+export function LearnScreen({ onStartLevel, completedLessons = 0 }: LearnScreenProps = {}) {
+  const stage = clampCompletedLessons(completedLessons ?? 0);
+  const mapSrc = MAP_STAGES[stage];
+
   return (
     <div style={{ height: "100%", background: "#f0ede8", display: "flex", flexDirection: "column" }}>
 
@@ -421,14 +201,30 @@ export function LearnScreen({ onStartLevel }: LearnScreenProps = {}) {
             {phase.status === "active" ? (
               <>
                 <ActivePhaseHeader phase={phase} />
-                {SEGMENTS.map((frames, segIdx) => (
-                  <div key={segIdx}>
-                    <FilmSegment frames={frames} onTap={onStartLevel} />
-                    {segIdx < SEGMENTS.length - 1 && (
-                      <Divider img={DIVIDER_IMAGES[segIdx]} tilt={DIVIDER_TILTS[segIdx]} />
-                    )}
-                  </div>
-                ))}
+                <button
+                  type="button"
+                  onClick={onStartLevel}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    marginRight: 28,
+                    width: "calc(100% - 28px)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <img
+                    src={mapSrc}
+                    alt={`Learning map stage ${stage}`}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                      borderRadius: 16,
+                      boxShadow: "0 4px 14px rgba(20, 20, 80, 0.12)",
+                    }}
+                  />
+                </button>
               </>
             ) : (
               <LockedPhaseCard phase={phase} />

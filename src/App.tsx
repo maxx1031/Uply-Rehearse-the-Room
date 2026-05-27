@@ -70,6 +70,29 @@ const VALID_STEPS: Step[] = [
   "profile",
   "mission", "practice", "mission-complete", "review",
 ];
+const COMPLETED_LESSONS_STORAGE_KEY = "uply.completedLessons";
+const HOME_TODO_STORAGE_KEY = "uply.review.todos";
+const DEFAULT_HOME_TODOS = [
+  "Review one LinkedIn opener before noon",
+  "Send one warm follow-up message after coffee chat",
+  "Draft a 3-line thank-you note for a mentor",
+] as const;
+
+function loadCompletedLessonCount(): number {
+  if (typeof window === "undefined") return 0;
+  const raw = window.localStorage.getItem(COMPLETED_LESSONS_STORAGE_KEY);
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return 0;
+  if (value <= 0) return 0;
+  if (value >= 5) return 5;
+  return Math.floor(value);
+}
+
+function persistCompletedLessonCount(value: number): void {
+  if (typeof window === "undefined") return;
+  const safeValue = Math.max(0, Math.min(5, Math.floor(value)));
+  window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, String(safeValue));
+}
 
 function readStepFromUrl(): Step {
   if (typeof window === "undefined") return "splash";
@@ -90,6 +113,7 @@ export default function App() {
   const [goalId, setGoalId] = useState<GoalId | null>(null);
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
+  const [completedLessons, setCompletedLessons] = useState<number>(() => loadCompletedLessonCount());
 
   const onboardingProfile = useMemo(() => {
     if (!goalId) return buildDefaultOnboardingProfile();
@@ -122,6 +146,10 @@ export default function App() {
     const displayName = name.trim() || PROFILE_CONSTANTS.defaultUserName;
     setUserName(displayName);
     persistUserName(displayName);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify([...DEFAULT_HOME_TODOS]));
+      window.dispatchEvent(new CustomEvent("uply:todos-updated", { detail: [...DEFAULT_HOME_TODOS] }));
+    }
     setCurtainOpen(false);
     go("curtain");
 
@@ -146,6 +174,8 @@ export default function App() {
     persistUserName(PROFILE_CONSTANTS.defaultUserName);
     setGoalId(null);
     setBucket(null);
+    setCompletedLessons(0);
+    persistCompletedLessonCount(0);
     go("splash");
   };
 
@@ -282,6 +312,7 @@ export default function App() {
                 <HomeScreen
                   userName={userName}
                   onRestart={restartFlow}
+                  completedLessons={completedLessons}
                   onStartMission={() => go("mission")}
                 />
               </motion.div>
@@ -308,7 +339,15 @@ export default function App() {
                 <PracticePage
                   profile={onboardingProfile}
                   onExit={() => go("home", -1)}
-                  onComplete={(result: PracticeSessionResult) => { setSessionResult(result); go("mission-complete"); }}
+                  onComplete={(result: PracticeSessionResult) => {
+                    setSessionResult(result);
+                    setCompletedLessons((prev) => {
+                      const next = Math.min(5, prev + 1);
+                      persistCompletedLessonCount(next);
+                      return next;
+                    });
+                    go("mission-complete");
+                  }}
                 />
               </motion.div>
             )}

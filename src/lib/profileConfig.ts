@@ -2,9 +2,9 @@ export const PROFILE_CONSTANTS = {
   defaultUserName: "Member",
   actorSinceLabel: "Actor since 2024",
   homeGreeting: "Welcome back",
-  homeActiveDays: "128 days",
+  homeActiveDays: "10 days",
   homePoints: "14,000",
-  profileStats: ["128 days", "Sapphire", "14,000", "95min"] as const,
+  profileStats: ["10 days", "Sapphire", "14,000", "95min"] as const,
 } as const;
 
 const USER_NAME_STORAGE_KEY = "uply.userName";

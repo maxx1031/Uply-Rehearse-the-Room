@@ -318,7 +318,10 @@ export function ReviewScreen() {
     const existing = existingRaw ? (JSON.parse(existingRaw) as string[]) : [];
     const cleaned = todoText.trim();
     if (!cleaned) return;
-    const next = [cleaned, ...existing.filter((item) => item !== cleaned)].slice(0, 12);
+    const normalizedExisting = Array.isArray(existing)
+      ? existing.map((item) => String(item).trim()).filter(Boolean)
+      : [];
+    const next = [cleaned, ...normalizedExisting.filter((item) => item !== cleaned)].slice(0, 12);
     window.localStorage.setItem(key, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent("uply:todos-updated", { detail: next }));
   };
@@ -391,7 +394,7 @@ export function ReviewScreen() {
       </div>
 
       {/* ── Input card: thick purple frame, taller body, yellow submit ── */}
-      <div style={{ margin: "0 16px", marginTop: -132, position: "relative", zIndex: 2, flexShrink: 0 }}>
+      <div style={{ margin: "0 16px", marginTop: -155, position: "relative", zIndex: 2, flexShrink: 0 }}>
         <div style={{
           borderRadius: 32,
           background: BRAND_PURPLE,
@@ -570,6 +573,7 @@ export function ReviewScreen() {
         padding: "24px 16px 130px",
         flexShrink: 0,
         pointerEvents: "none",
+        transform: "translateY(-23px)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* Yellow bubble — matches home page Luna bubble */}
