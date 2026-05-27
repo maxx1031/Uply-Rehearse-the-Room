@@ -23,6 +23,10 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
+import analysisIcon1 from "@/assets/analysis/1.png";
+import analysisIcon2 from "@/assets/analysis/2.png";
+import analysisIcon3 from "@/assets/analysis/3.png";
+import analysisIcon4 from "@/assets/analysis/4.png";
 import {
   FIRST_LESSON_PARTNER_SHORT_ROLE,
   FIRST_LESSON_SCENE_SUBTITLE,
@@ -37,17 +41,17 @@ export type GoalId = "small-talk" | "follow-up" | "ask-help" | "pitch";
 
 export interface Goal {
   id: GoalId;
-  emoji: string;
+  icon: string;
   title: string;
   sub: string;
   scene: string;
 }
 
 export const GOALS: Goal[] = [
-  { id: "small-talk", emoji: "☕",  title: "Start a conversation with someone new", sub: "Coffee chats, hallway hellos, party intros", scene: "CAFE · ACT I" },
-  { id: "follow-up",  emoji: "✉️", title: "Follow up after meeting someone",         sub: "DMs, emails, asking for a second meet",      scene: "INBOX · ACT II" },
-  { id: "ask-help",   emoji: "🤝", title: "Ask someone for help or advice",          sub: "Mentorship, intros, feedback requests",      scene: "OFFICE · ACT II" },
-  { id: "pitch",      emoji: "🎙", title: "Speak up & share my idea in a group",     sub: "Meetings, classes, group dinners",           scene: "CLASSROOM · ACT III" },
+  { id: "small-talk", icon: analysisIcon1, title: "Start a conversation with someone new", sub: "Coffee chats, hallway hellos, party intros", scene: "CAFE · ACT I" },
+  { id: "follow-up",  icon: analysisIcon2, title: "Follow up after meeting someone",         sub: "DMs, emails, asking for a second meet",      scene: "INBOX · ACT II" },
+  { id: "ask-help",   icon: analysisIcon3, title: "Ask someone for help or advice",          sub: "Mentorship, intros, feedback requests",      scene: "OFFICE · ACT II" },
+  { id: "pitch",      icon: analysisIcon4, title: "Speak up & share my idea in a group",     sub: "Meetings, classes, group dinners",           scene: "CLASSROOM · ACT III" },
 ];
 
 // ╔══════════════════════════════════════════════════════════════════════
@@ -77,7 +81,7 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
             <button key={g.id} onClick={() => setPicked(g.id)} style={{
               textAlign: "left", padding: "14px 16px", borderRadius: 18,
               background: active ? "var(--bg-lavender-soft)" : "var(--bg-cream)",
-              border: active ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,.08)",
+              border: active ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(107,99,212,.28)",
               color: "var(--text-ink)", cursor: "pointer", fontFamily: "inherit",
               minHeight: 108,
               display: "flex", alignItems: "center", gap: 14,
@@ -87,16 +91,29 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
                 : "0 4px 12px rgba(8,4,40,.06)",
             }}>
               <div style={{
-                width: 46, height: 46, borderRadius: 14, flexShrink: 0,
-                background: active ? "rgba(107,99,212,.18)" : "rgba(107,99,212,.08)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
-              }}>{g.emoji}</div>
+                width: 70, height: 70, borderRadius: 16, flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                overflow: "hidden",
+              }}>
+                <img
+                  src={g.icon}
+                  alt=""
+                  aria-hidden="true"
+                  style={{
+                    width: 70,
+                    height: 70,
+                    objectFit: "cover",
+                    display: "block",
+                    clipPath: "inset(0 round 16px)",
+                  }}
+                />
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2, color: "var(--text-ink)" }}>{g.title}</div>
               </div>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%",
-                border: active ? "2px solid var(--accent-purple-mid)" : "1.5px solid rgba(40,30,110,.18)",
+                border: active ? "2px solid var(--accent-purple-mid)" : "1.5px solid rgba(107,99,212,.38)",
                 background: active ? "var(--accent-purple-mid)" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
