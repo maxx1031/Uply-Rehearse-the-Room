@@ -28,13 +28,20 @@ async function readRequestBody(req: IncomingMessage): Promise<unknown> {
 }
 
 function localRealtimeTokenApi(): Plugin {
+  const routeToHandler: Record<string, string> = {
+    "/api/realtime-token": "./api/realtime-token.js",
+    "/api/review-advice": "./api/review-advice.js",
+    "/api/review-chat": "./api/review-chat.js",
+  };
+
   return {
     name: 'uply-local-realtime-token-api',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const pathname = req.url ? new URL(req.url, 'http://localhost').pathname : '';
-        if (pathname !== '/api/realtime-token') {
+        const handlerPath = routeToHandler[pathname];
+        if (!handlerPath) {
           next();
           return;
         }
@@ -54,7 +61,7 @@ function localRealtimeTokenApi(): Plugin {
           res.end(JSON.stringify(payload));
         };
 
-        const handlerUrl = new URL('./api/realtime-token.js', import.meta.url).href;
+        const handlerUrl = new URL(handlerPath, import.meta.url).href;
         const { default: handler } = await import(handlerUrl);
         await handler(devReq, devRes);
       });

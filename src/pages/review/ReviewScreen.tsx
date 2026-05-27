@@ -158,9 +158,10 @@ export function ReviewScreen() {
   const [text, setText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [convIndex, setConvIndex] = useState<number | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [customConversation, setCustomConversation] = useState<ConvRecord | null>(null);
-  const canSubmit = text.trim().length > 0 || Boolean(selectedFile);
+  const [submitting, setSubmitting] = useState(false);
+  const canSubmit = text.trim().length > 0 || selectedFiles.length > 0;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
@@ -173,50 +174,125 @@ export function ReviewScreen() {
     return "image";
   };
 
-  const buildCustomConversation = (query: string, file: File): ConvRecord => {
-    const uploadKind = inferUploadKind(file);
-    const extension = (file.name.split(".").pop() || file.type.split("/").pop() || "file").toUpperCase();
-    const uploadMeta = `${extension} ${formatFileSize(file.size)} · Uploaded`;
+  const buildCustomConversation = (query: string, files: File[]): ConvRecord => {
+    const hasImage = files.some((f) => inferUploadKind(f) === "image");
+    const title = query || (files.length > 1 ? `Uploaded ${files.length} files for review` : "Uploaded file for review");
+    const messages: ConvRecord["messages"] = files.map((file) => {
+      const uploadKind = inferUploadKind(file);
+      const extension = (file.name.split(".").pop() || file.type.split("/").pop() || "file").toUpperCase();
+      const uploadMeta = `${extension} ${formatFileSize(file.size)} · Uploaded`;
+      return {
+        role: "user",
+        isImage: uploadKind === "image",
+        isAudio: uploadKind === "audio",
+        uploadKind,
+        uploadName: file.name,
+        uploadMeta,
+      };
+    });
+    messages.push({
+      role: "system",
+      text: "Uploads received. I can help you review tone, clarity, and next-step wording. Tell me what outcome you want from this conversation.",
+    });
 
     return {
       target: "Alumni",
-      location: uploadKind === "audio" ? "Email" : "LinkedIn",
-      title: query || "Uploaded file for review",
-      messages: [
-        {
-          role: "user",
-          isImage: uploadKind === "image",
-          isAudio: uploadKind === "audio",
-          uploadKind,
-          uploadName: file.name,
-          uploadMeta,
-        },
-        {
-          role: "system",
-          text: "Upload received. I can help you review tone, clarity, and next-step wording. Tell me what outcome you want from this conversation.",
-        },
-      ],
+      location: hasImage ? "LinkedIn" : "Email",
+      title,
+      messages,
     };
+  };
+
+  const readFileAsBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : "";
+        const base64 = result.includes(",") ? result.split(",")[1] : result;
+        if (!base64) reject(new Error("Could not read file"));
+        else resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error ?? new Error("File read failed"));
+      reader.readAsDataURL(file);
+    });
   };
 
   const openFilePicker = (accept: string) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = accept;
+    input.multiple = true;
     input.onchange = () => {
-      const file = input.files?.[0] ?? null;
-      setSelectedFile(file);
+      const picked = Array.from(input.files ?? []);
+      if (!picked.length) return;
+      setSelectedFiles((prev) => {
+        const map = new Map(prev.map((f) => [`${f.name}-${f.size}-${f.lastModified}`, f] as const));
+        for (const file of picked) {
+          map.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        }
+        return Array.from(map.values()).slice(0, 6);
+      });
     };
     input.click();
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
+  const handleSubmit = async () => {
+    if (!canSubmit || submitting) return;
 
-    if (selectedFile) {
+    if (selectedFiles.length > 0) {
       const query = text.trim();
-      setCustomConversation(buildCustomConversation(query, selectedFile));
-      setConvIndex(0);
+      setSubmitting(true);
+      try {
+        const filesPayload = await Promise.all(
+          selectedFiles.map(async (file) => ({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            base64: await readFileAsBase64(file),
+          })),
+        );
+        const res = await fetch("/api/review-advice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userMessage: query,
+            files: filesPayload,
+          }),
+        });
+
+        if (!res.ok) {
+          const textBody = await res.text();
+          throw new Error(`review-advice ${res.status}: ${textBody.slice(0, 120)}`);
+        }
+
+        const payload = await res.json();
+        const advice = typeof payload?.advice === "string" && payload.advice.trim()
+          ? payload.advice.trim()
+          : "Upload received. I can help you review tone, clarity, and next-step wording. Tell me what outcome you want from this conversation.";
+
+        const custom = buildCustomConversation(query, selectedFiles);
+        if (query) {
+          custom.messages.push({ role: "user", text: query });
+        }
+        custom.messages.push({ role: "system", text: advice });
+        setCustomConversation(custom);
+        setConvIndex(0);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown network error";
+        const fallback = buildCustomConversation(query, selectedFiles);
+        if (query) fallback.messages.push({ role: "user", text: query });
+        fallback.messages.push({
+          role: "system",
+          text:
+            "I couldn't reach the review model right now. " +
+            `(${message}) ` +
+            "Your upload is saved. Try again in a moment, or share what outcome you want and I'll draft a response template.",
+        });
+        setCustomConversation(fallback);
+        setConvIndex(0);
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -233,6 +309,18 @@ export function ReviewScreen() {
     }
     setCustomConversation(null);
     setConvIndex(2);
+  };
+
+  const handleTodoGenerated = (todoText: string) => {
+    if (typeof window === "undefined") return;
+    const key = "uply.review.todos";
+    const existingRaw = window.localStorage.getItem(key);
+    const existing = existingRaw ? (JSON.parse(existingRaw) as string[]) : [];
+    const cleaned = todoText.trim();
+    if (!cleaned) return;
+    const next = [cleaned, ...existing.filter((item) => item !== cleaned)].slice(0, 12);
+    window.localStorage.setItem(key, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("uply:todos-updated", { detail: next }));
   };
 
   return (
@@ -258,6 +346,7 @@ export function ReviewScreen() {
         <ConversationScreen
           index={convIndex}
           customConversation={customConversation}
+          onTodoGenerated={handleTodoGenerated}
           onBack={() => {
             setConvIndex(null);
             setCustomConversation(null);
@@ -359,53 +448,60 @@ export function ReviewScreen() {
                 <Mic size={14} color={BRAND_PURPLE} strokeWidth={2} />
               </button>
             </div>
-            {selectedFile && (
-              <div
-                style={{
-                  marginTop: 8,
-                  borderRadius: 10,
-                  background: "#f7f5fc",
-                  border: "1px solid #e2def2",
-                  padding: "8px 10px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
+            {selectedFiles.length > 0 && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                {selectedFiles.map((file) => (
                   <div
+                    key={`${file.name}-${file.size}-${file.lastModified}`}
                     style={{
-                      fontFamily: "'Nunito', sans-serif",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#1a1830",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      borderRadius: 10,
+                      background: "#f7f5fc",
+                      border: "1px solid #e2def2",
+                      padding: "8px 10px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 8,
                     }}
                   >
-                    {selectedFile.name}
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: "#1a1830",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {file.name}
+                      </div>
+                      <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 11, color: "#9896b8", marginTop: 1 }}>
+                        {`${file.type.startsWith("audio/") ? "Audio" : "File"} · ${formatFileSize(file.size)}`}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const id = `${file.name}-${file.size}-${file.lastModified}`;
+                        setSelectedFiles((prev) => prev.filter((f) => `${f.name}-${f.size}-${f.lastModified}` !== id));
+                      }}
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        color: "#8f8aa8",
+                        fontFamily: "'Nunito', sans-serif",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 11, color: "#9896b8", marginTop: 1 }}>
-                    {`${selectedFile.type.startsWith("audio/") ? "Audio" : "File"} · ${formatFileSize(selectedFile.size)}`}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedFile(null)}
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    color: "#8f8aa8",
-                    fontFamily: "'Nunito', sans-serif",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    flexShrink: 0,
-                  }}
-                >
-                  Remove
-                </button>
+                ))}
               </div>
             )}
           </div>
@@ -431,7 +527,7 @@ export function ReviewScreen() {
         {/* Yellow submit (arrow up) — floats centered, straddles bottom edge */}
         <button
           onClick={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!canSubmit || submitting}
           style={{
           position: "absolute",
           bottom: -14,
@@ -439,16 +535,16 @@ export function ReviewScreen() {
           transform: "translateX(-50%)",
           zIndex: 10,
           width: 54, height: 54, borderRadius: "50%",
-          background: canSubmit ? "#FFCF4A" : "#f2e7bd",
+          background: canSubmit && !submitting ? "#FFCF4A" : "#f2e7bd",
           border: "3px solid #f0ede8",
           display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: canSubmit ? "pointer" : "default",
-          boxShadow: canSubmit
+          cursor: canSubmit && !submitting ? "pointer" : "default",
+          boxShadow: canSubmit && !submitting
             ? "0 6px 18px rgba(255,180,0,0.45), 0 2px 4px rgba(60,40,180,0.18)"
             : "0 2px 8px rgba(0,0,0,0.08)",
         }}
         >
-          <ArrowUp size={22} color={canSubmit ? "white" : "#e0c783"} strokeWidth={2.5} />
+          <ArrowUp size={22} color={canSubmit && !submitting ? "white" : "#e0c783"} strokeWidth={2.5} />
         </button>
       </div>
 
