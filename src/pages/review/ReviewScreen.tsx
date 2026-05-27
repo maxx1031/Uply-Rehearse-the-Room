@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Plus, Mic, ArrowUp, Clock, ChevronLeft, ChevronRight, User, MapPin } from "lucide-react";
 import bg55 from "@/assets/imports/55.png";
 import megaphone from "@/assets/imports/you2.png";
-import { ConversationScreen } from "./ConversationScreen";
+import { ConversationScreen, type ConvRecord } from "./ConversationScreen";
 
 // Single source of truth for the page's brand purple. Used by the input
 // frame, dividers and any other accent. Keeps the screen visually unified.
@@ -158,6 +158,82 @@ export function ReviewScreen() {
   const [text, setText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [convIndex, setConvIndex] = useState<number | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customConversation, setCustomConversation] = useState<ConvRecord | null>(null);
+  const canSubmit = text.trim().length > 0 || Boolean(selectedFile);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
+    if (bytes >= 1024) return `${(bytes / 1024).toFixed(2)}KB`;
+    return `${bytes}B`;
+  };
+
+  const inferUploadKind = (file: File): "image" | "audio" => {
+    if (file.type.startsWith("audio/")) return "audio";
+    return "image";
+  };
+
+  const buildCustomConversation = (query: string, file: File): ConvRecord => {
+    const uploadKind = inferUploadKind(file);
+    const extension = (file.name.split(".").pop() || file.type.split("/").pop() || "file").toUpperCase();
+    const uploadMeta = `${extension} ${formatFileSize(file.size)} · Uploaded`;
+
+    return {
+      target: "Alumni",
+      location: uploadKind === "audio" ? "Email" : "LinkedIn",
+      title: query || "Uploaded file for review",
+      messages: [
+        {
+          role: "user",
+          isImage: uploadKind === "image",
+          isAudio: uploadKind === "audio",
+          uploadKind,
+          uploadName: file.name,
+          uploadMeta,
+        },
+        {
+          role: "system",
+          text: "Upload received. I can help you review tone, clarity, and next-step wording. Tell me what outcome you want from this conversation.",
+        },
+      ],
+    };
+  };
+
+  const openFilePicker = (accept: string) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    input.onchange = () => {
+      const file = input.files?.[0] ?? null;
+      setSelectedFile(file);
+    };
+    input.click();
+  };
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+
+    if (selectedFile) {
+      const query = text.trim();
+      setCustomConversation(buildCustomConversation(query, selectedFile));
+      setConvIndex(0);
+      return;
+    }
+
+    const query = text.trim().toLowerCase();
+    if (query.includes("linkedin")) {
+      setCustomConversation(null);
+      setConvIndex(0);
+      return;
+    }
+    if (query.includes("interview") || query.includes("follow-up") || query.includes("recruiter") || query.includes("email")) {
+      setCustomConversation(null);
+      setConvIndex(1);
+      return;
+    }
+    setCustomConversation(null);
+    setConvIndex(2);
+  };
 
   return (
     <div
@@ -179,7 +255,14 @@ export function ReviewScreen() {
         />
       )}
       {convIndex !== null && (
-        <ConversationScreen index={convIndex} onBack={() => setConvIndex(null)} />
+        <ConversationScreen
+          index={convIndex}
+          customConversation={customConversation}
+          onBack={() => {
+            setConvIndex(null);
+            setCustomConversation(null);
+          }}
+        />
       )}
       {/* ── Hero: studio illustration, deeper purple mood + bottom gradient ── */}
       <div style={{
@@ -255,21 +338,76 @@ export function ReviewScreen() {
             />
             {/* Helper buttons row — left + right (icons unchanged size) */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 4 }}>
-              <button style={{
+              <button
+                onClick={() => openFilePicker("image/*,.pdf")}
+                style={{
                 width: 30, height: 30, borderRadius: "50%",
                 background: "#eeecf8", border: "none", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
+                }}
+              >
                 <Plus size={14} color={BRAND_PURPLE} strokeWidth={2} />
               </button>
-              <button style={{
+              <button
+                onClick={() => openFilePicker("audio/*")}
+                style={{
                 width: 30, height: 30, borderRadius: "50%",
                 background: "#eeecf8", border: "none", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
+                }}
+              >
                 <Mic size={14} color={BRAND_PURPLE} strokeWidth={2} />
               </button>
             </div>
+            {selectedFile && (
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 10,
+                  background: "#f7f5fc",
+                  border: "1px solid #e2def2",
+                  padding: "8px 10px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontFamily: "'Nunito', sans-serif",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#1a1830",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {selectedFile.name}
+                  </div>
+                  <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 11, color: "#9896b8", marginTop: 1 }}>
+                    {`${selectedFile.type.startsWith("audio/") ? "Audio" : "File"} · ${formatFileSize(selectedFile.size)}`}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: "#8f8aa8",
+                    fontFamily: "'Nunito', sans-serif",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Pagination dots — three dots on each side, sits in the purple frame */}
@@ -291,20 +429,26 @@ export function ReviewScreen() {
         </div>
 
         {/* Yellow submit (arrow up) — floats centered, straddles bottom edge */}
-        <button style={{
+        <button
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          style={{
           position: "absolute",
           bottom: -14,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 10,
           width: 54, height: 54, borderRadius: "50%",
-          background: "#FFCF4A",
+          background: canSubmit ? "#FFCF4A" : "#f2e7bd",
           border: "3px solid #f0ede8",
           display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 6px 18px rgba(255,180,0,0.45), 0 2px 4px rgba(60,40,180,0.18)",
-        }}>
-          <ArrowUp size={22} color="white" strokeWidth={2.5} />
+          cursor: canSubmit ? "pointer" : "default",
+          boxShadow: canSubmit
+            ? "0 6px 18px rgba(255,180,0,0.45), 0 2px 4px rgba(60,40,180,0.18)"
+            : "0 2px 8px rgba(0,0,0,0.08)",
+        }}
+        >
+          <ArrowUp size={22} color={canSubmit ? "white" : "#e0c783"} strokeWidth={2.5} />
         </button>
       </div>
 

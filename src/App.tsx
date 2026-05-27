@@ -38,6 +38,7 @@ import {
   buildOnboardingProfile,
   type PracticeSessionResult,
 } from "./lib/onboardingProfile";
+import { loadStoredUserName, persistUserName, PROFILE_CONSTANTS } from "./lib/profileConfig";
 
 type Step =
   // intro
@@ -85,17 +86,21 @@ export default function App() {
   const [step, setStep] = useState<Step>(readStepFromUrl);
   const [dir, setDir] = useState(1);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
-  const [, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>(() => loadStoredUserName() ?? PROFILE_CONSTANTS.defaultUserName);
   const [goalId, setGoalId] = useState<GoalId | null>(null);
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
 
   const onboardingProfile = useMemo(() => {
     if (!goalId) return buildDefaultOnboardingProfile();
+    // 5-point UI bucket → 3-bucket downstream profile (left/mid/right)
+    const profileBucket: "left" | "mid" | "right" =
+      bucket === null || bucket === 2 ? "mid" :
+      bucket <= 1 ? "left" : "right";
     return buildOnboardingProfile({
       selectedGoal: goalId,
       archetypeId: DEFAULT_ARCHETYPE,
-      reflectionBucket: bucket ?? "mid",
+      reflectionBucket: profileBucket,
     });
   }, [goalId, bucket]);
   const [curtainOpen, setCurtainOpen] = useState(false);
@@ -114,28 +119,31 @@ export default function App() {
   };
 
   const showTicket = (name: string, showTitle: string) => {
-    setUserName(name);
+    const displayName = name.trim() || PROFILE_CONSTANTS.defaultUserName;
+    setUserName(displayName);
+    persistUserName(displayName);
     setCurtainOpen(false);
     go("curtain");
 
     const t1 = setTimeout(() => {
       setOverlay({ userName: name, showTitle, exiting: false });
-    }, 400);
+    }, 180);
 
     const t2 = setTimeout(() => {
       setOverlay((prev) => (prev ? { ...prev, exiting: true } : null));
-    }, 3400);
+    }, 900);
 
     const t3 = setTimeout(() => {
       setOverlay(null);
       setCurtainOpen(true);
-    }, 4200);
+    }, 1250);
 
     timersRef.current = [t1, t2, t3];
   };
 
   const restartFlow = () => {
-    setUserName(null);
+    setUserName(PROFILE_CONSTANTS.defaultUserName);
+    persistUserName(PROFILE_CONSTANTS.defaultUserName);
     setGoalId(null);
     setBucket(null);
     go("splash");
@@ -209,7 +217,7 @@ export default function App() {
               <motion.div key="login" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
                 <LoginScreen
                   onBack={() => go("ticket", -1)}
-                  onLogin={() => showTicket("Member", "Until We Meet Again")}
+                  onLogin={(name) => showTicket(name, "Until We Meet Again")}
                 />
               </motion.div>
             )}
@@ -272,6 +280,7 @@ export default function App() {
             {step === "home" && (
               <motion.div key="home" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <HomeScreen
+                  userName={userName}
                   onRestart={restartFlow}
                   onStartMission={() => go("mission")}
                 />

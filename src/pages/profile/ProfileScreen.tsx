@@ -27,6 +27,7 @@ import statMask from "@/assets/imports/4.png";
 import goalEmail from "@/assets/imports/5.png";
 import goalCoffee from "@/assets/imports/6.png";
 import goalResume from "@/assets/imports/7.png";
+import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
 
 const WEEKLY_GOALS = [
   { img: goalEmail,  label: "Send Emails",       current: 3, total: 3 },
@@ -49,12 +50,7 @@ const CAST_AVATARS = [
 ];
 
 const STAT_ICONS = [statCalendar, statSapphire, statStar, statMask];
-const STATS = [
-  { value: "128 days" },
-  { value: "Sapphire" },
-  { value: "14,000"   },
-  { value: "95min"    },
-];
+const STATS = PROFILE_CONSTANTS.profileStats.map((value) => ({ value }));
 
 function daysLeftInWeek() {
   const day = new Date().getDay(); // 0=Sun … 6=Sat
@@ -63,9 +59,10 @@ function daysLeftInWeek() {
 
 interface Props {
   onBack: () => void;
+  userName?: string;
 }
 
-export function ProfileScreen({ onBack }: Props) {
+export function ProfileScreen({ onBack, userName = PROFILE_CONSTANTS.defaultUserName }: Props) {
   return (
     <div className="relative flex flex-col h-full overflow-hidden" style={{ background: "#f0ede8" }}>
       <img src={bgTexture} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-60" />
@@ -110,10 +107,10 @@ export function ProfileScreen({ onBack }: Props) {
             </motion.div>
 
             <div style={{ fontFamily: "var(--font-heading)", fontSize: "24px", fontWeight: 600, color: "#1a1830", marginTop: 12 }}>
-              Max
+              {userName}
             </div>
             <div style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "12px", color: "#9896b8", marginTop: 2 }}>
-              Actor since 2024
+              {PROFILE_CONSTANTS.actorSinceLabel}
             </div>
           </div>
         </div>

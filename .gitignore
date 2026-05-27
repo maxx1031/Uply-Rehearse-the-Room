@@ -6,3 +6,10 @@ dist
 .DS_Store
 *.log
 *.tsbuildinfo
+
+# local-only — symlink to Downloads
+docs/art-assets
+
+# debug / temp gallery
+public/gallery.html
+

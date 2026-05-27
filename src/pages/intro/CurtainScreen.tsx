@@ -11,10 +11,10 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
 
   useEffect(() => {
     if (!startOpen) return;
-    const t1 = setTimeout(() => setPhase("opening"), 100);
-    const t2 = setTimeout(() => setPhase("lit"), 2800);
-    const t3 = setTimeout(() => setPhase("done"), 4000);
-    const t4 = setTimeout(onDone, 4400);
+    const t1 = setTimeout(() => setPhase("opening"), 80);
+    const t2 = setTimeout(() => setPhase("lit"), 700);
+    const t3 = setTimeout(() => setPhase("done"), 3000);
+    const t4 = setTimeout(onDone, 3350);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, [startOpen, onDone]);
 
@@ -41,7 +41,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
               ? "linear-gradient(180deg, rgba(255,215,120,0.55) 0%, rgba(255,190,80,0.18) 50%, transparent 100%)"
               : "linear-gradient(180deg, rgba(255,220,140,0.0) 0%, transparent 100%)",
           }}
-          transition={{ duration: 1.8, ease: "easeOut" }}
+          transition={{ duration: 2.6, ease: "easeOut" }}
         />
 
         {/* Center stage spotlight — expands as lights come on */}
@@ -62,7 +62,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
               : "radial-gradient(ellipse, rgba(255,230,160,0.0) 0%, transparent 70%)",
             scale: isLit ? 1.4 : isOpen ? 0.9 : 0.5,
           }}
-          transition={{ duration: isLit ? 2.0 : 1.6, ease: "easeOut" }}
+          transition={{ duration: isLit ? 2.8 : 1.6, ease: "easeOut" }}
         />
 
         {/* Side stage lights — amber wash from wings */}
@@ -70,13 +70,13 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
           className="absolute top-0 bottom-0 left-0"
           style={{ width: "40%", background: "linear-gradient(90deg, rgba(255,180,60,0.0), transparent)" }}
           animate={{ background: isLit ? "linear-gradient(90deg, rgba(255,180,60,0.14), transparent)" : "linear-gradient(90deg, rgba(255,180,60,0.0), transparent)" }}
-          transition={{ duration: 1.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 2.2, delay: 0.4, ease: "easeOut" }}
         />
         <motion.div
           className="absolute top-0 bottom-0 right-0"
           style={{ width: "40%", background: "linear-gradient(270deg, rgba(255,180,60,0.0), transparent)" }}
           animate={{ background: isLit ? "linear-gradient(270deg, rgba(255,180,60,0.14), transparent)" : "linear-gradient(270deg, rgba(255,180,60,0.0), transparent)" }}
-          transition={{ duration: 1.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 2.2, delay: 0.4, ease: "easeOut" }}
         />
 
         {/* Stage floor — reflects warm light */}
@@ -88,7 +88,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
               ? "linear-gradient(180deg, rgba(30,18,60,1) 0%, rgba(18,10,40,1) 100%)"
               : "linear-gradient(180deg, #06031a 0%, #04020e 100%)",
           }}
-          transition={{ duration: 1.8, ease: "easeOut" }}
+          transition={{ duration: 2.4, ease: "easeOut" }}
         />
 
         {/* Floor reflection glow */}
@@ -100,7 +100,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
               ? "linear-gradient(0deg, rgba(255,200,80,0.08) 0%, transparent 100%)"
               : "transparent",
           }}
-          transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+          transition={{ duration: 2.1, delay: 0.7, ease: "easeOut" }}
         />
 
         {/* Footlights strip */}
@@ -134,7 +134,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
         }}
         initial={{ x: 0 }}
         animate={{ x: isOpen ? "-88%" : 0 }}
-        transition={{ duration: 2.3, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 1.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {[12, 24, 38, 52, 66, 80].map((pct) => (
           <div key={pct} className="absolute top-0 bottom-0" style={{ left: `${pct}%`, width: "1.5px", background: "rgba(0,0,0,0.25)" }} />
@@ -155,7 +155,7 @@ export function CurtainScreen({ onDone, startOpen }: Props) {
         }}
         initial={{ x: 0 }}
         animate={{ x: isOpen ? "88%" : 0 }}
-        transition={{ duration: 2.3, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 1.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {[18, 32, 45, 58, 72, 85].map((pct) => (
           <div key={pct} className="absolute top-0 bottom-0" style={{ left: `${pct}%`, width: "1.5px", background: "rgba(0,0,0,0.25)" }} />

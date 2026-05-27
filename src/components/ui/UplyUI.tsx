@@ -4,7 +4,7 @@
  * All components are zero-dep. They expect `./styles.css` to be imported once
  * at the app root for keyframe animations.
  */
-import { CSSProperties } from "react";
+import { CSSProperties, useState } from "react";
 
 // ─────────────────────────────────────────────────────────────
 // Uply mark (smiley orb logo)
@@ -34,20 +34,39 @@ export function PrimaryBtn({
   glow?: boolean;
   style?: CSSProperties;
 }) {
+  const [pressed, setPressed] = useState(false);
+  const enabled = !disabled;
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      onPointerDown={() => enabled && setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
       style={{
-        width: "100%", height: 54, borderRadius: 9999, border: "none",
-        background: disabled ? "#3a3268" : "linear-gradient(180deg,var(--accent-purple-soft),#7a6ee0)",
-        color: "var(--text-on-dark)", fontWeight: 700, fontSize: 17, letterSpacing: ".2px",
-        cursor: disabled ? "not-allowed" : "pointer",
-        boxShadow: disabled ? "none" : (glow
-          ? "0 0 0 1px rgba(255,255,255,.12) inset, 0 12px 40px rgba(122,110,224,.45), 0 2px 0 rgba(255,255,255,.25) inset"
-          : "none"),
-        transition: "transform .15s ease",
-        fontFamily: "inherit",
+        width: "100%",
+        height: 54,
+        borderRadius: 16,
+        border: "none",
+        background: enabled
+          ? "linear-gradient(180deg, #7c73e6 0%, #5b52cc 100%)"
+          : "rgba(107,99,212,0.18)",
+        color: enabled ? "white" : "#b0aed4",
+        fontFamily: "'Nunito', sans-serif",
+        fontWeight: 600,
+        fontSize: "15px",
+        letterSpacing: "0",
+        cursor: enabled ? "pointer" : "default",
+        transform: enabled && pressed ? "translateY(4px)" : "translateY(0)",
+        boxShadow: !enabled
+          ? "none"
+          : pressed
+          ? "0 1px 0 #3d36a0, 0 4px 12px rgba(107,99,212,0.2)"
+          : glow
+          ? "0 5px 0 #3d36a0, 0 8px 24px rgba(107,99,212,0.38)"
+          : "0 5px 0 #3d36a0",
+        transition: "transform 0.08s ease, box-shadow 0.08s ease",
         ...style,
       }}
     >{children}</button>

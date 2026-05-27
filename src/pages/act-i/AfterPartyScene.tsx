@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, animate } from "motion/react";
-import partyBg from "@/assets/imports/background2-1.jpg";
+import partyBg from "@/assets/art asset/background/backrgroud.jpg";
 import character from "@/assets/imports/ppl.png";
 
 interface Props {

@@ -3,10 +3,11 @@ import { motion } from "motion/react";
 import bgTexture from "@/assets/imports/___-1.jpg";
 import theaterBg from "@/assets/imports/theater.jpg";
 import uplyIcon from "@/assets/imports/logo3-1.png";
+import { normalizeUserName } from "@/lib/profileConfig";
 
 interface Props {
   onBack: () => void;
-  onLogin: () => void;
+  onLogin: (name: string) => void;
 }
 
 const SCALLOP_MASK: React.CSSProperties = {
@@ -33,7 +34,7 @@ export function LoginScreen({ onBack, onLogin }: Props) {
   const handleLogin = () => {
     if (!ready) return;
     setLoading(true);
-    setTimeout(onLogin, 900);
+    setTimeout(() => onLogin(normalizeUserName(contact)), 900);
   };
 
   return (

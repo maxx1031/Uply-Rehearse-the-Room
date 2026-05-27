@@ -11,12 +11,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic } from "lucide-react";
 import {
-  SolidFigure, Chip,
+  SolidFigure, Chip, PrimaryBtn,
   MicButton, TypingDots,
 } from "@/components/ui/UplyUI";
 import { useRealtime } from "@/lib/useRealtime";
 import { logTurn } from "@/lib/conversationLog";
-import sceneBg from "@/assets/imports/background2-1.jpg";
+import sceneBg from "@/assets/after-party/scene-bg-v2.jpg";
 import characterImg from "@/assets/imports/ppl.png";
 
 // ╔══════════════════════════════════════════════════════════════════════
@@ -422,13 +422,20 @@ export function ConversationScreen({
         }}
       />
       {/* Character (real figure, head near door-handle level) */}
+      // 人物图
       {inDialog && (
         <img
           src={characterImg}
           alt=""
           style={{
-            position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)",
-            width: 300, height: "auto", mixBlendMode: "multiply", opacity: 0.88, zIndex: 1,
+            position: "absolute", 
+            top: "20%",  // 数值越小越靠上, 越大越靠下
+            left: "50%", 
+            transform: "translateX(-50%)",
+            width: 500, //变大变小
+            height: "auto", 
+            // mixBlendMode: "normal", 
+            opacity: 0.88, zIndex: 1,
             pointerEvents: "none",
           }}
         />
@@ -445,7 +452,7 @@ export function ConversationScreen({
         {/* Maya name tag (above head) — translucent purple chip + connector line */}
         {inDialog && (
           <div style={{
-            position: "absolute", top: "calc(30% - 36px)", left: 0, right: 0, zIndex: 5,
+            position: "absolute", top: "calc(30% - 20px)", left: 0, right: 0, zIndex: 5,
             display: "flex", flexDirection: "column", alignItems: "center",
           }}>
             <div style={{
@@ -497,16 +504,22 @@ export function ConversationScreen({
               </div>
               <div style={{ display: "flex", gap: 10, width: "100%" }}>
                 <button onClick={onSkip} style={{
-                  flex: 1, height: 46, borderRadius: 14, border: "none",
-                  background: "#eeecf5", color: "#9896b8",
-                  fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 15, cursor: "pointer",
+                  flex: 1,
+                  height: 54,
+                  borderRadius: 16,
+                  border: "none",
+                  background: "rgba(107,99,212,0.18)",
+                  color: "#b0aed4",
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  cursor: "pointer",
                 }}>Skip</button>
-                <button onClick={startMission} style={{
-                  flex: 2, height: 46, borderRadius: 14, border: "none",
-                  background: "linear-gradient(135deg, #7c73e6, #5b52cc)",
-                  color: "#FFFFFF", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 15, cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(107,99,212,0.4)",
-                }}>Start</button>
+                <div style={{ flex: 2 }}>
+                  <PrimaryBtn onClick={startMission} glow={false}>
+                    Start
+                  </PrimaryBtn>
+                </div>
               </div>
             </div>
           </div>
@@ -594,7 +607,7 @@ export function ConversationScreen({
                 her next reply (set in useRealtime), so it coexists with the user's. */}
             {rt.transcript && (
               <div className="uply-fade-up" style={{
-                position: "absolute", top: "15%", left: 0, right: 0, zIndex: 7,
+                position: "absolute", top: "calc(15% + 10px)", left: 0, right: 0, zIndex: 7,
                 display: "flex", justifyContent: "center", padding: "0 24px",
               }}>
                 <div style={{
@@ -602,8 +615,8 @@ export function ConversationScreen({
                   background: "rgba(255,255,255,0.72)",
                   backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
                   border: "1px solid rgba(107,99,212,0.25)",
-                  borderRadius: "16px 16px 16px 4px", padding: "10px 14px",
-                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  borderRadius: "16px 16px 16px 4px", padding: "6px 14px",
+                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.35,
                   boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                 }}>{rt.transcript}</div>
               </div>
@@ -620,8 +633,8 @@ export function ConversationScreen({
                   background: "rgba(255,255,255,0.72)",
                   backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
                   border: "1px solid rgba(107,99,212,0.25)",
-                  borderRadius: "16px 16px 4px 16px", padding: "10px 14px",
-                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.45,
+                  borderRadius: "16px 16px 4px 16px", padding: "6px 14px",
+                  color: "#1a1830", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500, lineHeight: 1.35,
                   boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                 }}>{userText || <TypingDots />}</div>
               </div>
@@ -707,10 +720,10 @@ export function ConversationScreen({
             display: "flex", justifyContent: "flex-start", zIndex: 7,
           }}>
             <div style={{
-              maxWidth: 240,
+              maxWidth: 190,
               background: "#FFFFFF", border: "2px solid var(--text-accent)",
-              borderRadius: 16, padding: "12px 16px",
-              color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+              borderRadius: 16, padding: "3px 10px",
+              color: "var(--text-ink)", fontSize: 12, fontWeight: 500, lineHeight: 1.2,
               boxShadow: "0 8px 24px rgba(8,4,40,.18)",
             }}>
               {(phase === "npc-typing" || phase === "ending-npc-typing") ? <TypingDots color="var(--text-ink-mute)" /> : latestNpc.text}
@@ -753,10 +766,10 @@ export function ConversationScreen({
             display: "flex", justifyContent: "flex-end",
           }}>
             <div style={{
-              maxWidth: 240,
+              maxWidth: 190,
               background: "#FFFFFF", border: "2px solid var(--accent-yellow-soft)",
-              borderRadius: 16, padding: "12px 16px",
-              color: "var(--text-ink)", fontSize: 14, fontWeight: 500, lineHeight: 1.4,
+              borderRadius: 16, padding: "3px 10px",
+              color: "var(--text-ink)", fontSize: 12, fontWeight: 500, lineHeight: 1.2,
               boxShadow: "0 8px 24px rgba(8,4,40,.18)",
             }}>{latestMe.text}</div>
           </div>

@@ -224,7 +224,7 @@ export function ResultScreen({
 
       {revealed >= 3 && (
         <div className="uply-fade-up">
-          <PrimaryBtn onClick={onContinue}>This feels right</PrimaryBtn>
+          <PrimaryBtn onClick={onContinue} glow={false}>This feels right</PrimaryBtn>
         </div>
       )}
     </div>
@@ -233,21 +233,23 @@ export function ResultScreen({
 
 // ╔══════════════════════════════════════════════════════════════════════
 // ║  ReflectionScreen — "Does this reflect how you actually show up?"
-// ║  Slider with three feedback buckets (left / mid / right).
+// ║  Slider with five direct feedback points (0..4).
 // ╚══════════════════════════════════════════════════════════════════════
-export type ReflectionBucket = "left" | "mid" | "right";
+const REFLECTION_POINTS = [0, 1, 2, 3, 4] as const;
+export type ReflectionBucket = (typeof REFLECTION_POINTS)[number];
 
 export function ReflectionScreen({
   onContinue,
 }: { onContinue: (bucket: ReflectionBucket) => void }) {
   // 5 discrete points (0..4), No on the left to Yes! on the right. null = unset.
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<ReflectionBucket | null>(null);
 
-  const bucketOf = (v: number): ReflectionBucket => (v <= 1 ? "left" : v === 2 ? "mid" : "right");
-  const feedback: Record<ReflectionBucket, { title: string; body: string }> = {
-    left:  { title: "Good news — we already know each other a little 🎯", body: "What you played on stage tonight maps closely to how you usually show up. We'll build from here." },
-    mid:   { title: "Somewhere between rehearsal and reality 🪞", body: "Some of this is you; some is the version you wish were you. We'll work in that gap — it's the most useful place to practice." },
-    right: { title: "Then there's so much to discover ✨", body: "What we saw tonight isn't the whole you. The coming scenes will give you space to try on other voices." },
+  const feedback: Record<ReflectionBucket, string> = {
+    0: "Then there's so much to discover.",
+    1: "A side of you we haven't met yet",
+    2: "Somewhere between rehearsal and reality.",
+    3: "Mostly the you you bring.",
+    4: "Good news — we already know each other a little."
   };
 
   return (
@@ -257,12 +259,12 @@ export function ReflectionScreen({
       padding: "70px 24px 40px",
       display: "flex", flexDirection: "column",
     }}>
-      <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel>
-      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
+      {/* <ActLabel color="var(--text-ink-mute)">DIRECTOR'S NOTE</ActLabel> */}
+      <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 500, lineHeight: 1.2, marginTop: 10 }}>
         Does this reflect how you actually show up?
       </div>
       <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8 }}>
-        Drag the marker — there's no wrong answer.
+        {/* Drag the marker — there's no wrong answer. */}
       </div>
 
       <div style={{ marginTop: 36 }}>
@@ -291,7 +293,7 @@ export function ReflectionScreen({
 
         {/* 5 discrete tick dots (tap to pick) */}
         <div style={{ display: "flex", marginTop: 8 }}>
-          {[0, 1, 2, 3, 4].map(v => (
+          {REFLECTION_POINTS.map(v => (
             <button key={v} onClick={() => setSelected(v)} aria-label={`option ${v + 1}`} style={{
               flex: 1, display: "flex", justifyContent: "center", alignItems: "center",
               background: "none", border: "none", cursor: "pointer", padding: "8px 0",
@@ -314,17 +316,16 @@ export function ReflectionScreen({
           borderRadius: 18, color: "var(--text-ink)",
           boxShadow: "0 8px 24px rgba(8,4,40,.08)",
         }}>
-          <div className="uply-serif" style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.25, marginBottom: 8 }}>
-            {feedback[bucketOf(selected)].title}
+          <div className="uply-serif" style={{ fontSize: 19, fontWeight: 400, lineHeight: 1.3 }}>
+            {feedback[selected]}
           </div>
-          <div style={{ fontSize: 14, color: "var(--text-ink-mute)", lineHeight: 1.5 }}>{feedback[bucketOf(selected)].body}</div>
         </div>
       )}
 
       <div style={{ flex: 1 }} />
 
       <div style={{ marginTop: 24, paddingBottom: 8 }}>
-        <PrimaryBtn disabled={selected === null} onClick={() => selected !== null && onContinue(bucketOf(selected))}>Next →</PrimaryBtn>
+        <PrimaryBtn disabled={selected === null} onClick={() => selected !== null && onContinue(selected)}>Next</PrimaryBtn>
       </div>
     </div>
   );

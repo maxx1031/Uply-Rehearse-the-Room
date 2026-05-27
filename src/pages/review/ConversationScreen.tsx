@@ -1,15 +1,18 @@
 import { ChevronLeft, FileImage, Headphones } from "lucide-react";
 import { User, MapPin } from "lucide-react";
 
-interface Message {
+export interface Message {
   role: "user" | "system";
   text?: string;
   isImage?: boolean;
   isAudio?: boolean;
+  uploadName?: string;
+  uploadMeta?: string;
+  uploadKind?: "image" | "audio";
   choices?: string[];
 }
 
-interface ConvRecord {
+export interface ConvRecord {
   target: string;
   location: string;
   title: string;
@@ -119,10 +122,11 @@ function SystemBubble({ text }: { text: string }) {
 interface Props {
   index: number;
   onBack: () => void;
+  customConversation?: ConvRecord | null;
 }
 
-export function ConversationScreen({ index, onBack }: Props) {
-  const conv = CONVERSATIONS[index];
+export function ConversationScreen({ index, onBack, customConversation = null }: Props) {
+  const conv = customConversation ?? CONVERSATIONS[index];
 
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#f0ede8", display: "flex", flexDirection: "column" }}>
@@ -158,25 +162,155 @@ export function ConversationScreen({ index, onBack }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {conv.messages.map((msg, i) => {
             if (msg.role === "user" && msg.isImage) {
+              const uploadKind = msg.uploadKind ?? "image";
               return (
                 <UserBubble key={i}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f5f0e8", borderRadius: 10, padding: "8px 12px" }}>
-                    <FileImage size={16} color="#b8b4d0" strokeWidth={1.8} />
-                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "12px", color: "#9896b8" }}>
-                      LinkedIn screenshot · 1 image uploaded
-                    </span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      background: "white",
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                      border: "1px solid #e5e1f2",
+                      minWidth: 220,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: "#eef1ff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                        {uploadKind === "audio"
+                          ? <Headphones size={16} color="#7f7ad6" strokeWidth={1.8} />
+                          : <FileImage size={16} color="#7f7ad6" strokeWidth={1.8} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          color: "#1a1830",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {msg.uploadName ?? "LinkedIn-screenshot.jpg"}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontWeight: 500,
+                          fontSize: "11px",
+                          color: "#9896b8",
+                          marginTop: 2,
+                        }}
+                      >
+                        {msg.uploadMeta ?? "JPG 1.22MB · Uploaded"}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "#6B63D4",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✓
+                    </div>
                   </div>
                 </UserBubble>
               );
             }
             if (msg.role === "user" && msg.isAudio) {
+              const uploadKind = msg.uploadKind ?? "audio";
               return (
                 <UserBubble key={i}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f5f0e8", borderRadius: 10, padding: "8px 12px" }}>
-                    <Headphones size={16} color="#b8b4d0" strokeWidth={1.8} />
-                    <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "12px", color: "#9896b8" }}>
-                      Audio recording · 1 file uploaded
-                    </span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      background: "white",
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                      border: "1px solid #e5e1f2",
+                      minWidth: 220,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: "#f2efff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                        {uploadKind === "image"
+                          ? <FileImage size={16} color="#7f7ad6" strokeWidth={1.8} />
+                          : <Headphones size={16} color="#7f7ad6" strokeWidth={1.8} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          color: "#1a1830",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {msg.uploadName ?? "Follow-up-voice-note.m4a"}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontWeight: 500,
+                          fontSize: "11px",
+                          color: "#9896b8",
+                          marginTop: 2,
+                        }}
+                      >
+                        {msg.uploadMeta ?? "M4A 139.72KB · Uploaded"}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "#6B63D4",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✓
+                    </div>
                   </div>
                 </UserBubble>
               );

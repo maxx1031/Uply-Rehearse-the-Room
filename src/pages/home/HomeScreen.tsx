@@ -9,6 +9,7 @@ import { ProfileScreen } from "@/pages/profile/ProfileScreen";
 import { LearnScreen } from "@/pages/learn/LearnScreen";
 import { ReviewScreen } from "@/pages/review/ReviewScreen";
 import { FIRST_LESSON_SCENE_TITLE, FIRST_LESSON_PARTNER_SHORT_ROLE } from "@/lib/onboardingProfile";
+import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
 
 type Tab = "home" | "learn" | "review" | "profile";
 
@@ -51,9 +52,10 @@ interface HomeScreenProps {
   onStartMission?: () => void;
   /** Optional restart of the whole onboarding (kept for legacy parity). */
   onRestart?: () => void;
+  userName?: string;
 }
 
-export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
+export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaultUserName }: HomeScreenProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
 
   return (
@@ -61,9 +63,9 @@ export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
 
       <div className="flex-1 overflow-hidden relative">
         {activeTab === "profile" ? (
-          <ProfileScreen onBack={() => setActiveTab("home")} />
+          <ProfileScreen userName={userName} onBack={() => setActiveTab("home")} />
         ) : activeTab === "learn" ? (
-          <LearnScreen />
+          <LearnScreen onStartLevel={onStartMission} />
         ) : activeTab === "review" ? (
           <ReviewScreen />
         ) : (
@@ -88,10 +90,10 @@ export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
                 </div>
                 <div>
                   <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "11px", color: "#9896b8", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                    Welcome back
+                    {PROFILE_CONSTANTS.homeGreeting}
                   </div>
                   <div style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "20px", color: "#1a1830", lineHeight: 1.1 }}>
-                    Max
+                    {userName}
                   </div>
                 </div>
               </div>
@@ -101,10 +103,10 @@ export function HomeScreen({ onStartMission }: HomeScreenProps = {}) {
                 boxShadow: "0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 <img src={statCalendar} alt="" aria-hidden style={{ width: 16, height: 16, objectFit: "contain" }} />
-                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>128 days</span>
+                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{PROFILE_CONSTANTS.homeActiveDays}</span>
                 <div style={{ width: 1, height: 12, background: "#c8c4d8" }} />
                 <img src={statStar} alt="" aria-hidden style={{ width: 16, height: 16, objectFit: "contain" }} />
-                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>14,000</span>
+                <span style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830" }}>{PROFILE_CONSTANTS.homePoints}</span>
               </div>
             </motion.div>
 

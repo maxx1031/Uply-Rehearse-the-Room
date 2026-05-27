@@ -22,7 +22,7 @@ import {
   Star,
   User as UserIcon,
 } from "lucide-react";
-import { ActLabel, PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
+import { PrimaryBtn, UplyMark } from "@/components/ui/UplyUI";
 import {
   FIRST_LESSON_PARTNER_SHORT_ROLE,
   FIRST_LESSON_SCENE_SUBTITLE,
@@ -62,12 +62,12 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
       padding: "70px 22px 32px",
       display: "flex", flexDirection: "column",
     }}>
-      <ActLabel color="var(--text-ink-mute)">SET YOUR SCENE</ActLabel>
+      {/* <ActLabel color="var(--text-ink-mute)">SET YOUR SCENE</ActLabel> */}
       <div className="uply-serif" style={{ color: "var(--text-ink)", fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginTop: 10 }}>
         What's one small social thing you'd like to pull off?
       </div>
       <div style={{ color: "var(--text-ink-mute)", fontSize: 14, marginTop: 8, marginBottom: 24 }}>
-        Your pick becomes your first real scene.
+        {/* Your pick becomes your first real scene. */}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
@@ -79,6 +79,7 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
               background: active ? "var(--bg-lavender-soft)" : "var(--bg-cream)",
               border: active ? "1.5px solid var(--accent-purple-mid)" : "1px solid rgba(40,30,110,.08)",
               color: "var(--text-ink)", cursor: "pointer", fontFamily: "inherit",
+              minHeight: 108,
               display: "flex", alignItems: "center", gap: 14,
               transition: "all .2s ease",
               boxShadow: active
@@ -92,8 +93,6 @@ export function GoalScreen({ onPick }: { onPick: (goalId: GoalId) => void }) {
               }}>{g.emoji}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2, color: "var(--text-ink)" }}>{g.title}</div>
-                <div style={{ fontSize: 12.5, color: "var(--text-ink-mute)", marginTop: 3 }}>{g.sub}</div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".22em", color: "#b9802c", marginTop: 6 }}>{g.scene}</div>
               </div>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%",
