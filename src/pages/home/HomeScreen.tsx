@@ -51,6 +51,9 @@ interface HomeScreenProps {
   /** Tap a module card or the featured scene play button. App routes this to
    *  the practice / conversation flow. */
   onStartMission?: () => void;
+  onLearnLessonComplete?: () => void;
+  debugModeEnabled?: boolean;
+  onSetCompletedLessons?: (value: number) => void;
   /** Optional restart of the whole onboarding (kept for legacy parity). */
   onRestart?: () => void;
   userName?: string;
@@ -59,6 +62,9 @@ interface HomeScreenProps {
 
 export function HomeScreen({
   onStartMission,
+  onLearnLessonComplete,
+  debugModeEnabled = false,
+  onSetCompletedLessons,
   userName = PROFILE_CONSTANTS.defaultUserName,
   completedLessons = 0,
 }: HomeScreenProps = {}) {
@@ -122,7 +128,13 @@ export function HomeScreen({
         {activeTab === "profile" ? (
           <ProfileScreen userName={userName} onBack={() => setActiveTab("home")} />
         ) : activeTab === "learn" ? (
-          <LearnScreen onStartLevel={onStartMission} completedLessons={completedLessons} />
+          <LearnScreen
+            onStartLevel={onStartMission}
+            onLessonComplete={onLearnLessonComplete}
+            debugModeEnabled={debugModeEnabled}
+            onSetCompletedLessons={onSetCompletedLessons}
+            completedLessons={completedLessons}
+          />
         ) : activeTab === "review" ? (
           <ReviewScreen />
         ) : (

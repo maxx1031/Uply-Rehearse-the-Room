@@ -114,6 +114,9 @@ export default function App() {
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
   const [completedLessons, setCompletedLessons] = useState<number>(() => loadCompletedLessonCount());
+  const debugModeEnabled =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("debug") === "1";
 
   const onboardingProfile = useMemo(() => {
     if (!goalId) return buildDefaultOnboardingProfile();
@@ -177,6 +180,20 @@ export default function App() {
     setCompletedLessons(0);
     persistCompletedLessonCount(0);
     go("splash");
+  };
+
+  const handleLearnLessonComplete = () => {
+    setCompletedLessons((prev) => {
+      const next = Math.min(5, prev + 1);
+      persistCompletedLessonCount(next);
+      return next;
+    });
+  };
+
+  const handleSetCompletedLessons = (value: number) => {
+    const next = Math.max(0, Math.min(5, Math.floor(value)));
+    setCompletedLessons(next);
+    persistCompletedLessonCount(next);
   };
 
   useEffect(() => clearTimers, []);
@@ -313,6 +330,9 @@ export default function App() {
                   userName={userName}
                   onRestart={restartFlow}
                   completedLessons={completedLessons}
+                  onLearnLessonComplete={handleLearnLessonComplete}
+                  debugModeEnabled={debugModeEnabled}
+                  onSetCompletedLessons={handleSetCompletedLessons}
                   onStartMission={() => go("mission")}
                 />
               </motion.div>

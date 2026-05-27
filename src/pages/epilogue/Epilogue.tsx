@@ -177,7 +177,6 @@ export function SloganScreen({ onDone }: { onDone: () => void }) {
           color: "var(--text-ink-mute)", fontSize: 12, letterSpacing: ".32em", fontWeight: 700,
         }}>
           <div style={{ width: 24, height: 1, background: "var(--text-ink-mute)" }} />
-          END OF PROLOGUE
           <div style={{ width: 24, height: 1, background: "var(--text-ink-mute)" }} />
         </div>
       </div>

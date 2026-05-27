@@ -8,11 +8,37 @@ import styles from "./MissionPage.module.css";
 
 interface MissionPageProps {
   profile?: OnboardingProfile | null;
+  missionLabel?: string;
+  missionTitle?: string;
+  missionSubtitle?: string;
+  partnerName?: string;
+  partnerRole?: string;
+  partnerStyle?: string;
+  sceneLabel?: string;
+  taskTitle?: string;
+  taskDescription?: string;
+  taskHint?: string;
+  startButtonText?: string;
   onBack: () => void;
   onStartPractice: () => void;
 }
 
-export function MissionPage({ profile, onBack, onStartPractice }: MissionPageProps) {
+export function MissionPage({
+  profile,
+  missionLabel = "TODAY'S MISSION",
+  missionTitle,
+  missionSubtitle,
+  partnerName,
+  partnerRole,
+  partnerStyle,
+  sceneLabel = "Coffee chat",
+  taskTitle = "Personal goal",
+  taskDescription,
+  taskHint,
+  startButtonText = "Curtain up",
+  onBack,
+  onStartPractice,
+}: MissionPageProps) {
   const [expanded, setExpanded] = useState(false);
   const activeProfile = profile ?? buildDefaultOnboardingProfile();
   const promptSeed = activeProfile.firstLessonPromptSeed;
@@ -24,8 +50,8 @@ export function MissionPage({ profile, onBack, onStartPractice }: MissionPagePro
           <ChevronLeft size={20} strokeWidth={2.2} />
         </button>
         <div>
-          <div className={styles.eyebrow}>TODAY'S MISSION</div>
-          <div className={styles.title}>{promptSeed.sceneTitle}</div>
+          <div className={styles.eyebrow}>{missionLabel}</div>
+          <div className={styles.title}>{missionTitle ?? promptSeed.sceneTitle}</div>
         </div>
       </div>
 
@@ -37,19 +63,20 @@ export function MissionPage({ profile, onBack, onStartPractice }: MissionPagePro
           <div className={styles.partnerRow}>
             <div className={styles.silhouette} aria-hidden="true" />
             <div>
-              <div className={styles.partnerName}>{promptSeed.partnerName}</div>
-              <div className={styles.partnerRole}>{promptSeed.partnerRole}</div>
+              <div className={styles.partnerName}>{partnerName ?? promptSeed.partnerName}</div>
+              <div className={styles.partnerRole}>{partnerRole ?? promptSeed.partnerRole}</div>
             </div>
           </div>
+          {missionSubtitle ? <div className={styles.mutedText}>{missionSubtitle}</div> : null}
 
           <div className={styles.metaGrid}>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Scene</div>
-              <div className={styles.metaValue}>Coffee chat</div>
+              <div className={styles.metaValue}>{sceneLabel}</div>
             </div>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Style</div>
-              <div className={styles.metaValue}>Gentle</div>
+              <div className={styles.metaValue}>{partnerStyle ?? "Gentle"}</div>
             </div>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Time</div>
@@ -61,10 +88,10 @@ export function MissionPage({ profile, onBack, onStartPractice }: MissionPagePro
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <Target size={15} />
-            Personal goal
+            {taskTitle}
           </div>
-          <div className={styles.bodyText}>{activeProfile.selectedGoal.personalObjective}</div>
-          <div className={styles.mutedText}>{activeProfile.selectedGoal.title}</div>
+          <div className={styles.bodyText}>{taskDescription ?? activeProfile.selectedGoal.personalObjective}</div>
+          <div className={styles.mutedText}>{taskHint ?? activeProfile.selectedGoal.title}</div>
         </section>
 
         <section className={styles.strategyPanel}>
@@ -107,7 +134,7 @@ export function MissionPage({ profile, onBack, onStartPractice }: MissionPagePro
       <div className={styles.footer}>
         <button className={styles.primaryButton} onClick={onStartPractice}>
           <Mic2 size={18} />
-          Curtain up
+          {startButtonText}
         </button>
       </div>
     </div>

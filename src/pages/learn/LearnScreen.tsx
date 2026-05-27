@@ -1,9 +1,21 @@
-import { ScrollText, Lock } from "lucide-react";
+import { useState } from "react";
+import { ScrollText, Lock, ChevronLeft, Target, Sparkles } from "lucide-react";
 import statCalendar from "@/assets/imports/1.png";
 import statSapphire from "@/assets/imports/2.png";
 import statStar     from "@/assets/imports/3.png";
 import statMask     from "@/assets/imports/4.png";
+import lessonBgEarly from "@/assets/lesson/Gemini_Generated_Image_up3ghoup3ghoup3g.png";
+import lessonBgLate from "@/assets/lesson/Gemini_Generated_Image_cqktntcqktntcqkt.png";
+import lessonP1 from "@/assets/lesson/p1.png";
+import lessonP2 from "@/assets/lesson/p2.png";
+import lessonP3 from "@/assets/lesson/p3.png";
+import lessonP4 from "@/assets/lesson/p4.png";
+import lessonP5 from "@/assets/lesson/p5.png";
 import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
+import { buildDefaultOnboardingProfile } from "@/lib/onboardingProfile";
+import { getLessonByCompletedLessons } from "@/lib/selfIntroCourse";
+import { MissionPage } from "@/pages/mission/MissionPage";
+import { MissionCompletePage } from "@/pages/practice/MissionCompletePage";
 import map0 from "@/assets/Map/Map0.png";
 import map1 from "@/assets/Map/Map 1.png";
 import map2 from "@/assets/Map/Map 2.png";
@@ -15,6 +27,9 @@ interface LearnScreenProps {
   /** Tap map → App routes to MissionPage → PracticePage. */
   onStartLevel?: () => void;
   completedLessons?: number;
+  onLessonComplete?: () => void;
+  debugModeEnabled?: boolean;
+  onSetCompletedLessons?: (value: number) => void;
 }
 
 const STATS = [
@@ -24,6 +39,13 @@ const STATS = [
   { img: statMask,     value: "95min"    },
 ];
 const MAP_STAGES = [map0, map1, map2, map3, map4, map5] as const;
+const LESSON_P_IMAGES = {
+  1: lessonP1,
+  2: lessonP2,
+  3: lessonP3,
+  4: lessonP4,
+  5: lessonP5,
+} as const;
 
 function clampCompletedLessons(value: number): number {
   if (!Number.isFinite(value)) return 0;
@@ -156,9 +178,403 @@ function NextPhaseDivider() {
   );
 }
 
-export function LearnScreen({ onStartLevel, completedLessons = 0 }: LearnScreenProps = {}) {
+export function LearnScreen({
+  onStartLevel,
+  onLessonComplete,
+  completedLessons = 0,
+  debugModeEnabled = false,
+  onSetCompletedLessons,
+}: LearnScreenProps = {}) {
   const stage = clampCompletedLessons(completedLessons ?? 0);
   const mapSrc = MAP_STAGES[stage];
+  const [flowStep, setFlowStep] = useState<"map" | "onboarding-preview" | "mission" | "after-party" | "mission-complete">("map");
+  const lesson = getLessonByCompletedLessons(stage);
+  const previewBackgroundSrc = stage <= 2 ? lessonBgEarly : lessonBgLate;
+  const lessonCharacterSrc = LESSON_P_IMAGES[lesson.level as keyof typeof LESSON_P_IMAGES] ?? lessonP1;
+  const lessonSceneLabel = lesson.level <= 3 ? "Orientation chat" : "Alumni chat";
+
+  const handleMapTap = () => {
+    // Stage 5 is fully completed and only shows unlocked rewards on map.
+    if (stage >= 5) return;
+    setFlowStep("onboarding-preview");
+  };
+
+  const handleMissionStart = () => {
+    setFlowStep("after-party");
+  };
+
+  const handleMissionCompleteDone = () => {
+    if (onLessonComplete) {
+      onLessonComplete();
+      setFlowStep("map");
+      return;
+    }
+    onStartLevel?.();
+  };
+
+  if (flowStep === "mission") {
+    return (
+      <MissionPage
+        profile={buildDefaultOnboardingProfile()}
+        missionLabel={`LEVEL ${lesson.level} REHEARSAL`}
+        missionTitle={lesson.title}
+        missionSubtitle={lesson.subtitle}
+        partnerName={lesson.persona.name}
+        partnerRole={lesson.persona.displayRole}
+        partnerStyle={lesson.persona.voice}
+        sceneLabel={lesson.level <= 3 ? "Orientation chat" : "Alumni chat"}
+        taskTitle="Today's task"
+        taskDescription={lesson.userTask}
+        taskHint={lesson.supportLabel}
+        startButtonText="Start rehearsal"
+        onBack={() => setFlowStep("map")}
+        onStartPractice={handleMissionStart}
+      />
+    );
+  }
+
+  if (flowStep === "mission-complete") {
+    return <MissionCompletePage scoreDelta={120} streak={3} onDone={handleMissionCompleteDone} />;
+  }
+
+  if (flowStep === "onboarding-preview" || flowStep === "after-party") {
+    const UI = {
+      headerTop: 56,
+      headerLeft: 64,
+      backTop: 52,
+      backLeft: 16,
+      characterTop: "50%",
+      characterWidth: 200,
+      taskCardTop: "62%",
+      taskCardSide: 16,
+      taskCardRadius: 18,
+      taskCardPadding: "14px 14px 12px",
+      titleSize: 26,
+      titleMarginTop: 6,
+      captionSize: 11,
+      captionSpacing: "0.14em",
+      sceneSpacing: "0.1em",
+      taskBodySize: 18,
+      hintSize: 12,
+    } as const;
+
+    const isFormalDialogueStage = flowStep === "after-party";
+    const formalTopChipText = `· Level ${lesson.level} · ${lesson.title} ·`;
+    const formalTaskChipText = `Challenge · ${lesson.shortTitle}`;
+    const handleBack = () => {
+      if (isFormalDialogueStage) {
+        setFlowStep("mission");
+        return;
+      }
+      setFlowStep("map");
+    };
+    const handleTaskContinue = () => {
+      if (isFormalDialogueStage) {
+        setFlowStep("mission-complete");
+        return;
+      }
+      setFlowStep("mission");
+    };
+
+    return (
+      <div style={{ height: "100%", background: "#f0ede8", display: "flex", flexDirection: "column", position: "relative" }}>
+        <div
+          style={{
+            position: "relative",
+            flex: 1,
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src={previewBackgroundSrc}
+            alt=""
+            aria-hidden
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center top",
+              display: "block",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(84,70,178,0.7) 0%, rgba(84,70,178,0.36) 35%, rgba(240,237,232,0.92) 78%, #f0ede8 100%)",
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={handleBack}
+            style={{
+              position: "absolute",
+              top: UI.backTop,
+              left: UI.backLeft,
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(255,255,255,0.84)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(20, 20, 80, 0.14)",
+            }}
+            aria-label="Back to map"
+          >
+            <ChevronLeft size={20} color="#1a1830" />
+          </button>
+
+          {isFormalDialogueStage ? (
+            <>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 58,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 21,
+                  fontFamily: "var(--font-heading)",
+                  fontSize: 17,
+                  fontWeight: 600,
+                  letterSpacing: ".06em",
+                  color: "#FFFFFF",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {formalTopChipText}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  top: 100,
+                  left: 14,
+                  zIndex: 21,
+                  maxWidth: 220,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "7px 9px",
+                    borderRadius: 10,
+                    background: "rgba(107,99,212,0.45)",
+                    backdropFilter: "blur(8px)",
+                    boxShadow: "0 6px 16px rgba(107,99,212,0.18)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      flexShrink: 0,
+                      background: "transparent",
+                      border: "2px solid #FFFFFF",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      lineHeight: 1.25,
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {formalTaskChipText}
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{ position: "absolute", top: UI.headerTop, left: UI.headerLeft, right: 16 }}>
+              <div
+                style={{
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 700,
+                  fontSize: UI.captionSize,
+                  letterSpacing: UI.captionSpacing,
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.72)",
+                }}
+              >
+                {`Level ${lesson.level} Mission`}
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 700,
+                  fontSize: UI.captionSize,
+                  letterSpacing: UI.sceneSpacing,
+                  textTransform: "uppercase",
+                color: "#FFFFFF",
+                  marginTop: 4,
+                }}
+              >
+                {lessonSceneLabel}
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Fredoka', sans-serif",
+                  fontWeight: 600,
+                  fontSize: UI.titleSize,
+                  lineHeight: 1.12,
+                  marginTop: UI.titleMarginTop,
+                  color: "white",
+                }}
+              >
+                {lesson.title}
+              </div>
+            </div>
+          )}
+
+          <div
+            style={{
+              position: "absolute",
+              left: 16,
+              right: 16,
+              top: UI.characterTop,
+              transform: "translateY(-50%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 8,
+            }}
+          >
+            <img
+              src={lessonCharacterSrc}
+              alt="Main character"
+              style={{
+                width: UI.characterWidth,
+                height: "auto",
+                objectFit: "contain",
+                filter: "drop-shadow(0 10px 24px rgba(40, 30, 110, 0.22))",
+              }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleTaskContinue}
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: UI.taskCardTop,
+              transform: "translate(-50%, -50%)",
+              width: `calc(100% - ${UI.taskCardSide * 2}px)`,
+              background: "rgba(255,255,255,0.94)",
+              borderRadius: UI.taskCardRadius,
+              padding: UI.taskCardPadding,
+              boxShadow: "0 8px 24px rgba(20,20,80,0.15)",
+              border: "none",
+              textAlign: "left",
+              cursor: "pointer",
+              zIndex: 18,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 700,
+                fontSize: UI.hintSize,
+                color: "#6B63D4",
+              }}
+            >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Target size={14} />
+                {isFormalDialogueStage ? "Challenge" : "Task"}
+              </span>
+              <span
+                style={{
+                  fontFamily: "'Nunito', sans-serif",
+                  fontWeight: 700,
+                  fontSize: UI.captionSize,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "#FFFFFF",
+                }}
+              >
+                {lessonSceneLabel}
+              </span>
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontFamily: "'Fredoka', sans-serif",
+                fontWeight: 500,
+                fontSize: UI.taskBodySize,
+                color: "#1a1830",
+                lineHeight: 1.25,
+              }}
+            >
+              {lesson.userTask}
+            </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontFamily: "'Nunito', sans-serif",
+                fontWeight: 600,
+                fontSize: UI.hintSize,
+                color: "#9896b8",
+                lineHeight: 1.45,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Sparkles size={13} />
+              {lesson.supportLabel}
+            </div>
+          </button>
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            left: 16,
+            right: 16,
+            bottom: 96,
+            zIndex: 20,
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleTaskContinue}
+            style={{
+              width: "100%",
+              height: 54,
+              borderRadius: 16,
+              border: "none",
+              background: "linear-gradient(180deg, #8C7BF5 0%, #6B63D4 100%)",
+              color: "white",
+              fontFamily: "'Fredoka', sans-serif",
+              fontSize: "18px",
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 8px 18px rgba(84,70,178,0.34)",
+            }}
+          >
+            {isFormalDialogueStage ? "Finish this lesson" : "Start first lesson"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: "100%", background: "#f0ede8", display: "flex", flexDirection: "column" }}>
@@ -193,6 +609,61 @@ export function LearnScreen({ onStartLevel, completedLessons = 0 }: LearnScreenP
         paddingLeft: 28, paddingTop: 4, paddingBottom: 110,
       } as React.CSSProperties}>
 
+        {debugModeEnabled && (
+          <div
+            style={{
+              marginRight: 28,
+              marginBottom: 12,
+              background: "rgba(255,255,255,0.92)",
+              borderRadius: 12,
+              padding: "10px 10px 8px",
+              boxShadow: "0 4px 12px rgba(20,20,80,0.1)",
+              border: "1px solid rgba(107,99,212,0.25)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Nunito', sans-serif",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#6B63D4",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              Debug Map Stage
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[0, 1, 2, 3, 4].map((value) => {
+                const active = stage === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => onSetCompletedLessons?.(value)}
+                    style={{
+                      width: 34,
+                      height: 28,
+                      borderRadius: 8,
+                      border: active ? "none" : "1px solid rgba(107,99,212,0.35)",
+                      background: active ? "#6B63D4" : "white",
+                      color: active ? "white" : "#6B63D4",
+                      fontFamily: "'Fredoka', sans-serif",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    aria-label={`Set map stage ${value}`}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {PHASES.map((phase, phaseIdx) => (
           <div key={phase.num}>
             {/* Separator before phases 2+ */}
@@ -203,7 +674,7 @@ export function LearnScreen({ onStartLevel, completedLessons = 0 }: LearnScreenP
                 <ActivePhaseHeader phase={phase} />
                 <button
                   type="button"
-                  onClick={onStartLevel}
+                  onClick={handleMapTap}
                   style={{
                     background: "transparent",
                     border: "none",
