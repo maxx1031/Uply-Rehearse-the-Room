@@ -25,7 +25,7 @@
   top: 58px;
   left: var(--sp-4);
   z-index: 4;
-  width: 214px;
+  width: min(300px, calc(100% - var(--sp-6)));
   border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
@@ -86,6 +86,32 @@
   flex: 0 0 auto;
 }
 
+.preparedIntro {
+  display: grid;
+  gap: var(--sp-2);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--bg-cream) 76%, transparent);
+  box-shadow: var(--shadow-soft);
+  padding: var(--sp-3);
+}
+
+.preparedIntroLabel {
+  color: var(--accent-purple-mid);
+  font-family: var(--font-heading);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+}
+
+.preparedIntroText {
+  max-height: 136px;
+  overflow: auto;
+  color: var(--text-primary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: 1.4;
+}
+
 .nameLabel {
   position: absolute;
   top: 47%;
@@ -123,6 +149,11 @@
   top: 34%;
   left: var(--sp-4);
   outline: 2px solid var(--accent-purple-mid);
+}
+
+.assistantBubbleLower {
+  top: auto;
+  bottom: 156px;
 }
 
 .userBubble {

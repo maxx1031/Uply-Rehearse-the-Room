@@ -10,7 +10,7 @@ import {
   type ReviewDraft,
   type TranscriptRecord,
 } from "@/lib/onboardingProfile";
-import { buildLessonMockScript, type IntroMemory, type LessonConfig } from "@/lib/selfIntroCourse";
+import { buildLessonMockScript, buildPolishedIntro, type IntroMemory, type LessonConfig } from "@/lib/selfIntroCourse";
 import { type MockRealtimeTurn, useRealtime } from "@/lib/useRealtime";
 import styles from "./PracticePage.module.css";
 
@@ -33,6 +33,7 @@ function nowIso(): string {
 export function PracticePage({ profile, lesson, memory, onExit, onComplete }: PracticePageProps) {
   const activeProfile = profile ?? buildDefaultOnboardingProfile();
   const promptSeed = activeProfile.firstLessonPromptSeed;
+  const preparedIntro = lesson.id === "level-4" ? buildPolishedIntro(memory) : "";
   const startedAtRef = useRef(nowIso());
   const finishHandledRef = useRef(false);
   const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -289,6 +290,10 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
       : recording
       ? "Tap to send"
       : "Tap to speak";
+  const assistantBubbleClass =
+    preparedIntro && tasksExpanded
+      ? `${styles.assistantBubble} ${styles.assistantBubbleLower}`
+      : styles.assistantBubble;
 
   return (
     <div className={styles.screen}>
@@ -303,6 +308,12 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
         {tasksExpanded && (
           <div className={styles.taskList}>
             <div className={styles.taskItem}><span />{lesson.userTask}</div>
+            {preparedIntro ? (
+              <div className={styles.preparedIntro}>
+                <div className={styles.preparedIntroLabel}>Prepared intro</div>
+                <div className={styles.preparedIntroText}>{preparedIntro}</div>
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -310,7 +321,7 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
       <div className={styles.nameLabel}>{promptSeed.partnerName}</div>
 
       {bubbleText && (
-        <div className={activeBubble === "user" ? styles.userBubble : styles.assistantBubble}>
+        <div className={activeBubble === "user" ? styles.userBubble : assistantBubbleClass}>
           {bubbleText}
         </div>
       )}
