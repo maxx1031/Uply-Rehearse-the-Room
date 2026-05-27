@@ -277,7 +277,7 @@ Prompt 责任：
 - Mission Brief 把本关任务说给用户听。
 - 它不触发 partner 对话。
 - 它不展示 tips、success criteria、current draft 或奖励信息。
-- 第四关的 polished intro 不在 Mission 或 Practice 展示。
+- 第四关的 prepared intro 不在 Mission 展示，只在 Practice 折叠任务区展示。
 
 不要做：
 
@@ -312,7 +312,7 @@ Prompt 责任：
 - 顶部任务列表，可以收起，只显示当前 Level 的一句目标。
 - 当前关的 partner 名称 (L1 Luna / L2 Theo / L3 Maya / L4-L5 Jordan Lee)。
 - 所有 Level 都不显示 Tips 卡。
-- Level 4 不显示 polished intro 卡。
+- Level 4 在折叠任务区显示 prepared intro，小抄只服务本关试说。
 - 当前 assistant 或 user bubble。
 - 底部退出、语音、暂停按钮。
 
@@ -485,7 +485,7 @@ Prompt 责任：
 - 用户说太少时，先反应他说过的内容，再用正常 chat 语气问一个具体细节。
 - 用户说太多时，抓住一个真的有兴趣的线索继续聊。
 - Level 1 到 3 通过自我介绍带出本关目标密度，用户没跟上时自然追问缺失的信息槽。
-- Level 4 只邀请用户试说已经准备好的 polished intro，不在对话中重新生成一版，也不评论结构。
+- Level 4 只邀请用户试说已经准备好的 prepared intro，不在对话中重新生成一版，也不评论结构。
 - Level 5 不主动帮助，听完 intro 后只问一个自然 follow-up。
 
 ### Partner 不能做
@@ -504,25 +504,21 @@ Prompt 责任：
 
 ```mermaid
 stateDiagram-v2
-  [*] --> practice
-  practice --> practice: "任务未达成, 继续自然追问"
-  practice --> cool_down: "本关 landing 条件内部满足 (不外显)"
-  cool_down --> wrap_up_signal: "至少 1 轮自然延展之后"
-  wrap_up_signal --> mutual_goodbye: "Partner 主动起话 'I should head out, but...'"
-  mutual_goodbye --> goodbye_line: "用户回应"
-  goodbye_line --> complete: "Partner 说出 in-character 自然告别"
+  [*] --> collect_target
+  collect_target --> collect_target: "任务未达成, 只追问本关缺口"
+  collect_target --> bridge_close: "本关 target 已满足"
+  bridge_close --> complete: "一句具体回应 + 主动离场理由 + 自然告别"
   complete --> [*]: "同一轮 response 中调用 finish_practice"
-  practice --> goodbye_line: "用户明确坚决说要走 ('I have to run')"
+  collect_target --> complete: "用户明确坚决说要走 ('I have to run')"
 ```
 
 执行规则：
 
-- `practice`：正常对话与训练，AI 内部跟踪 landing 条件。
-- `cool-down`：landing 满足后，先来 ≥1 轮自然延续，不抢着收尾。
-- `wrap-up-signal`：Partner 主动起话头说要走 (L1-L3 orientation 用 "I should head to the next session" / "I should go find my friend before the next thing"，L4-L5 alumni coffee chat 用 "I should head back to work soon" / "I've got a thing in ten minutes")，不等用户开口。
-- `mutual-goodbye`：用户回应后，partner 说一句 in-character 自然告别。
+- `collect_target`：正常对话与训练，AI 内部只跟踪本关 target，不额外追新任务。
+- `bridge_close`：target 满足后，不再问新问题。Partner 用一句具体回应承接用户刚说的内容，然后主动给离场理由并自然告别。
 - `complete`：告别句已说出后，同 response 内调用 `finish_practice`。
-- 用户中途说 "ok / bye / thanks" 不触发收尾，AI 当作礼貌回应继续自己的 wrap-up。
+- 用户中途说 "ok / bye / thanks" 且 target 未满足时，AI 当作礼貌 filler，温和回应后只轻拉回一次，追问本关关键缺口。
+- 用户第二次继续软性告别，或明确坚决说要走时，partner 给一句 supportive in-character 告别，同 turn 调用 `finish_practice`。
 - 前端收到 `finish_practice` 后先暂存，等待当前 assistant response 完成，再延迟约 750ms 进入完成弹层。
 
 收尾句：
@@ -554,9 +550,9 @@ stateDiagram-v2
 | 用户任务 | Answer with the same level of detail: name plus school. |
 | Practice 任务显示 | Answer with the same level of detail: name plus school. |
 | Luna 开场 | `Hey, I'm Luna. UBC, Cog Sys.` |
-| Luna 目标 | 用 name + 学校 + 主修密度自我介绍后停顿, 用户镜像后自然带出名字、学校或当前角色。可 drip 的素材: capstone on conversational AI、climbing at The Hive、Cog Sys 是 CS / psych / linguistics 的混合。 |
-| 成功条件 | intro 包含姓名、学校、专业或身份 |
-| 完成规则 | 用户说出完整短介绍，且本关信息槽被覆盖 |
+| Luna 目标 | 用 name + 学校 + 主修密度自我介绍后停顿, 用户镜像后自然带出名字和一个身份锚点。可 drip 的素材: capstone on conversational AI、climbing at The Hive、Cog Sys 是 CS / psych / linguistics 的混合。 |
+| 成功条件 | 用户说出姓名和一个身份锚点 |
+| 完成规则 | 用户说出姓名和学校、专业、角色或当前身份之一即可，不强迫完整重说 |
 | 产出 memory | Identity anchor |
 
 对话模式：
@@ -566,11 +562,7 @@ Luna: 自我介绍 (name + 学校 + 主修), 停顿
 User: 镜像回答 (name + 学校 或 当前角色)
 Luna: 反应他说的内容, 如果缺学校或角色, 自然追问一个细节
 User: 补充缺失信息
-Luna: cool-down, 自然延续一下话题
-User: 回应
-Luna: wrap-up signal ("I should head to the next session, but...")
-User: 回应
-Luna: in-character 自然告别 (e.g. "Really good meeting you, see you around!")
+Luna: 一句具体回应 + 主动离场理由 + in-character 自然告别
 System: finish_practice (与告别同 turn)
 ```
 
@@ -582,9 +574,9 @@ System: finish_practice (与告别同 turn)
 | 用户任务 | Add one more detail about your major or work direction. |
 | Practice 任务显示 | Add one more detail about your major or work direction. |
 | Theo 开场 | `Hey, I'm Theo. SFU, Comm and Interactive Arts.` |
-| Theo 目标 | 开场只给 name + 学校 + general field (3 anchor facts)，副修 (Interactive Arts) / podcast / 摄影 等剩余 facts 通过 turn 2-3 自然 drip 出来。用户没跟上时自然追问 missing piece (实习/项目/研究/工作/探索方向都可以) |
-| 成功条件 | intro 包含身份和当前项目、工作、研究或探索方向 |
-| 完成规则 | 用户说出完整介绍，且当前方向被覆盖 |
+| Theo 目标 | 开场只给 name + 学校 + general field (3 anchor facts)，副修 (Interactive Arts) / podcast / 摄影 等剩余 facts 只在有助于自然接话时 drip。用户没跟上时自然追问一个当前方向 (实习/项目/研究/工作/探索方向都可以) |
+| 成功条件 | 用户说出一个当前项目、工作、研究或探索方向 |
+| 完成规则 | 当前方向被覆盖即可，不强迫完整重说身份 |
 | 产出 memory | Professional anchor |
 
 对话模式：
@@ -594,11 +586,7 @@ Theo: 自我介绍 opening (name + 学校 + general field), 停顿
 User: 镜像 (name + 学校 + 专业/方向)
 Theo: 反应一个细节, drip 自己一个 fact (podcast 或 Interactive Arts), 问对方当前方向
 User: 分享 direction
-Theo: cool-down, 反应 + 分享自己相关一点 (例如 podcast 在做的那期关于 designers 用 AI tools)
-User: 回应
-Theo: wrap-up signal ("I should go find my friend before the next session, but...")
-User: 回应
-Theo: in-character 自然告别
+Theo: 一句具体回应 + 主动离场理由 + in-character 自然告别
 System: finish_practice (与告别同 turn)
 ```
 
@@ -610,9 +598,9 @@ System: finish_practice (与告别同 turn)
 | 用户任务 | Add one personal hook and a light reason to keep talking. |
 | Practice 任务显示 | Add one personal hook and a light reason to keep talking. |
 | Maya 开场 | `Hey, I'm Maya. Emily Carr, Industrial Design.` |
-| Maya 目标 | 开场只给 name + 学校 + 主修 (跟 L2 开场同密度)。thesis interactive installation 在 turn 3 左右才说 (Maya 主动分享自己的 direction)。hobby 在 turn 5 左右才说 (Maya 主动分享 ceramics 和 seawall 骑车)，社交邀约 (Saturday seawall ride) 这个 social hook 在 turn 7 左右才抛 (用户说完自己 hobby 后, Maya 接话才提)。开场绝不出现 ceramics / 骑车 / seawall / 周末 |
-| 成功条件 | 用户说出完整 intro、具体动机和轻量 small ask |
-| 完成规则 | 用户的 30 秒版本已包含身份、方向、动机和 small ask |
+| Maya 目标 | 开场只给 name + 学校 + 主修 (跟 L2 开场同密度)。thesis / ceramics / seawall ride 只作为自然社交素材使用，不再作为强制回合脚本。核心是引出用户的动机、curiosity 或一个轻量 small ask。开场绝不出现 ceramics / 骑车 / seawall / 周末 |
+| 成功条件 | 用户说出具体动机、curiosity 或轻量 small ask |
+| 完成规则 | 本关增量被覆盖即可，不强迫用户说完整 30 秒版本 |
 | 产出 memory | Curiosity hook，并同步成 nextSmallAsk |
 
 对话模式：
@@ -622,15 +610,9 @@ Maya: 自我介绍 opening (name + 学校 + 主修), 停顿
 User: 镜像 identity
 Maya: 反应, drip 自己的 direction (thesis interactive installation), 问对方方向
 User: 分享 direction
-Maya: 自然 pivot 到 "outside of school", 分享自己 ceramics 和 seawall 骑车, 问对方 hobby
-User: 分享 hobby
-Maya: 反应 hobby, drip social hook ("A few of us are doing a Saturday morning seawall ride this weekend...")
-User: 回应 (接受/婉拒/反问/其他社交回应)
-Maya: cool-down
-User: 回应
-Maya: wrap-up signal
-User: 回应
-Maya: in-character 自然告别 (可引用聊过的具体内容, e.g. "let me know about the ride!")
+Maya: 如果还缺动机或 small ask, 问一个具体问题, 例如为什么对这个方向好奇
+User: 分享 motivation / curiosity / small ask
+Maya: 一句具体回应 + 主动离场理由 + in-character 自然告别
 System: finish_practice (与告别同 turn)
 ```
 
@@ -639,11 +621,11 @@ System: finish_practice (与告别同 turn)
 | 项目 | 内容 |
 |---|---|
 | 用户任务 | Try the polished version and make it sound like you. |
-| Practice 任务显示 | Try the polished version and make it sound like you. |
+| Practice 任务显示 | Try the polished version and make it sound like you. 折叠任务区同时显示 prepared intro。 |
 | Jordan 开场 | `Hey, good seeing you. I'm Jordan, glad we found a time.` |
-| Jordan 目标 | 只邀请用户试说已经准备好的 polished intro，不现场生成新版本 |
+| Jordan 目标 | 只邀请用户试说已经准备好的 prepared intro，不现场生成新版本 |
 | 成功条件 | 用户尝试完整版本，保留个人细节，听起来自然 |
-| 完成规则 | 用户试说完整 intro 后，Jordan 自然回应并收尾 |
+| 完成规则 | 用户尝试 prepared intro 或 close personal adaptation 后，Jordan 短承接并收尾 |
 | 产出 memory | Customized intro v1 |
 
 对话模式：
@@ -651,19 +633,14 @@ System: finish_practice (与告别同 turn)
 ```text
 Jordan: 邀请用户试说已经准备好的版本
 User: 说出准备好的版本或自己的改写
-Jordan: 反应一个具体细节, 问一个自然 follow-up (不评论结构, 不生成 polished version)
-User: 回答
-Jordan: cool-down, 反应他说的
-User: 回应
-Jordan: wrap-up signal
-User: 回应
-Jordan: in-character 自然告别
+Jordan: 反应一个具体细节 (不评论结构, 不生成 polished version)
+Jordan: 主动离场理由 + in-character 自然告别
 System: finish_practice (与告别同 turn)
 ```
 
 Level 4 重要边界：
 
-- 当前 Practice 不渲染 polished intro 卡。
+- 当前 Practice 在折叠任务区渲染 prepared intro。
 - Jordan 不能在对话里重新生成 polished intro。
 
 ### Level 5, No-hint challenge
@@ -685,11 +662,7 @@ Jordan: 邀请用户直接开始完整 intro
 User: 说 30 到 45 秒 intro (从记忆里, 无 hint)
 Jordan: 反应, 问一个自然 follow-up
 User: 回答 follow-up
-Jordan: cool-down, 反应他答的
-User: 回应
-Jordan: wrap-up signal
-User: 回应
-Jordan: in-character 自然告别
+Jordan: 一句具体回应 + 主动离场理由 + in-character 自然告别
 System: finish_practice (与告别同 turn)
 ```
 
@@ -707,7 +680,8 @@ Level 5 重要边界：
 | 单词回答 | 要一个具体细节 | 否 |
 | 跑题 | 轻轻拉回本关任务 | 否 |
 | 焦虑或说不会 | 承认感受，再问一个更小的问题 | 否 |
-| 礼貌性 "ok / bye / thanks / see you" | 当作 polite filler，温和回应 ("yeah, totally")，**继续 cool-down → wrap-up signal → goodbye 序列**，不立即结束 | 否 (用户没真想走) |
+| 礼貌性 "ok / bye / thanks / see you" | target 未满足时当作 polite filler，温和回应后轻拉回一次，只追问本关关键缺口 | 否 |
+| 第二次软性告别 | 给一句 supportive in-character 告别，同 turn 调用 finish_practice，避免强留用户 | 是，轻量完成 |
 | 明确坚决说要走 ("I have to go now" / "I have to run" / "let's stop here") | 给一句 supportive in-character 告别，同 turn 调用 finish_practice | 是，轻量完成 |
 | 安全边界风险 | 退出角色，给安全提醒后结束 | 是 |
 
@@ -720,7 +694,7 @@ Level 5 重要边界：
 - Locked Level 不能进入。
 - Level 5 只在 Level 1 到 4 完成后解锁。
 - Mission 展示当前关 partner 和一句 Today's task。
-- Practice 中所有 Level 都不显示 Tips 卡或 polished intro 卡。
+- Practice 中所有 Level 都不显示 Tips 卡；Level 4 只在折叠任务区显示 prepared intro。
 - Practice 左上任务列表只显示当前 Level 的一句目标。
 - Partner prompt 不包含 UI tips、模板、checklist 或句型提示。
 - Partner 告别句播完后才出现完成弹层。

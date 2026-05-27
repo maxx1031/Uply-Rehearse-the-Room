@@ -62,7 +62,7 @@ const MISSION_TOOLS = [
     type: "function",
     name: "finish_practice",
     description:
-      "End the practice only when the role prompt's finish rules say the level is complete, after Jordan has provided a natural closing line.",
+      "End the practice only when the role prompt's finish rules say the round is complete, after the current partner has provided a natural closing line.",
     parameters: {
       type: "object",
       properties: {
