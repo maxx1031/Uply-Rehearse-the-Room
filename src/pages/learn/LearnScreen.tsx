@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollText, Lock, ChevronLeft, Target, Sparkles } from "lucide-react";
 import statCalendar from "@/assets/imports/1.png";
 import statSapphire from "@/assets/imports/2.png";
@@ -80,35 +80,93 @@ const PHASES: Phase[] = [
     status: "locked" },
 ];
 
+interface StickyBannerTheme {
+  partLabel: string;
+  title: string;
+  background: string;
+  titleColor: string;
+  subtitleColor: string;
+}
+
+const STICKY_BANNER_THEMES: Record<number, StickyBannerTheme> = {
+  1: {
+    partLabel: "Phase 1 · Part 1",
+    title: "Self Introduction",
+    background: "#6B63D4",
+    titleColor: "#FFFFFF",
+    subtitleColor: "rgba(255,255,255,0.72)",
+  },
+  2: {
+    partLabel: "Phase 1 · Part 2",
+    title: "Lab Outreach",
+    background: "#E5EAA0",
+    titleColor: "#1a1830",
+    subtitleColor: "rgba(26,24,48,0.62)",
+  },
+  3: {
+    partLabel: "Phase 1 · Part 3",
+    title: "Internship Hunt",
+    background: "#9FE1AC",
+    titleColor: "#1a1830",
+    subtitleColor: "rgba(26,24,48,0.62)",
+  },
+  4: {
+    partLabel: "Phase 1 · Part 4",
+    title: "Full-time Search",
+    background: "#FFB86B",
+    titleColor: "#1a1830",
+    subtitleColor: "rgba(26,24,48,0.62)",
+  },
+};
+
 /* ─── Active Phase header (purple banner, inline) ─── */
-function ActivePhaseHeader({ phase }: { phase: Phase }) {
+function ActivePhaseHeader({
+  partLabel,
+  title,
+  background,
+  titleColor,
+  subtitleColor,
+  sticky = false,
+}: {
+  partLabel: string;
+  title: string;
+  background: string;
+  titleColor: string;
+  subtitleColor: string;
+  sticky?: boolean;
+}) {
   return (
     <div style={{
-      background: "#6B63D4", borderRadius: 16, padding: "13px 16px",
+      background,
+      borderRadius: 16,
+      padding: "13px 16px",
       marginRight: 28, marginBottom: 18,
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      boxShadow: "0 4px 18px rgba(107,99,212,0.32)",
+      boxShadow: sticky ? "0 8px 20px rgba(20,20,80,0.2)" : "0 4px 18px rgba(107,99,212,0.32)",
+      position: sticky ? "sticky" : "relative",
+      top: sticky ? 0 : "auto",
+      zIndex: sticky ? 30 : "auto",
     }}>
       <div>
         <div style={{
           fontFamily: "'Nunito', sans-serif", fontWeight: 600,
-          fontSize: "11px", color: "rgba(255,255,255,0.62)", letterSpacing: "0.05em",
+          fontSize: "11px", color: subtitleColor, letterSpacing: "0.05em",
         }}>
-          {phase.partLabel}
+          {partLabel}
         </div>
         <div style={{
           fontFamily: "'Fredoka', sans-serif", fontWeight: 600,
-          fontSize: "22px", color: "white", lineHeight: 1.15, marginTop: 2,
+          fontSize: "22px", color: titleColor, lineHeight: 1.15, marginTop: 2,
         }}>
-          {phase.title}
+          {title}
         </div>
       </div>
       <div style={{
         width: 46, height: 46, borderRadius: 13,
-        background: "rgba(255,255,255,0.16)",
+        background: titleColor === "#FFFFFF" ? "rgba(255,255,255,0.16)" : "rgba(26,24,48,0.08)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <ScrollText size={22} color="white" strokeWidth={1.8} />
+        <ScrollText size={22} color={titleColor} strokeWidth={1.8} />
       </div>
     </div>
   );
@@ -187,11 +245,27 @@ export function LearnScreen({
 }: LearnScreenProps = {}) {
   const stage = clampCompletedLessons(completedLessons ?? 0);
   const mapSrc = MAP_STAGES[stage];
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [activeStickyPart, setActiveStickyPart] = useState<number>(1);
   const [flowStep, setFlowStep] = useState<"map" | "onboarding-preview" | "mission" | "after-party" | "mission-complete">("map");
   const lesson = getLessonByCompletedLessons(stage);
   const previewBackgroundSrc = stage <= 2 ? lessonBgEarly : lessonBgLate;
   const lessonCharacterSrc = LESSON_P_IMAGES[lesson.level as keyof typeof LESSON_P_IMAGES] ?? lessonP1;
   const lessonSceneLabel = lesson.level <= 3 ? "Orientation chat" : "Alumni chat";
+  const stickyTheme = STICKY_BANNER_THEMES[activeStickyPart] ?? STICKY_BANNER_THEMES[1];
+
+  const syncStickyPartWithScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const pageHeight = Math.max(container.clientHeight * 0.8, 1);
+    const pageIndex = Math.floor(container.scrollTop / pageHeight);
+    const nextPart = Math.min(4, Math.max(1, pageIndex + 1));
+    if (nextPart !== activeStickyPart) setActiveStickyPart(nextPart);
+  };
+
+  useEffect(() => {
+    syncStickyPartWithScroll();
+  }, []);
 
   const handleMapTap = () => {
     // Stage 5 is fully completed and only shows unlocked rewards on map.
@@ -607,7 +681,16 @@ export function LearnScreen({
       <div style={{
         flex: 1, overflowY: "auto", scrollbarWidth: "none",
         paddingLeft: 28, paddingTop: 4, paddingBottom: 110,
-      } as React.CSSProperties}>
+      } as React.CSSProperties} ref={scrollRef} onScroll={syncStickyPartWithScroll}>
+
+        <ActivePhaseHeader
+          partLabel={stickyTheme.partLabel}
+          title={stickyTheme.title}
+          background={stickyTheme.background}
+          titleColor={stickyTheme.titleColor}
+          subtitleColor={stickyTheme.subtitleColor}
+          sticky
+        />
 
         {debugModeEnabled && (
           <div
@@ -671,7 +754,6 @@ export function LearnScreen({
 
             {phase.status === "active" ? (
               <>
-                <ActivePhaseHeader phase={phase} />
                 <button
                   type="button"
                   onClick={handleMapTap}
