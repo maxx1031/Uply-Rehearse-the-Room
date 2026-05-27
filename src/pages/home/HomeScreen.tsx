@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "motion/react";
-import { User, MessageCircle, ScrollText, Drama, Play, MessageSquare, Coffee, HeartHandshake, Sparkles, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { Check, User, MessageCircle, ScrollText, Drama, Play } from "lucide-react";
 import statCalendar from "@/assets/imports/1.png";
 import statStar from "@/assets/imports/3.png";
 import sceneImg from "@/assets/imports/Gemini_Generated_Image_lbtprrlbtprrlbtp.png";
@@ -8,17 +8,10 @@ import you2Img from "@/assets/imports/you2.png";
 import { ProfileScreen } from "@/pages/profile/ProfileScreen";
 import { LearnScreen } from "@/pages/learn/LearnScreen";
 import { ReviewScreen } from "@/pages/review/ReviewScreen";
-import { FIRST_LESSON_SCENE_TITLE, FIRST_LESSON_PARTNER_SHORT_ROLE } from "@/lib/onboardingProfile";
+import { FIRST_LESSON_SCENE_TITLE } from "@/lib/onboardingProfile";
 import { PROFILE_CONSTANTS } from "@/lib/profileConfig";
 
 type Tab = "home" | "learn" | "review" | "profile";
-
-const MODULES = [
-  { Icon: MessageSquare,  title: "LinkedIn Opener",     subtitle: "Warm first message",        type: "Friendly alumni",  duration: "8 min", accent: "#6B63D4", bg: "#f3f1ff" },
-  { Icon: Coffee,         title: "AI PM Coffee Chat",   subtitle: "Ask one focused AI question", type: FIRST_LESSON_PARTNER_SHORT_ROLE, duration: "10 min", accent: "#F59E0B", bg: "#fffbeb" },
-  { Icon: HeartHandshake, title: "Post-Chat Thank You", subtitle: "Recap and stay in touch",   type: "Recent mentor",    duration: "6 min", accent: "#5b52cc", bg: "#eeeaff" },
-  { Icon: Sparkles,       title: "Quiet Reconnect",     subtitle: "Restart after months silent", type: "Old classmate",  duration: "5 min", accent: "#10B981", bg: "#f0fdf4" },
-];
 
 const TAB_ITEMS: { icon: React.ElementType; key: Tab }[] = [
   { icon: Drama,         key: "home"    },
@@ -26,6 +19,14 @@ const TAB_ITEMS: { icon: React.ElementType; key: Tab }[] = [
   { icon: MessageCircle, key: "review"  },
   { icon: User,          key: "profile" },
 ];
+
+const DEFAULT_HOME_TODOS = [
+  "Review one LinkedIn opener before noon",
+  "Send one warm follow-up message after coffee chat",
+  "Draft a 3-line thank-you note for a mentor",
+];
+
+const HOME_TODO_STORAGE_KEY = "uply.review.todos";
 
 function SprocketStrip() {
   return (
@@ -57,6 +58,39 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaultUserName }: HomeScreenProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [todos, setTodos] = useState<Array<{ id: number; text: string; date: string }>>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const loadTodos = () => {
+      const raw = window.localStorage.getItem(HOME_TODO_STORAGE_KEY);
+      let nextTodoTexts = DEFAULT_HOME_TODOS;
+      if (!raw) {
+        setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
+        window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify(DEFAULT_HOME_TODOS));
+      } else {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) {
+            nextTodoTexts = [...parsed, ...DEFAULT_HOME_TODOS].slice(0, 8);
+            setTodos(nextTodoTexts.map((text, idx) => ({ id: idx + 1, text, date: idx < parsed.length ? "Added from review" : "Added today" })));
+          } else {
+            setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
+          }
+        } catch {
+          setTodos(DEFAULT_HOME_TODOS.map((text, idx) => ({ id: idx + 1, text, date: "Added today" })));
+        }
+      }
+    };
+    loadTodos();
+    const onUpdated = () => loadTodos();
+    window.addEventListener("uply:todos-updated", onUpdated);
+    return () => window.removeEventListener("uply:todos-updated", onUpdated);
+  }, []);
+
+  const handleCompleteTodo = (id: number) => {
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  };
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden" style={{ background: "#f0ede8" }}>
@@ -222,67 +256,75 @@ export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaul
               />
             </motion.div>
 
-            {/* ── Networking Modules ── */}
+            {/* ── To-Do list ── */}
             <div style={{ padding: "0 16px" }}>
-              <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "11px", color: "#9896b8", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>
-                Networking Modules
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {MODULES.map((mod, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.25 + i * 0.06 }}
-                    onClick={() => onStartMission?.()}
-                    style={{
-                      background: "white", borderRadius: 16,
-                      padding: "13px 14px",
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "11px", color: "#9896b8", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>
+                  To-Do List
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <AnimatePresence initial={false}>
+                    {todos.slice(0, 4).map((todo) => (
+                      <motion.div
+                        key={todo.id}
+                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 40, scale: 0.95, transition: { duration: 0.22 } }}
+                        transition={{ duration: 0.28, ease: [0.34, 1.2, 0.64, 1] }}
+                        style={{
+                          background: "white",
+                          borderRadius: 16,
+                          padding: "13px 14px",
+                          boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, fontSize: "13px", color: "#1a1830", lineHeight: 1.4 }}>
+                            {todo.text}
+                          </div>
+                          <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "10px", color: "#c0bcd8", marginTop: 4 }}>
+                            {todo.date}
+                          </div>
+                        </div>
+                        <motion.button
+                          onClick={() => handleCompleteTodo(todo.id)}
+                          whileTap={{ scale: 0.82, backgroundColor: "#6B63D4", borderColor: "#6B63D4" }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: "50%",
+                            flexShrink: 0,
+                            background: "#f0eeff",
+                            border: "2px solid #d4cfee",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Check size={15} color="#6B63D4" strokeWidth={2.5} />
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {todos.length === 0 && (
+                    <div style={{
+                      background: "white",
+                      borderRadius: 16,
+                      padding: "20px 14px",
                       boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      {/* Flat icon */}
-                      <div style={{
-                        width: 46, height: 46, borderRadius: 13,
-                        background: mod.bg,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
-                      }}>
-                        <mod.Icon size={20} color={mod.accent} strokeWidth={1.6} />
+                      textAlign: "center",
+                    }}>
+                      <div style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "16px", color: "#c4bfee" }}>
+                        All done! 🎉
                       </div>
-
-                      {/* Text */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: 600, fontSize: "15px", color: "#1a1830", lineHeight: 1.2 }}>
-                          {mod.title}
-                        </div>
-                        <div style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "11px", color: "#9896b8", marginTop: 2 }}>
-                          {mod.subtitle}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                          <Users size={10} color="#c0bcd8" strokeWidth={1.8} />
-                          <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 500, fontSize: "10px", color: "#c0bcd8" }}>
-                            {mod.type} · {mod.duration}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Rehearse */}
-                      <button style={{
-                        height: 32, paddingLeft: 12, paddingRight: 12, borderRadius: 10,
-                        background: mod.bg, border: "none", cursor: "pointer",
-                        display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
-                      }}>
-                        <Play size={9} color={mod.accent} fill={mod.accent} />
-                        <span style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 600, fontSize: "11px", color: mod.accent }}>
-                          Rehearse
-                        </span>
-                      </button>
                     </div>
-                  </motion.div>
-                ))}
+                  )}
+                </div>
               </div>
             </div>
 
@@ -321,6 +363,7 @@ export function HomeScreen({ onStartMission, userName = PROFILE_CONSTANTS.defaul
           );
         })}
       </div>
+
     </div>
   );
 }
