@@ -18,11 +18,11 @@ export interface UseRealtimeOptions {
   onEvent?: (event: any) => void;
   /** Called when the model starts/stops speaking (audio output activity). */
   onSpeakingChange?: (speaking: boolean) => void;
-  /** No-op here; accepted for compatibility with the practice page. */
+  /** Probe the token endpoint on mount. Defaults to true. */
   probeOnMount?: boolean;
-  /** No-op here; accepted for compatibility with the practice page. */
+  /** JSON body sent when minting a Realtime client secret. */
   tokenRequestBody?: unknown;
-  /** No-op here; accepted for compatibility with the practice page. */
+  /** Script replayed in mock mode. */
   mockScript?: MockRealtimeTurn[];
   /** No-op here; accepted for compatibility with the practice page. */
   mockFinishArguments?: unknown;
@@ -77,6 +77,15 @@ function isMockMode(): boolean {
   return m === "1" || m === "true";
 }
 
+function buildTokenRequestInit(body: unknown): RequestInit {
+  if (body === undefined) return { method: "POST" };
+  return {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+
 /** Scripted dialogue replayed in mock mode. Keep at >=3 assistant turns so the
  *  onboarding flow's `triggerAfterRounds={3}` reaches the active-turn handoff. */
 const MOCK_SCRIPT: { role: "assistant" | "user"; text: string; afterMs: number }[] = [
@@ -93,6 +102,8 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   // Index into MOCK_SCRIPT, advanced one assistant + one user turn per press.
   const cursorRef = useRef<number>(0);
+  const finishSentRef = useRef(false);
+  const script = opts.mockScript?.length ? opts.mockScript : MOCK_SCRIPT;
 
   const cleanup = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -106,10 +117,11 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     setStatus("idle");
     setTranscript("");
     cursorRef.current = 0;
+    finishSentRef.current = false;
   }, [cleanup]);
 
   // Play a scripted assistant turn with streamed transcript deltas.
-  const playAssistant = useCallback((text: string) => {
+  const playAssistant = useCallback((text: string, onDone?: () => void) => {
     opts.onEvent?.({ type: "response.created" });
     opts.onSpeakingChange?.(true);
     const chunks = text.match(/.{1,18}(\s|$)/g) ?? [text];
@@ -126,6 +138,7 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
       opts.onSpeakingChange?.(false);
       opts.onEvent?.({ type: "response.audio_transcript.done", transcript: text });
       opts.onEvent?.({ type: "response.done" });
+      onDone?.();
     }, chunks.length * 220 + 200);
     timersRef.current.push(doneT);
   }, [opts]);
@@ -138,14 +151,14 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
     const t2 = setTimeout(() => {
       setStatus("active");
       // Maya's opening line, mirroring the real opening response.create.
-      const first = MOCK_SCRIPT[0];
+      const first = script[0];
       if (first?.role === "assistant") {
         cursorRef.current = 1;
         playAssistant(first.text);
       }
     }, 700);
     timersRef.current.push(t1, t2);
-  }, [playAssistant]);
+  }, [playAssistant, script]);
 
   const beginTurn = useCallback(() => {
     setTranscript("");
@@ -154,19 +167,31 @@ function useRealtimeMockImpl(opts: UseRealtimeOptions): UseRealtimeReturn {
 
   const endTurn = useCallback(() => {
     // Emit the next scripted user line, then Maya's following reply.
-    const userTurn = MOCK_SCRIPT[cursorRef.current];
+    const userTurn = script[cursorRef.current];
     const userText = userTurn?.role === "user" ? userTurn.text : "Mm-hmm, yeah.";
     if (userTurn?.role === "user") cursorRef.current += 1;
     opts.onEvent?.({
       type: "conversation.item.input_audio_transcription.completed",
       transcript: userText,
     });
-    const reply = MOCK_SCRIPT[cursorRef.current];
+    const reply = script[cursorRef.current];
     const replyText = reply?.role === "assistant" ? reply.text : "Haha, totally. So tell me more!";
     if (reply?.role === "assistant") cursorRef.current += 1;
-    const t = setTimeout(() => playAssistant(replyText), 500);
+    const shouldFinishAfterReply = cursorRef.current >= script.length && !finishSentRef.current;
+    const t = setTimeout(() => {
+      playAssistant(replyText, () => {
+        if (!shouldFinishAfterReply || finishSentRef.current || opts.mockFinishArguments === undefined) return;
+        finishSentRef.current = true;
+        opts.onEvent?.({
+          type: "response.function_call_arguments.done",
+          name: "finish_practice",
+          call_id: "mock_finish_practice",
+          arguments: JSON.stringify(opts.mockFinishArguments),
+        });
+      });
+    }, 500);
     timersRef.current.push(t);
-  }, [opts, playAssistant]);
+  }, [opts, playAssistant, script]);
 
   return {
     status,
@@ -212,10 +237,11 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   // Probe the token endpoint once on mount so we can hide the mic button if
   // the server hasn't been configured yet.
   useEffect(() => {
+    if (opts.probeOnMount === false) return;
     let cancelled = false;
     (async () => {
       try {
-        const probe = await fetch(tokenEndpoint, { method: "POST" });
+        const probe = await fetch(tokenEndpoint, buildTokenRequestInit(opts.tokenRequestBody));
         if (cancelled) return;
         if (probe.status === 503) {
           setIsAvailable(false);
@@ -233,7 +259,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     return () => {
       cancelled = true;
     };
-  }, [tokenEndpoint]);
+  }, [opts.probeOnMount, opts.tokenRequestBody, tokenEndpoint]);
 
   const cleanup = useCallback(() => {
     try {
@@ -307,7 +333,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
     setStatus("requesting-token");
 
     try {
-      const tokenRes = await fetch(tokenEndpoint, { method: "POST" });
+      const tokenRes = await fetch(tokenEndpoint, buildTokenRequestInit(opts.tokenRequestBody));
       if (!tokenRes.ok) {
         const body = await tokenRes.text();
         throw new Error(`Token endpoint ${tokenRes.status}: ${body.slice(0, 200)}`);

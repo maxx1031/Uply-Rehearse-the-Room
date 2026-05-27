@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { ChevronDown, ClipboardList, Mic, Pause, Play, X } from "lucide-react";
 import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
 import {
@@ -20,13 +20,15 @@ interface PracticePageProps {
 }
 
 const MOCK_SCRIPT: MockRealtimeTurn[] = [
-  { role: "assistant", text: "Hi, I am Jordan. I am glad we could find a few minutes for coffee.", afterMs: 800 },
-  { role: "user", text: "Thanks for meeting me. I saw your CS alumni badge and wanted to ask about internships.", afterMs: 2200 },
-  { role: "assistant", text: "Of course. I remember that search feeling confusing at first. What part feels most unclear right now?", afterMs: 1200 },
-  { role: "user", text: "I am trying to understand how to choose my first product internship.", afterMs: 2600 },
-  { role: "assistant", text: "That is a good small question. I would start by looking for teams where you can talk to users every week.", afterMs: 1300 },
-  { role: "user", text: "Could I send you one quick question later about how you found your first role?", afterMs: 2500 },
-  { role: "assistant", text: "Absolutely. Send me one focused question, and I will try to make the path feel less fuzzy.", afterMs: 1100 },
+  { role: "assistant", text: "Hi, I am Jordan. Glad we could find a few minutes for coffee.", afterMs: 800 },
+  { role: "user", text: "Thanks for meeting me. I heard you work on applied AI products and wanted to ask what that looks like day to day.", afterMs: 2200 },
+  { role: "assistant", text: "Yeah, lately I have been working on a customer support agent, so a lot of my day is turning messy user needs into something the model can handle reliably.", afterMs: 1200 },
+  { role: "user", text: "I am curious how you moved from regular PM work into AI PM.", afterMs: 2600 },
+  { role: "assistant", text: "Honestly, some of it was timing, but the biggest shift was getting comfortable with making a best guess, testing it, and learning from weird model behavior.", afterMs: 1300 },
+  { role: "user", text: "Could I send you one focused follow-up question later about building a small AI side project?", afterMs: 2500 },
+  { role: "assistant", text: "That is a clear ask, send me one focused question and I can point you toward a practical next step.", afterMs: 1100 },
+  { role: "user", text: "Thank you, this was really helpful. I should head out.", afterMs: 1800 },
+  { role: "assistant", text: "Of course, I am glad it helped. Good luck with the project.", afterMs: 900 },
 ];
 
 function id(prefix: string): string {
@@ -51,7 +53,10 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
   const [activeBubble, setActiveBubble] = useState<"assistant" | "user" | null>("assistant");
   const [assistantText, setAssistantText] = useState("");
   const [userText, setUserText] = useState("");
+  const [recording, setRecording] = useState(false);
   const rtRef = useRef<ReturnType<typeof useRealtime> | null>(null);
+  const recordingRef = useRef(false);
+  const pressStartedAtRef = useRef(0);
 
   const appendTurn = useCallback((speaker: PracticeTranscriptTurn["speaker"], text: string) => {
     transcriptRef.current = [...transcriptRef.current, { id: id("turn"), speaker, text, createdAt: nowIso() }];
@@ -81,8 +86,25 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     onComplete(buildResult(completionType, reviewDraft));
   }, [buildResult, onComplete]);
 
+  const setRecordingState = useCallback((value: boolean) => {
+    recordingRef.current = value;
+    setRecording(value);
+  }, []);
+
   const handleEvent = useCallback((evt: any) => {
     const type = typeof evt?.type === "string" ? evt.type : "";
+    const functionCallName =
+      typeof evt?.name === "string"
+        ? evt.name
+        : typeof evt?.item?.name === "string"
+        ? evt.item.name
+        : "";
+    const functionCallId =
+      typeof evt?.call_id === "string"
+        ? evt.call_id
+        : typeof evt?.item?.call_id === "string"
+        ? evt.item.call_id
+        : "";
 
     if (type === "input_audio_buffer.speech_started") {
       setActiveBubble("user");
@@ -116,12 +138,17 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
       appendTurn("assistant", text);
     }
 
-    if (type === "response.function_call_arguments.done" && evt.name === "finish_practice") {
+    if (
+      (type.endsWith("function_call_arguments.done") || type === "response.output_item.done") &&
+      functionCallName === "finish_practice"
+    ) {
       const draft = buildFallbackReviewDraft(transcriptRef.current, activeProfile);
-      rtRef.current?.sendEvent({
-        type: "conversation.item.create",
-        item: { type: "function_call_output", call_id: evt.call_id, output: JSON.stringify({ ok: true }) },
-      });
+      if (functionCallId) {
+        rtRef.current?.sendEvent({
+          type: "conversation.item.create",
+          item: { type: "function_call_output", call_id: functionCallId, output: JSON.stringify({ ok: true }) },
+        });
+      }
       finishPractice("natural", draft);
     }
   }, [activeProfile, appendTurn, finishPractice]);
@@ -130,7 +157,7 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     probeOnMount: false,
     tokenRequestBody: { flow: "mission", promptSeed },
     mockScript: MOCK_SCRIPT,
-    mockFinishArguments: { reason: "clear_small_ask" },
+    mockFinishArguments: { reason: "user_asked_to_end" },
     onEvent: handleEvent,
   });
   rtRef.current = rt;
@@ -153,8 +180,60 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     }
   }, [elapsedSeconds, finishPractice]);
 
+  useEffect(() => {
+    if (rt.status !== "active" || paused) {
+      setRecordingState(false);
+      pressStartedAtRef.current = 0;
+    }
+  }, [paused, rt.status, setRecordingState]);
+
+  const beginVoiceTurn = (target: HTMLButtonElement, pointerId: number) => {
+    if (paused || rt.status !== "active" || recordingRef.current) return;
+    target.setPointerCapture?.(pointerId);
+    pressStartedAtRef.current = Date.now();
+    setRecordingState(true);
+    setActiveBubble("user");
+    setUserText("");
+    rt.beginTurn();
+  };
+
+  const finishVoiceTurn = () => {
+    if (!recordingRef.current) return;
+    setRecordingState(false);
+    pressStartedAtRef.current = 0;
+    rt.endTurn();
+  };
+
+  const handleMicPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (paused) return;
+    if (rt.status === "idle" || rt.status === "error") {
+      void rt.start();
+      return;
+    }
+    if (rt.status !== "active") return;
+    event.preventDefault();
+    if (recordingRef.current) {
+      finishVoiceTurn();
+      return;
+    }
+    beginVoiceTurn(event.currentTarget, event.pointerId);
+  };
+
+  const handleMicPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!recordingRef.current) return;
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+    const heldMs = Date.now() - pressStartedAtRef.current;
+    if (heldMs >= 450) {
+      finishVoiceTurn();
+    }
+  };
+
   const pause = () => {
     setPaused(true);
+    setRecordingState(false);
+    pressStartedAtRef.current = 0;
     rt.setInputEnabled(false);
     rt.sendEvent({ type: "response.cancel" });
     rt.sendEvent({ type: "output_audio_buffer.clear" });
@@ -178,6 +257,12 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
   };
 
   const bubbleText = activeBubble === "user" ? userText : assistantText || rt.transcript;
+  const micLabel =
+    rt.status === "requesting-token" || rt.status === "connecting"
+      ? "Connecting"
+      : recording
+      ? "Tap to send"
+      : "Tap to speak";
 
   return (
     <div className={styles.screen}>
@@ -214,9 +299,17 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
         <button className={styles.circleButton} onClick={() => setShowExitConfirm(true)} aria-label="Exit practice">
           <X size={22} />
         </button>
-        <button className={styles.micButton} onClick={() => (rt.status === "idle" || rt.status === "error") && rt.start()}>
+        <button
+          className={`${styles.micButton} ${recording ? styles.micButtonRecording : ""}`}
+          onPointerDown={handleMicPointerDown}
+          onPointerUp={handleMicPointerUp}
+          onPointerCancel={() => finishVoiceTurn()}
+          onContextMenu={(event) => event.preventDefault()}
+          aria-label={recording ? "Send voice turn" : "Start voice turn"}
+          aria-pressed={recording}
+        >
           <Mic size={27} />
-          <span>{rt.status === "requesting-token" || rt.status === "connecting" ? "Connecting" : "Tap to speak"}</span>
+          <span>{micLabel}</span>
         </button>
         <button className={styles.circleButton} onClick={pause} aria-label="Pause practice">
           <Pause size={21} fill="currentColor" />
