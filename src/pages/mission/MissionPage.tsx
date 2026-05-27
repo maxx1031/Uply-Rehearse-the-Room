@@ -4,10 +4,13 @@ import {
   buildDefaultOnboardingProfile,
   type OnboardingProfile,
 } from "@/lib/onboardingProfile";
+import { type IntroMemory, type LessonConfig } from "@/lib/selfIntroCourse";
 import styles from "./MissionPage.module.css";
 
 interface MissionPageProps {
   profile?: OnboardingProfile | null;
+  lesson?: LessonConfig;
+  memory?: IntroMemory;
   missionLabel?: string;
   missionTitle?: string;
   missionSubtitle?: string;
@@ -25,23 +28,37 @@ interface MissionPageProps {
 
 export function MissionPage({
   profile,
-  missionLabel = "TODAY'S MISSION",
+  lesson,
+  memory,
+  missionLabel,
   missionTitle,
   missionSubtitle,
   partnerName,
   partnerRole,
   partnerStyle,
-  sceneLabel = "Coffee chat",
-  taskTitle = "Personal goal",
+  sceneLabel,
+  taskTitle,
   taskDescription,
   taskHint,
-  startButtonText = "Curtain up",
+  startButtonText,
   onBack,
   onStartPractice,
 }: MissionPageProps) {
+  void memory;
   const [expanded, setExpanded] = useState(false);
   const activeProfile = profile ?? buildDefaultOnboardingProfile();
   const promptSeed = activeProfile.firstLessonPromptSeed;
+  const resolvedMissionLabel = lesson ? `LEVEL ${lesson.level} REHEARSAL` : missionLabel ?? "TODAY'S MISSION";
+  const resolvedMissionTitle = lesson?.title ?? missionTitle ?? promptSeed.sceneTitle;
+  const resolvedMissionSubtitle = lesson?.subtitle ?? missionSubtitle;
+  const resolvedPartnerName = partnerName ?? promptSeed.partnerName;
+  const resolvedPartnerRole = partnerRole ?? promptSeed.partnerRole;
+  const resolvedPartnerStyle = partnerStyle ?? promptSeed.partnerStyle;
+  const resolvedSceneLabel = sceneLabel ?? (lesson && lesson.level <= 3 ? "Orientation chat" : "Alumni chat");
+  const resolvedTaskTitle = taskTitle ?? "Today's task";
+  const resolvedTaskDescription = lesson?.userTask ?? taskDescription ?? activeProfile.selectedGoal.personalObjective;
+  const resolvedTaskHint = lesson?.supportLabel ?? taskHint ?? activeProfile.selectedGoal.title;
+  const resolvedStartButtonText = startButtonText ?? "Start rehearsal";
 
   return (
     <div className={styles.screen}>
@@ -50,8 +67,8 @@ export function MissionPage({
           <ChevronLeft size={20} strokeWidth={2.2} />
         </button>
         <div>
-          <div className={styles.eyebrow}>{missionLabel}</div>
-          <div className={styles.title}>{missionTitle ?? promptSeed.sceneTitle}</div>
+          <div className={styles.eyebrow}>{resolvedMissionLabel}</div>
+          <div className={styles.title}>{resolvedMissionTitle}</div>
         </div>
       </div>
 
@@ -63,20 +80,20 @@ export function MissionPage({
           <div className={styles.partnerRow}>
             <div className={styles.silhouette} aria-hidden="true" />
             <div>
-              <div className={styles.partnerName}>{partnerName ?? promptSeed.partnerName}</div>
-              <div className={styles.partnerRole}>{partnerRole ?? promptSeed.partnerRole}</div>
+              <div className={styles.partnerName}>{resolvedPartnerName}</div>
+              <div className={styles.partnerRole}>{resolvedPartnerRole}</div>
             </div>
           </div>
-          {missionSubtitle ? <div className={styles.mutedText}>{missionSubtitle}</div> : null}
+          {resolvedMissionSubtitle ? <div className={styles.mutedText}>{resolvedMissionSubtitle}</div> : null}
 
           <div className={styles.metaGrid}>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Scene</div>
-              <div className={styles.metaValue}>{sceneLabel}</div>
+              <div className={styles.metaValue}>{resolvedSceneLabel}</div>
             </div>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Style</div>
-              <div className={styles.metaValue}>{partnerStyle ?? "Gentle"}</div>
+              <div className={styles.metaValue}>{resolvedPartnerStyle}</div>
             </div>
             <div className={styles.metaItem}>
               <div className={styles.metaLabel}>Time</div>
@@ -88,10 +105,10 @@ export function MissionPage({
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <Target size={15} />
-            {taskTitle}
+            {resolvedTaskTitle}
           </div>
-          <div className={styles.bodyText}>{taskDescription ?? activeProfile.selectedGoal.personalObjective}</div>
-          <div className={styles.mutedText}>{taskHint ?? activeProfile.selectedGoal.title}</div>
+          <div className={styles.bodyText}>{resolvedTaskDescription}</div>
+          <div className={styles.mutedText}>{resolvedTaskHint}</div>
         </section>
 
         <section className={styles.strategyPanel}>
@@ -134,7 +151,7 @@ export function MissionPage({
       <div className={styles.footer}>
         <button className={styles.primaryButton} onClick={onStartPractice}>
           <Mic2 size={18} />
-          {startButtonText}
+          {resolvedStartButtonText}
         </button>
       </div>
     </div>

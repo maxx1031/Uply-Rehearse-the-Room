@@ -125,6 +125,33 @@
   outline: 2px solid var(--accent-purple-mid);
 }
 
+.assistantBubbleLower {
+  top: 42%;
+}
+
+.preparedIntro {
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow-soft);
+  padding: var(--sp-3);
+}
+
+.preparedIntroLabel {
+  color: var(--accent-purple-mid);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.preparedIntroText {
+  color: var(--text-primary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  line-height: 1.4;
+  margin-top: var(--sp-2);
+}
+
 .userBubble {
   right: var(--sp-4);
   bottom: 156px;
