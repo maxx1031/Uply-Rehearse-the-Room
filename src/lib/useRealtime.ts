@@ -224,6 +224,8 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
   const [transcript, setTranscript] = useState<string>("");
 
+  const statusRef = useRef<RealtimeStatus>("idle");
+  const sessionIdRef = useRef(0);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -233,6 +235,11 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   // Timestamp of the last beginTurn — guards against committing a sub-100ms
   // buffer (which errors as input_audio_buffer_commit_empty).
   const turnStartRef = useRef<number>(0);
+
+  const setRealtimeStatus = useCallback((next: RealtimeStatus) => {
+    statusRef.current = next;
+    setStatus(next);
+  }, []);
 
   // Probe the token endpoint once on mount so we can hide the mic button if
   // the server hasn't been configured yet.
@@ -284,11 +291,12 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   }, []);
 
   const stop = useCallback(() => {
-    setStatus("ending");
+    sessionIdRef.current += 1;
+    setRealtimeStatus("ending");
     cleanup();
-    setStatus("idle");
+    setRealtimeStatus("idle");
     setTranscript("");
-  }, [cleanup]);
+  }, [cleanup, setRealtimeStatus]);
 
   const sendEvent = useCallback((event: unknown) => {
     const dc = dcRef.current;
@@ -324,21 +332,38 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
   }, [sendEvent]);
 
   useEffect(() => {
-    return () => cleanup();
+    return () => {
+      sessionIdRef.current += 1;
+      cleanup();
+    };
   }, [cleanup]);
 
   const start = useCallback(async () => {
+    if (
+      statusRef.current === "requesting-token" ||
+      statusRef.current === "connecting" ||
+      statusRef.current === "active"
+    ) {
+      return;
+    }
+
+    const sessionId = sessionIdRef.current + 1;
+    sessionIdRef.current = sessionId;
+    cleanup();
+
     setError(null);
     setTranscript("");
-    setStatus("requesting-token");
+    setRealtimeStatus("requesting-token");
 
     try {
       const tokenRes = await fetch(tokenEndpoint, buildTokenRequestInit(opts.tokenRequestBody));
+      if (sessionIdRef.current !== sessionId) return;
       if (!tokenRes.ok) {
         const body = await tokenRes.text();
         throw new Error(`Token endpoint ${tokenRes.status}: ${body.slice(0, 200)}`);
       }
       const tokenJson = await tokenRes.json();
+      if (sessionIdRef.current !== sessionId) return;
       // OpenAI may nest the secret under a few different shapes depending on
       // API version; check a couple before giving up.
       const ephemeral =
@@ -350,7 +375,8 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
         throw new Error(`Token endpoint returned no usable secret: ${JSON.stringify(tokenJson).slice(0, 200)}`);
       }
 
-      setStatus("connecting");
+      setRealtimeStatus("connecting");
+      if (sessionIdRef.current !== sessionId) return;
 
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
@@ -360,6 +386,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       audioEl.autoplay = true;
       audioElRef.current = audioEl;
       pc.ontrack = (e) => {
+        if (sessionIdRef.current !== sessionId) return;
         audioEl.srcObject = e.streams[0];
         if (e.streams[0]) {
           const track = e.streams[0].getAudioTracks()[0];
@@ -372,6 +399,15 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
 
       // Outbound audio (user's mic) → first track on the peer.
       const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (sessionIdRef.current !== sessionId) {
+        mic.getTracks().forEach((t) => t.stop());
+        try {
+          pc.close();
+        } catch {}
+        audioEl.srcObject = null;
+        audioEl.remove();
+        return;
+      }
       micStreamRef.current = mic;
       // Mic streams continuously over the media track (WebRTC suppresses muted
       // tracks as silence, so we must NOT gate with track.enabled). Turns are
@@ -384,10 +420,12 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       // With server VAD off, the model stays silent until asked. Kick off Maya's
       // opening line as soon as the channel is ready.
       dc.addEventListener("open", () => {
+        if (sessionIdRef.current !== sessionId) return;
         respondingRef.current = true;
         dc.send(JSON.stringify({ type: "response.create" }));
       });
       dc.addEventListener("message", (e) => {
+        if (sessionIdRef.current !== sessionId) return;
         try {
           const evt = JSON.parse(e.data);
           opts.onEvent?.(evt);
@@ -418,7 +456,9 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       });
 
       const offer = await pc.createOffer();
+      if (sessionIdRef.current !== sessionId) return;
       await pc.setLocalDescription(offer);
+      if (sessionIdRef.current !== sessionId) return;
 
       const sdpRes = await fetch("https://api.openai.com/v1/realtime/calls", {
         method: "POST",
@@ -428,6 +468,7 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
           "Content-Type": "application/sdp",
         },
       });
+      if (sessionIdRef.current !== sessionId) return;
 
       if (!sdpRes.ok) {
         const body = await sdpRes.text();
@@ -435,25 +476,30 @@ export function useRealtime(opts: UseRealtimeOptions = {}): UseRealtimeReturn {
       }
 
       const answerSdp = await sdpRes.text();
+      if (sessionIdRef.current !== sessionId) return;
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+      if (sessionIdRef.current !== sessionId) return;
 
       pc.onconnectionstatechange = () => {
+        if (sessionIdRef.current !== sessionId) return;
         const state = pc.connectionState;
         if (state === "connected") {
-          setStatus("active");
+          setRealtimeStatus("active");
         } else if (state === "failed" || state === "disconnected" || state === "closed") {
+          sessionIdRef.current += 1;
           cleanup();
-          setStatus("idle");
+          setRealtimeStatus("idle");
         }
       };
 
-      setStatus("active");
+      setRealtimeStatus("active");
     } catch (err: any) {
+      if (sessionIdRef.current !== sessionId) return;
       setError(err?.message ?? String(err));
       cleanup();
-      setStatus("error");
+      setRealtimeStatus("error");
     }
-  }, [tokenEndpoint, cleanup, opts]);
+  }, [tokenEndpoint, cleanup, opts, setRealtimeStatus]);
 
   const setInputEnabled = (enabled: boolean) => {
     micStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = enabled; });

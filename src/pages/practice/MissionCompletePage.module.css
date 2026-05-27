@@ -1,47 +1,73 @@
 .screen {
   position: absolute;
   inset: 0;
-  border: none;
-  background: var(--gradient-primary);
-  color: var(--text-on-dark);
-  font-family: var(--font-body);
   display: grid;
   place-items: center;
-  align-content: center;
+  padding: var(--sp-5);
+  background:
+    radial-gradient(circle at 30% 24%, color-mix(in srgb, var(--text-on-dark) 18%, transparent), transparent 28%),
+    radial-gradient(circle at 82% 56%, color-mix(in srgb, var(--accent-yellow-soft) 14%, transparent), transparent 24%),
+    var(--gradient-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.screen::before {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-deep-night) 58%, transparent);
+  backdrop-filter: blur(8px);
+  content: "";
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 100%;
+  max-width: 342px;
   gap: var(--sp-4);
-  cursor: pointer;
+  border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--text-on-dark) 90%, transparent);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+  padding: var(--sp-5);
+  animation: uply-fade-up 360ms ease-out both;
+}
+
+.challengeCard {
   text-align: center;
 }
 
-.mark {
-  width: 92px;
-  height: 92px;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--accent-yellow-soft);
-  display: grid;
-  place-items: center;
-  box-shadow: var(--shadow-card);
-  animation: uply-fade-up 360ms ease-out both;
-}
-
 .title {
+  color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: var(--fs-display);
   font-weight: var(--fw-bold);
-  animation: uply-fade-up 360ms ease-out both;
+  line-height: 1.05;
+}
+
+.subtitle {
+  max-width: 288px;
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  line-height: 1.45;
+  margin-top: calc(var(--sp-2) * -1);
 }
 
 .reward {
   display: grid;
-  gap: var(--sp-2);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
   border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.18);
-  padding: var(--sp-4) var(--sp-6);
+  background: color-mix(in srgb, var(--bg-lavender-soft) 78%, transparent);
+  padding: var(--sp-4);
   font-family: var(--font-heading);
-  font-size: var(--fs-body);
+  font-size: var(--fs-h2);
   font-weight: var(--fw-bold);
-  box-shadow: var(--shadow-soft);
+  line-height: 1.1;
 }
 
 .reward span {
@@ -49,12 +75,97 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
+  min-width: 0;
 }
 
-.hint {
-  color: var(--bg-lavender-soft);
+.gemReward img {
+  width: 32px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.realWorldPrompt {
+  display: grid;
+  justify-items: center;
+  border-radius: var(--r-xl);
+  background: var(--accent-yellow-soft);
+  box-shadow: var(--shadow-soft);
+  padding: var(--sp-4);
+  text-align: center;
+}
+
+.realWorldTitle {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: 1.15;
+}
+
+.realWorldBody {
+  color: var(--text-primary);
   font-size: var(--fs-caption);
   font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  line-height: 1.4;
+  margin-top: var(--sp-2);
+}
+
+.realWorldAsk {
+  display: inline-flex;
+  max-width: 100%;
+  margin-top: var(--sp-3);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--text-on-dark) 42%, transparent);
+  color: var(--text-primary);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  line-height: 1.35;
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
+}
+
+.singleAction {
+  grid-template-columns: minmax(0, 200px);
+  justify-content: center;
+}
+
+.singleAction .primaryButton {
+  min-height: 46px;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 52px;
+  border: none;
+  border-radius: var(--r-pill);
+  font-family: var(--font-heading);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: transform 80ms, box-shadow 80ms;
+}
+
+.primaryButton {
+  background: var(--btn-gradient);
+  color: var(--text-on-dark);
+  box-shadow: var(--shadow-btn-active);
+}
+
+.secondaryButton {
+  background: var(--btn-idle);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-btn-idle);
+}
+
+.primaryButton:active,
+.secondaryButton:active {
+  transform: translateY(4px);
+  box-shadow: var(--shadow-btn-pressed);
 }

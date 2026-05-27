@@ -10,26 +10,17 @@ import {
   type ReviewDraft,
   type TranscriptRecord,
 } from "@/lib/onboardingProfile";
+import { buildLessonMockScript, type IntroMemory, type LessonConfig } from "@/lib/selfIntroCourse";
 import { type MockRealtimeTurn, useRealtime } from "@/lib/useRealtime";
 import styles from "./PracticePage.module.css";
 
 interface PracticePageProps {
   profile?: OnboardingProfile | null;
+  lesson: LessonConfig;
+  memory: IntroMemory;
   onExit: (record: TranscriptRecord) => void;
   onComplete: (result: PracticeSessionResult) => void;
 }
-
-const MOCK_SCRIPT: MockRealtimeTurn[] = [
-  { role: "assistant", text: "Hi, I am Jordan. Glad we could find a few minutes for coffee.", afterMs: 800 },
-  { role: "user", text: "Thanks for meeting me. I heard you work on applied AI products and wanted to ask what that looks like day to day.", afterMs: 2200 },
-  { role: "assistant", text: "Yeah, lately I have been working on a customer support agent, so a lot of my day is turning messy user needs into something the model can handle reliably.", afterMs: 1200 },
-  { role: "user", text: "I am curious how you moved from regular PM work into AI PM.", afterMs: 2600 },
-  { role: "assistant", text: "Honestly, some of it was timing, but the biggest shift was getting comfortable with making a best guess, testing it, and learning from weird model behavior.", afterMs: 1300 },
-  { role: "user", text: "Could I send you one focused follow-up question later about building a small AI side project?", afterMs: 2500 },
-  { role: "assistant", text: "That is a clear ask, send me one focused question and I can point you toward a practical next step.", afterMs: 1100 },
-  { role: "user", text: "Thank you, this was really helpful. I should head out.", afterMs: 1800 },
-  { role: "assistant", text: "Of course, I am glad it helped. Good luck with the project.", afterMs: 900 },
-];
 
 function id(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -39,11 +30,14 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-export function PracticePage({ profile, onExit, onComplete }: PracticePageProps) {
+export function PracticePage({ profile, lesson, memory, onExit, onComplete }: PracticePageProps) {
   const activeProfile = profile ?? buildDefaultOnboardingProfile();
   const promptSeed = activeProfile.firstLessonPromptSeed;
   const startedAtRef = useRef(nowIso());
   const finishHandledRef = useRef(false);
+  const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingFinishDraftRef = useRef<ReviewDraft | null>(null);
+  const assistantResponseActiveRef = useRef(false);
   const transcriptRef = useRef<PracticeTranscriptTurn[]>([]);
 
   const [tasksExpanded, setTasksExpanded] = useState(true);
@@ -76,15 +70,31 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
       durationSeconds: Math.max(1, Math.round((Date.parse(endedAt) - Date.parse(startedAtRef.current)) / 1000)),
       transcript: currentTranscript,
       reviewDraft: reviewDraft ?? fallback,
-      scoreDelta: 25,
+      scoreDelta: lesson.scoreDelta,
     };
-  }, [activeProfile, promptSeed.partnerName, promptSeed.sceneTitle]);
+  }, [activeProfile, lesson.scoreDelta, promptSeed.partnerName, promptSeed.sceneTitle]);
 
   const finishPractice = useCallback((completionType: "natural" | "timeout", reviewDraft?: ReviewDraft) => {
     if (finishHandledRef.current) return;
     finishHandledRef.current = true;
+    if (finishTimerRef.current) {
+      clearTimeout(finishTimerRef.current);
+      finishTimerRef.current = null;
+    }
+    pendingFinishDraftRef.current = null;
+    assistantResponseActiveRef.current = false;
     onComplete(buildResult(completionType, reviewDraft));
   }, [buildResult, onComplete]);
+
+  const schedulePendingFinish = useCallback(() => {
+    if (finishHandledRef.current || finishTimerRef.current || !pendingFinishDraftRef.current) return;
+    const draft = pendingFinishDraftRef.current;
+    finishTimerRef.current = setTimeout(() => {
+      finishTimerRef.current = null;
+      pendingFinishDraftRef.current = null;
+      finishPractice("natural", draft);
+    }, 750);
+  }, [finishPractice]);
 
   const setRecordingState = useCallback((value: boolean) => {
     recordingRef.current = value;
@@ -112,6 +122,7 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
     }
 
     if (type === "response.created") {
+      assistantResponseActiveRef.current = true;
       setActiveBubble("assistant");
       setAssistantText("");
     }
@@ -138,25 +149,33 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
       appendTurn("assistant", text);
     }
 
+    if (type === "response.done") {
+      assistantResponseActiveRef.current = false;
+      schedulePendingFinish();
+    }
+
     if (
       (type.endsWith("function_call_arguments.done") || type === "response.output_item.done") &&
       functionCallName === "finish_practice"
     ) {
       const draft = buildFallbackReviewDraft(transcriptRef.current, activeProfile);
+      pendingFinishDraftRef.current = draft;
       if (functionCallId) {
         rtRef.current?.sendEvent({
           type: "conversation.item.create",
           item: { type: "function_call_output", call_id: functionCallId, output: JSON.stringify({ ok: true }) },
         });
       }
-      finishPractice("natural", draft);
+      if (!assistantResponseActiveRef.current) {
+        schedulePendingFinish();
+      }
     }
-  }, [activeProfile, appendTurn, finishPractice]);
+  }, [activeProfile, appendTurn, schedulePendingFinish]);
 
   const rt = useRealtime({
     probeOnMount: false,
     tokenRequestBody: { flow: "mission", promptSeed },
-    mockScript: MOCK_SCRIPT,
+    mockScript: buildLessonMockScript(lesson, memory) as MockRealtimeTurn[],
     mockFinishArguments: { reason: "user_asked_to_end" },
     onEvent: handleEvent,
   });
@@ -165,7 +184,14 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
   useEffect(() => {
     startedAtRef.current = nowIso();
     rt.start();
-    return () => rt.stop();
+    return () => {
+      if (finishTimerRef.current) {
+        clearTimeout(finishTimerRef.current);
+        finishTimerRef.current = null;
+      }
+      pendingFinishDraftRef.current = null;
+      rt.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -271,14 +297,12 @@ export function PracticePage({ profile, onExit, onComplete }: PracticePageProps)
 
       <div className={styles.taskPanel}>
         <button className={styles.taskHeader} onClick={() => setTasksExpanded((value) => !value)}>
-          <span><ClipboardList size={16} />Tasks</span>
+          <span><ClipboardList size={16} />Level {lesson.level}</span>
           <ChevronDown size={16} className={tasksExpanded ? styles.chevronOpen : styles.chevron} />
         </button>
         {tasksExpanded && (
           <div className={styles.taskList}>
-            {promptSeed.tasks.map((task) => (
-              <div className={styles.taskItem} key={task}><span />{task}</div>
-            ))}
+            <div className={styles.taskItem}><span />{lesson.userTask}</div>
           </div>
         )}
       </div>

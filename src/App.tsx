@@ -27,7 +27,7 @@ import {
   SloganScreen,
   type GoalId,
 } from "./pages/epilogue/Epilogue";
-import { HomeScreen } from "./pages/home/HomeScreen";
+import { HomeScreen, type HomeTab } from "./pages/home/HomeScreen";
 import { ProfileScreen } from "./pages/profile/ProfileScreen";
 import { MissionPage } from "./pages/mission/MissionPage";
 import { PracticePage } from "./pages/practice/PracticePage";
@@ -36,8 +36,22 @@ import { ReviewPage } from "./pages/practice/ReviewPage";
 import {
   buildDefaultOnboardingProfile,
   buildOnboardingProfile,
+  type MemoryCard,
   type PracticeSessionResult,
+  type TranscriptRecord,
 } from "./lib/onboardingProfile";
+import {
+  applyLessonMemory,
+  buildCourseReviewDraft,
+  buildInitialCourseProgress,
+  buildInitialIntroMemory,
+  buildLessonMemoryCard,
+  buildLessonPromptSeed,
+  completeLesson,
+  getLessonById,
+  getNextLessonId,
+  type CourseLessonId,
+} from "./lib/selfIntroCourse";
 
 type Step =
   // intro
@@ -89,6 +103,14 @@ export default function App() {
   const [goalId, setGoalId] = useState<GoalId | null>(null);
   const [bucket, setBucket] = useState<ReflectionBucket | null>(null);
   const [sessionResult, setSessionResult] = useState<PracticeSessionResult | null>(null);
+  const [courseProgress, setCourseProgress] = useState(buildInitialCourseProgress);
+  const [introMemory, setIntroMemory] = useState(buildInitialIntroMemory);
+  const [activeLessonId, setActiveLessonId] = useState<CourseLessonId>("level-1");
+  const [homeInitialTab, setHomeInitialTab] = useState<HomeTab>("home");
+  const [score, setScore] = useState(320);
+  const [streak, setStreak] = useState(2);
+  const [, setTranscriptRecords] = useState<TranscriptRecord[]>([]);
+  const [, setMemoryCards] = useState<MemoryCard[]>([]);
 
   const onboardingProfile = useMemo(() => {
     if (!goalId) return buildDefaultOnboardingProfile();
@@ -98,6 +120,15 @@ export default function App() {
       reflectionBucket: bucket ?? "mid",
     });
   }, [goalId, bucket]);
+  const activeLesson = useMemo(() => getLessonById(activeLessonId), [activeLessonId]);
+  const activePromptSeed = useMemo(
+    () => buildLessonPromptSeed(activeLesson, introMemory),
+    [activeLesson, introMemory],
+  );
+  const courseProfile = useMemo(
+    () => ({ ...onboardingProfile, firstLessonPromptSeed: activePromptSeed }),
+    [activePromptSeed, onboardingProfile],
+  );
   const [curtainOpen, setCurtainOpen] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lockedRef = useRef<boolean>(isStepLocked());
@@ -134,11 +165,42 @@ export default function App() {
     timersRef.current = [t1, t2, t3];
   };
 
-  const restartFlow = () => {
-    setUserName(null);
-    setGoalId(null);
-    setBucket(null);
-    go("splash");
+  const startLesson = (lessonId: CourseLessonId) => {
+    setActiveLessonId(lessonId);
+    setHomeInitialTab("home");
+    go("mission");
+  };
+
+  const handlePracticeComplete = (result: PracticeSessionResult) => {
+    const completedAt = new Date().toISOString();
+    const card = buildLessonMemoryCard(activeLesson, result.transcript);
+    const nextMemory = applyLessonMemory(introMemory, activeLesson, card);
+    const nextProgress = completeLesson(courseProgress, activeLesson.id, completedAt);
+    const reviewDraft = activeLesson.isChallenge
+      ? buildCourseReviewDraft(nextMemory, result.reviewDraft)
+      : result.reviewDraft;
+
+    setIntroMemory(nextMemory);
+    setCourseProgress(nextProgress);
+    setScore((value) => value + activeLesson.scoreDelta);
+    setStreak((value) => value + 1);
+    setSessionResult({ ...result, scoreDelta: activeLesson.scoreDelta, reviewDraft });
+    go("mission-complete");
+  };
+
+  const goCourseMap = () => {
+    setHomeInitialTab("learn");
+    go("home", -1);
+  };
+
+  const goNextLesson = () => {
+    const nextLessonId = getNextLessonId(activeLesson.id);
+    if (!nextLessonId) {
+      goCourseMap();
+      return;
+    }
+    setActiveLessonId(nextLessonId);
+    go("mission", 1);
   };
 
   useEffect(() => clearTimers, []);
@@ -158,7 +220,7 @@ export default function App() {
   return (
     <div
       className="size-full flex items-center justify-center"
-      style={{ background: "#e8e4df", minHeight: "100vh" }}
+      style={{ background: "var(--bg-paper)", minHeight: "100vh" }}
     >
       <div
         className="relative overflow-hidden"
@@ -170,7 +232,7 @@ export default function App() {
           borderRadius: "44px",
           boxShadow:
             "0 0 0 1px rgba(0,0,0,0.08), 0 40px 80px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.12)",
-          background: "#f5f2ee",
+          background: "var(--bg-cream)",
         }}
       >
         <div
@@ -272,22 +334,30 @@ export default function App() {
             {step === "home" && (
               <motion.div key="home" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <HomeScreen
-                  onRestart={restartFlow}
-                  onStartMission={() => go("mission")}
+                  progress={courseProgress}
+                  memory={introMemory}
+                  score={score}
+                  streak={streak}
+                  initialTab={homeInitialTab}
+                  onStartLesson={(lessonId) => startLesson(lessonId)}
                 />
               </motion.div>
             )}
 
             {step === "profile" && (
               <motion.div key="profile" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
-                <ProfileScreen onBack={() => go("home", -1)} />
+                <ProfileScreen
+                  onBack={() => go("home", -1)}
+                />
               </motion.div>
             )}
 
             {step === "mission" && (
               <motion.div key="mission" className="absolute inset-0" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}>
                 <MissionPage
-                  profile={onboardingProfile}
+                  profile={courseProfile}
+                  lesson={activeLesson}
+                  memory={introMemory}
                   onBack={() => go("home", -1)}
                   onStartPractice={() => go("practice")}
                 />
@@ -297,16 +367,28 @@ export default function App() {
             {step === "practice" && (
               <motion.div key="practice" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <PracticePage
-                  profile={onboardingProfile}
-                  onExit={() => go("home", -1)}
-                  onComplete={(result: PracticeSessionResult) => { setSessionResult(result); go("mission-complete"); }}
+                  profile={courseProfile}
+                  lesson={activeLesson}
+                  memory={introMemory}
+                  onExit={(record) => { setTranscriptRecords((records) => [record, ...records]); go("home", -1); }}
+                  onComplete={handlePracticeComplete}
                 />
               </motion.div>
             )}
 
             {step === "mission-complete" && (
               <motion.div key="mission-complete" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
-                <MissionCompletePage scoreDelta={120} streak={3} onDone={() => go("review")} />
+                <MissionCompletePage
+                  scoreDelta={activeLesson.scoreDelta}
+                  variant={activeLesson.isChallenge ? "challenge" : "lesson"}
+                  title={activeLesson.isChallenge ? "Challenge Complete" : "Level Complete"}
+                  subtitle=""
+                  realWorldPrompt={activeLesson.realWorldPrompt}
+                  secondaryLabel={activeLesson.isChallenge ? undefined : "Course map"}
+                  primaryLabel={activeLesson.isChallenge ? "Back" : getNextLessonId(activeLesson.id) ? "Next level" : "Course map"}
+                  onSecondary={activeLesson.isChallenge ? undefined : goCourseMap}
+                  onPrimary={activeLesson.isChallenge ? goCourseMap : goNextLesson}
+                />
               </motion.div>
             )}
 
@@ -314,9 +396,9 @@ export default function App() {
               <motion.div key="review" className="absolute inset-0" variants={fadeVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4 }}>
                 <ReviewPage
                   result={sessionResult}
-                  streak={3}
-                  onTryAgain={() => go("practice")}
-                  onDone={() => go("home", -1)}
+                  streak={streak}
+                  onTryAgain={() => go("mission")}
+                  onDone={(card) => { setMemoryCards((cards) => [card, ...cards]); go("home", -1); }}
                 />
               </motion.div>
             )}

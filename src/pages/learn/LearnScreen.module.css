@@ -1,0 +1,237 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, var(--bg-paper) 0%, var(--bg-cream) 100%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.header {
+  flex: 0 0 auto;
+  padding: 52px var(--sp-5) var(--sp-3);
+}
+
+.eyebrow {
+  color: var(--text-secondary);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  margin: var(--sp-1) 0 0;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  margin: var(--sp-2) 0 0;
+}
+
+.stackScroller {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stackScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.stackPad {
+  height: var(--sp-4);
+}
+
+.stackTail {
+  height: var(--sp-4);
+}
+
+.folder {
+  position: relative;
+  display: block;
+  width: calc(100% - 32px);
+  min-height: 178px;
+  margin-left: var(--sp-4);
+  margin-right: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.folder:active:not(:disabled) {
+  transform: translateY(4px);
+}
+
+.folder:disabled {
+  cursor: not-allowed;
+}
+
+.folderTab {
+  display: block;
+  width: 74px;
+  height: 22px;
+  margin-left: var(--sp-3);
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  background: var(--accent-purple-mid);
+  opacity: 0.9;
+}
+
+.folderBody {
+  display: flex;
+  min-height: 156px;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 0 var(--r-lg) var(--r-lg) var(--r-lg);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(8px);
+  padding: var(--sp-4);
+}
+
+.active {
+  z-index: 6;
+}
+
+.active .folderTab,
+.active .folderBody {
+  background: var(--gradient-primary);
+}
+
+.active .folderBody,
+.active .title,
+.active .subtitle,
+.active .levelLabel,
+.active .folderBottom,
+.active .memoryLine {
+  color: var(--text-on-dark);
+}
+
+.done {
+  z-index: 5;
+}
+
+.done .folderTab {
+  background: var(--accent-yellow-soft);
+}
+
+.ready {
+  z-index: 4;
+}
+
+.locked {
+  z-index: 2;
+  opacity: 0.68;
+}
+
+.locked .folderTab,
+.locked .folderBody {
+  background: var(--btn-idle);
+}
+
+.folderTop,
+.folderBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.iconWrap {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.28);
+  color: currentColor;
+  box-shadow: var(--shadow-soft);
+}
+
+.levelLabel,
+.folderBottom {
+  color: var(--text-secondary);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  display: block;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: 1.12;
+}
+
+.subtitle {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  line-height: 1.35;
+  margin-top: var(--sp-1);
+}
+
+.memoryLine {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.28);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.memoryShelf {
+  flex: 0 0 auto;
+  margin: 0 var(--sp-4) 92px;
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(8px);
+  padding: var(--sp-4);
+}
+
+.shelfTitle {
+  color: var(--accent-purple-mid);
+  font-family: var(--font-heading);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}
+
+.memoryShelf p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  line-height: 1.4;
+  margin: var(--sp-1) 0 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
