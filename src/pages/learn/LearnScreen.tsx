@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ScrollText, Lock, ChevronLeft, Target, Sparkles } from "lucide-react";
+import { ScrollText, Lock, ChevronLeft, Target } from "lucide-react";
 import statCalendar from "@/assets/imports/1.png";
 import statSapphire from "@/assets/imports/2.png";
 import statStar     from "@/assets/imports/3.png";
@@ -18,6 +18,7 @@ import {
   type CourseProgress,
   type IntroMemory,
 } from "@/lib/selfIntroCourse";
+import { PrimaryBtn } from "@/components/ui/UplyUI";
 import map0 from "@/assets/Map/Map0.png";
 import map1 from "@/assets/Map/Map 1.png";
 import map2 from "@/assets/Map/Map 2.png";
@@ -282,8 +283,8 @@ export function LearnScreen({
       backTop: 52,
       backLeft: 16,
       characterTop: "50%",
-      characterWidth: 200,
-      taskCardTop: "62%",
+      characterWidth: 240,
+      taskCardTop: "70%",
       taskCardSide: 16,
       taskCardRadius: 18,
       taskCardPadding: "14px 14px 12px",
@@ -554,52 +555,11 @@ export function LearnScreen({
             >
               {lesson.userTask}
             </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontFamily: "'Nunito', sans-serif",
-                fontWeight: 600,
-                fontSize: UI.hintSize,
-                color: "#9896b8",
-                lineHeight: 1.45,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <Sparkles size={13} />
-              {lesson.supportLabel}
+            <div style={{ marginTop: 20 }}>
+              <PrimaryBtn onClick={handleTaskContinue} glow={false}>
+                {isFormalDialogueStage ? "Finish this lesson" : "Start rehearsal"}
+              </PrimaryBtn>
             </div>
-          </button>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: 16,
-            right: 16,
-            bottom: 96,
-            zIndex: 20,
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleTaskContinue}
-            style={{
-              width: "100%",
-              height: 54,
-              borderRadius: 16,
-              border: "none",
-              background: "linear-gradient(180deg, #8C7BF5 0%, #6B63D4 100%)",
-              color: "white",
-              fontFamily: "'Fredoka', sans-serif",
-              fontSize: "18px",
-              fontWeight: 600,
-              cursor: "pointer",
-              boxShadow: "0 8px 18px rgba(84,70,178,0.34)",
-            }}
-          >
-            {isFormalDialogueStage ? "Finish this lesson" : "Start rehearsal"}
           </button>
         </div>
       </div>

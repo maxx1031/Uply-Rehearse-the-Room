@@ -1,6 +1,6 @@
 export const PROFILE_CONSTANTS = {
   defaultUserName: "Member",
-  actorSinceLabel: "Actor since 2024",
+  actorSinceLabel: "Actor since 2026",
   homeGreeting: "Welcome back",
   homeActiveDays: "10 days",
   homePoints: "14,000",

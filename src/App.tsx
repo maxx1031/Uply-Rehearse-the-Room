@@ -347,7 +347,7 @@ export default function App() {
   const startLesson = (lessonId: CourseLessonId) => {
     setActiveLessonId(lessonId);
     setHomeInitialTab("learn");
-    go("mission");
+    go("practice");
   };
 
   const handlePracticeComplete = (result: PracticeSessionResult) => {
@@ -385,7 +385,7 @@ export default function App() {
       return;
     }
     setActiveLessonId(nextLessonId);
-    go("mission", 1);
+    go("practice", 1);
   };
 
   useEffect(() => clearTimers, []);
@@ -405,14 +405,14 @@ export default function App() {
   return (
     <div
       className="size-full flex items-center justify-center"
-      style={{ background: "#e8e4df", minHeight: "100vh" }}
+      style={{ background: "#e8e4df", minHeight: "100dvh" }}
     >
       <div
         className="relative overflow-hidden"
         style={{
           width: "390px",
           height: "844px",
-          maxHeight: "100vh",
+          maxHeight: "100dvh",
           maxWidth: "100vw",
           borderRadius: "44px",
           boxShadow:

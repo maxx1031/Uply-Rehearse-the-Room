@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { ChevronDown, ClipboardList, Mic, Pause, Play, X } from "lucide-react";
-import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
+// import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
+import sceneWithSilhouette from "@/assets//lesson/Gemini_Generated_Image_cqktntcqktntcqkt.png";
+import lessonP1 from "@/assets/lesson/p1.png";
+import lessonP2 from "@/assets/lesson/p2.png";
+import lessonP3 from "@/assets/lesson/p3.png";
+import lessonP4 from "@/assets/lesson/p4.png";
+import lessonP5 from "@/assets/lesson/p5.png";
+
 import {
   buildDefaultOnboardingProfile,
   buildFallbackReviewDraft,
@@ -38,6 +45,14 @@ const MOCK_SCRIPT: MockRealtimeTurn[] = [
   { role: "user", text: "Thank you, this was really helpful. I should head out.", afterMs: 1800 },
   { role: "assistant", text: "Of course, I am glad it helped. Good luck with the project.", afterMs: 900 },
 ];
+
+const LESSON_TASK_IMAGES: Record<number, string> = {
+  1: lessonP1,
+  2: lessonP2,
+  3: lessonP3,
+  4: lessonP4,
+  5: lessonP5,
+};
 
 function id(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -311,6 +326,7 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
     preparedIntro && tasksExpanded
       ? `${styles.assistantBubble} ${styles.assistantBubbleLower}`
       : styles.assistantBubble;
+  const lessonTaskImageSrc = lesson ? LESSON_TASK_IMAGES[lesson.level] : undefined;
 
   return (
     <div className={styles.screen}>
@@ -343,7 +359,18 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
         )}
       </div>
 
-      <div className={styles.nameLabel}>{promptSeed.partnerName}</div>
+      {lessonTaskImageSrc ? (
+        <div className={styles.lessonActorWrap}>
+          <img
+            className={styles.lessonActor}
+            src={lessonTaskImageSrc}
+            alt={`Level ${lesson?.level ?? ""} lesson character`}
+          />
+          <div className={styles.nameLabel}>{promptSeed.partnerName}</div>
+        </div>
+      ) : (
+        <div className={styles.nameLabelFallback}>{promptSeed.partnerName}</div>
+      )}
 
       {bubbleText && (
         <div className={activeBubble === "user" ? styles.userBubble : assistantBubbleClass}>

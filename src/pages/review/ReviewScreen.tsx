@@ -358,7 +358,7 @@ export function ReviewScreen() {
       )}
       {/* ── Hero: studio illustration, deeper purple mood + bottom gradient ── */}
       <div style={{
-        height: "34vh",
+        height: "34%",
         flexShrink: 0,
         overflow: "hidden",
         position: "relative",

@@ -24,8 +24,9 @@
   position: absolute;
   top: 58px;
   left: var(--sp-4);
+  right: var(--sp-4);
   z-index: 4;
-  width: 214px;
+  width: auto;
   border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
@@ -86,7 +87,36 @@
   flex: 0 0 auto;
 }
 
+.lessonActorWrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -42%);
+  z-index: 3;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .nameLabel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  z-index: 4;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--accent-purple-mid);
+  box-shadow: var(--shadow-soft);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.18em;
+  padding: var(--sp-2) var(--sp-3);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nameLabelFallback {
   position: absolute;
   top: 47%;
   left: 50%;
@@ -101,6 +131,17 @@
   letter-spacing: 0.18em;
   padding: var(--sp-2) var(--sp-3);
   text-transform: uppercase;
+}
+
+.lessonActor {
+  position: relative;
+  transform: scale(1.25);
+  transform-origin: center center;
+  width: min(69.6vw, 278px);
+  max-height: 56%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 20px rgba(20, 14, 50, 0.3));
 }
 
 .assistantBubble,
