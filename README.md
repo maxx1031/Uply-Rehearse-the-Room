@@ -1,15 +1,15 @@
 # Uply (｡･ω･｡)ﾉ♡
 
+![Uply cover](docs/demo/uply-cover.png)
+
 > **Networking is a stage. Uply helps rehearse.**
 
 Uply is a low-pressure space that helps students and newcomers practice networking conversations with AI. While shaping your career, you could also gain real-world confidence.
 
 ## Try It Now
 
-- **Live demo:** https://uply-gilt.vercel.app
-- **Demo video:** watch the product loop below.
-
-<video src="docs/demo/uply-demo.mp4" controls width="360"></video>
+- **Live demo:** [Open Uply](https://uply-gilt.vercel.app)
+- **Demo video:** [Watch the product loop](https://github.com/maxx1031/Uply-Rehearse-the-Room/raw/main/docs/demo/uply-demo.mp4)
 
 ---
 
