@@ -4,6 +4,13 @@
 
 Uply is a low-pressure space that helps students and newcomers practice networking conversations with AI. While shaping your career, you could also gain real-world confidence.
 
+## Try It Now
+
+- **Live demo:** https://uply-gilt.vercel.app
+- **Demo video:** watch the product loop below.
+
+<video src="docs/demo/uply-demo.mp4" controls width="360"></video>
+
 ---
 
 ## 🚀 Inspiration
