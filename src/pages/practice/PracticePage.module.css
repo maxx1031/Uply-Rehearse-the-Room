@@ -12,201 +12,192 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 25%;
 }
 
-.vignette {
+.character {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 55%, transparent 34%, rgba(20, 14, 50, 0.52) 100%);
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(500px, 120vw);
+  height: auto;
+  opacity: 0.88;
+  z-index: 1;
+  pointer-events: none;
 }
 
-.taskPanel {
+.edgeBlurTop,
+.edgeBlurBottom,
+.edgeBlurLeft,
+.edgeBlurRight {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.edgeBlurTop {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+}
+
+.edgeBlurBottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  mask-image: linear-gradient(to top, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 100%);
+}
+
+.edgeBlurLeft {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 0%, transparent 100%);
+}
+
+.edgeBlurRight {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 48px;
+  mask-image: linear-gradient(to left, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, black 0%, transparent 100%);
+}
+
+.sceneChip {
   position: absolute;
   top: 58px;
-  left: var(--sp-4);
-  right: var(--sp-4);
-  z-index: 4;
-  width: auto;
-  border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-card);
-  padding: var(--sp-3);
-}
-
-.taskHeader {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--accent-purple-mid);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
   font-family: var(--font-heading);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
+  font-size: 17px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.06em;
+  color: var(--text-accent);
+  white-space: nowrap;
 }
 
-.taskHeader span {
+.activeTask {
+  position: absolute;
+  top: 100px;
+  left: 14px;
+  z-index: 8;
+  max-width: 220px;
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-}
-
-.chevron,
-.chevronOpen {
-  transition: transform 160ms ease;
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
-.taskList {
-  display: grid;
-  gap: var(--sp-2);
-  margin-top: var(--sp-3);
-}
-
-.taskItem {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  color: var(--text-primary);
-  font-size: var(--fs-caption);
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-primary) 45%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg-primary) 18%, transparent);
+  font-size: 12px;
   font-weight: var(--fw-bold);
+  line-height: 1.25;
+  color: var(--text-on-dark);
 }
 
-.taskItem span {
-  width: 11px;
-  height: 11px;
-  border-radius: var(--r-pill);
-  background: var(--accent-yellow-soft);
-  box-shadow: var(--shadow-soft);
+.activeTaskBox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--text-on-dark);
   flex: 0 0 auto;
 }
 
-.lessonActorWrap {
+.nameTagWrap {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -42%);
-  z-index: 3;
-  display: inline-flex;
+  top: calc(30% - 27px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.nameLabel {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 12px);
-  transform: translateX(-50%);
-  z-index: 4;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--accent-purple-mid);
-  box-shadow: var(--shadow-soft);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.18em;
-  padding: var(--sp-2) var(--sp-3);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.nameLabelFallback {
-  position: absolute;
-  top: 47%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--accent-purple-mid);
-  box-shadow: var(--shadow-soft);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.18em;
-  padding: var(--sp-2) var(--sp-3);
+.nameTag {
+  background: color-mix(in srgb, var(--bg-primary) 45%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--bg-primary) 50%, transparent);
+  border-radius: 10px;
+  padding: 4px 14px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.1em;
+  color: var(--text-on-dark);
   text-transform: uppercase;
 }
 
-.lessonActor {
-  position: relative;
-  transform: scale(1.25);
-  transform-origin: center center;
-  width: min(69.6vw, 278px);
-  max-height: 56%;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 20px rgba(20, 14, 50, 0.3));
+.nameTagLine {
+  width: 1px;
+  height: 10px;
+  background: color-mix(in srgb, var(--bg-primary) 45%, transparent);
+  margin-top: 3px;
+}
+
+.assistantBubbleWrap,
+.userBubbleWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 7;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--sp-5);
+  animation: uply-fade-up 260ms ease-out both;
+}
+
+.assistantBubbleWrap {
+  top: calc(15% + 10px);
+}
+
+.userBubbleWrap {
+  bottom: 150px;
 }
 
 .assistantBubble,
 .userBubble {
-  position: absolute;
-  z-index: 5;
-  max-width: 252px;
-  border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--shadow-card);
-  color: var(--text-primary);
-  font-size: var(--fs-caption);
+  max-width: 280px;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--text-on-dark) 72%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--bg-primary) 25%, transparent);
+  color: var(--text-ink);
+  font-size: 14px;
   font-weight: var(--fw-medium);
-  line-height: 1.4;
-  padding: var(--sp-3) var(--sp-4);
-  animation: uply-fade-up 260ms ease-out both;
+  line-height: 1.35;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--bg-deep-night) 10%, transparent);
 }
 
 .assistantBubble {
-  top: 34%;
-  left: var(--sp-4);
-  outline: 2px solid var(--accent-purple-mid);
-}
-
-.assistantBubbleLower {
-  top: 42%;
-}
-
-.preparedIntro {
-  border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.58);
-  box-shadow: var(--shadow-soft);
-  padding: var(--sp-3);
-}
-
-.preparedIntroLabel {
-  color: var(--accent-purple-mid);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.preparedIntroText {
-  color: var(--text-primary);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  line-height: 1.4;
-  margin-top: var(--sp-2);
+  border-radius: 16px 16px 16px 4px;
 }
 
 .userBubble {
-  right: var(--sp-4);
-  bottom: 156px;
-  outline: 2px solid var(--accent-yellow-soft);
+  border-radius: 16px 16px 4px 16px;
 }
 
 .errorText {
   position: absolute;
-  z-index: 7;
+  z-index: 9;
   left: var(--sp-4);
   right: var(--sp-4);
-  bottom: 124px;
+  bottom: 132px;
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.82);
+  background: color-mix(in srgb, var(--text-on-dark) 82%, transparent);
   color: var(--text-primary);
   box-shadow: var(--shadow-soft);
   padding: var(--sp-3);
@@ -216,18 +207,33 @@
 
 .bottomControls {
   position: absolute;
-  z-index: 6;
+  z-index: 9;
   left: var(--sp-4);
   right: var(--sp-4);
   bottom: 36px;
   display: grid;
-  grid-template-columns: 58px 1fr 58px;
-  align-items: center;
+  grid-template-columns: 50px 1fr 50px;
+  align-items: end;
   gap: var(--sp-3);
 }
 
-.circleButton,
-.micButton,
+.micColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.micHint {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  color: var(--text-on-dark);
+  text-shadow: 0 1px 4px color-mix(in srgb, var(--bg-deep-night) 60%, transparent);
+  text-align: center;
+}
+
+.cornerButton,
+.micRound,
 .resumeButton,
 .primaryButton,
 .secondaryButton {
@@ -235,38 +241,55 @@
   font-family: var(--font-heading);
   font-weight: var(--fw-bold);
   cursor: pointer;
-  transition: transform 80ms, box-shadow 80ms;
+  transition: transform 80ms, box-shadow 80ms, background 200ms;
 }
 
-.circleButton {
-  width: 58px;
-  height: 58px;
+.cornerButton {
+  width: 50px;
+  height: 50px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--text-on-dark) 55%, transparent);
+  backdrop-filter: blur(14px);
+  color: var(--accent-purple-mid);
   box-shadow: var(--shadow-card);
   display: grid;
   place-items: center;
 }
 
-.micButton {
-  min-height: 64px;
+.micRound {
+  position: relative;
+  width: 72px;
+  height: 72px;
   border-radius: var(--r-pill);
-  background: var(--btn-gradient);
-  color: var(--text-on-dark);
-  box-shadow: var(--shadow-btn-active);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-body);
+  background: linear-gradient(135deg, var(--accent-purple-soft), var(--btn-active-top));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--bg-primary) 40%, transparent);
+  display: grid;
+  place-items: center;
   touch-action: none;
   user-select: none;
 }
 
-.micButtonRecording {
-  transform: translateY(4px);
-  box-shadow: var(--shadow-btn-pressed);
+.micRoundActive {
+  transform: scale(0.94);
+  background: linear-gradient(135deg, var(--accent-lavender), var(--accent-purple-soft));
+  box-shadow: none;
+}
+
+.micRipple {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg-primary) 35%, transparent);
+  pointer-events: none;
+  animation: uply-ripple 1.6s ease-out infinite;
+}
+
+.micRippleDelay1 {
+  animation-delay: 0.52s;
+}
+
+.micRippleDelay2 {
+  animation-delay: 1.04s;
 }
 
 .pauseLayer,
@@ -274,7 +297,7 @@
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgba(26, 24, 48, 0.56);
+  background: color-mix(in srgb, var(--bg-deep-night) 56%, transparent);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
@@ -298,7 +321,7 @@
 .confirmCard {
   width: 100%;
   border-radius: var(--r-xl);
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--text-on-dark) 90%, transparent);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(10px);
   padding: var(--sp-5);
@@ -344,8 +367,7 @@
   box-shadow: var(--shadow-btn-idle);
 }
 
-.circleButton:active,
-.micButton:active,
+.cornerButton:active,
 .resumeButton:active,
 .primaryButton:active,
 .secondaryButton:active {

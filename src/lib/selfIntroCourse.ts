@@ -166,6 +166,12 @@ export const JORDAN_PERSONA: Persona = {
   socialHook: "a Berkeley alumni hike this weekend",
 };
 
+export const SARA_PERSONA: Persona = {
+  ...JORDAN_PERSONA,
+  name: "Sara",
+  shortLabel: "Sara",
+};
+
 export const SELF_INTRO_LESSONS: LessonConfig[] = [
   {
     id: "level-1",
@@ -281,8 +287,8 @@ export const SELF_INTRO_LESSONS: LessonConfig[] = [
     successCriteria: ["The user delivers a full 30 to 45 second intro.", "The user answers one follow-up naturally.", "The intro can be reused in a real alumni coffee chat."],
     suggestedLine:
       "I'm YJ, a student exploring AI product work. I'm interested in how applied AI products turn user needs into real workflows, and I'd love to hear how you built that path.",
-    partnerOpening: "Hey, I'm Jordan. Nice to finally meet you.",
-    persona: JORDAN_PERSONA,
+    partnerOpening: "Hey, I'm Sara. Nice to finally meet you.",
+    persona: SARA_PERSONA,
     scoreDelta: 50,
     isChallenge: true,
     hidePracticeTips: true,

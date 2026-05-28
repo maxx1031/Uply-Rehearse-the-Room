@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
-import { ChevronDown, ClipboardList, Mic, Pause, Play, X } from "lucide-react";
-// import sceneWithSilhouette from "@/assets/after-party/scene-with-silhouette.png";
-import sceneWithSilhouette from "@/assets//lesson/Gemini_Generated_Image_cqktntcqktntcqkt.png";
+import { Mic, Pause, Play, X } from "lucide-react";
+import sceneBg from "@/assets/after-party/scene-bg-v2.jpg";
+import fallbackCharacter from "@/assets/imports/ppl.png";
 import lessonP1 from "@/assets/lesson/p1.png";
 import lessonP2 from "@/assets/lesson/p2.png";
 import lessonP3 from "@/assets/lesson/p3.png";
 import lessonP4 from "@/assets/lesson/p4.png";
 import lessonP5 from "@/assets/lesson/p5.png";
-
+import { TypingDots } from "@/components/ui/UplyUI";
 import {
   buildDefaultOnboardingProfile,
   buildFallbackReviewDraft,
@@ -19,7 +19,7 @@ import {
 } from "@/lib/onboardingProfile";
 import {
   buildLessonMockScript,
-  buildPolishedIntro,
+  buildLessonPromptSeed,
   type IntroMemory,
   type LessonConfig,
 } from "@/lib/selfIntroCourse";
@@ -46,7 +46,7 @@ const MOCK_SCRIPT: MockRealtimeTurn[] = [
   { role: "assistant", text: "Of course, I am glad it helped. Good luck with the project.", afterMs: 900 },
 ];
 
-const LESSON_TASK_IMAGES: Record<number, string> = {
+const LESSON_CHARACTERS: Record<number, string> = {
   1: lessonP1,
   2: lessonP2,
   3: lessonP3,
@@ -64,8 +64,13 @@ function nowIso(): string {
 
 export function PracticePage({ profile, lesson, memory, onExit, onComplete }: PracticePageProps) {
   const activeProfile = profile ?? buildDefaultOnboardingProfile();
-  const promptSeed = activeProfile.firstLessonPromptSeed;
-  const preparedIntro = lesson?.id === "level-4" && memory ? buildPolishedIntro(memory) : "";
+  const promptSeed =
+    lesson && memory
+      ? buildLessonPromptSeed(lesson, memory)
+      : activeProfile.firstLessonPromptSeed;
+  const partnerName = lesson?.persona.name ?? promptSeed.partnerName;
+  const characterSrc = lesson ? LESSON_CHARACTERS[lesson.level] ?? fallbackCharacter : fallbackCharacter;
+  const activeTaskLabel = lesson?.userTask ?? promptSeed.tasks[0] ?? "Complete the mission";
   const startedAtRef = useRef(nowIso());
   const finishHandledRef = useRef(false);
   const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,7 +78,6 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
   const assistantResponseActiveRef = useRef(false);
   const transcriptRef = useRef<PracticeTranscriptTurn[]>([]);
 
-  const [tasksExpanded, setTasksExpanded] = useState(true);
   const [paused, setPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -96,7 +100,7 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
     return {
       id: id("session"),
       sceneTitle: promptSeed.sceneTitle,
-      partnerName: promptSeed.partnerName,
+      partnerName,
       completionType,
       startedAt: startedAtRef.current,
       endedAt,
@@ -105,7 +109,7 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
       reviewDraft: reviewDraft ?? fallback,
       scoreDelta: lesson?.scoreDelta ?? 25,
     };
-  }, [activeProfile, lesson?.scoreDelta, promptSeed.partnerName, promptSeed.sceneTitle]);
+  }, [activeProfile, lesson?.scoreDelta, partnerName, promptSeed.sceneTitle]);
 
   const finishPractice = useCallback((completionType: "natural" | "timeout", reviewDraft?: ReviewDraft) => {
     if (finishHandledRef.current) return;
@@ -308,73 +312,52 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
     onExit({
       id: id("record"),
       sceneTitle: promptSeed.sceneTitle,
-      partnerName: promptSeed.partnerName,
+      partnerName,
       completionType: "exit",
       createdAt: nowIso(),
       transcript: transcriptRef.current,
     });
   };
 
-  const bubbleText = activeBubble === "user" ? userText : assistantText || rt.transcript;
+  const assistantBubbleText = assistantText || rt.transcript;
   const micLabel =
     rt.status === "requesting-token" || rt.status === "connecting"
-      ? "Connecting"
+      ? "Connecting…"
       : recording
-      ? "Tap to send"
+      ? "Release to send"
+      : rt.status === "active"
+      ? "Hold to talk"
       : "Tap to speak";
-  const assistantBubbleClass =
-    preparedIntro && tasksExpanded
-      ? `${styles.assistantBubble} ${styles.assistantBubbleLower}`
-      : styles.assistantBubble;
-  const lessonTaskImageSrc = lesson ? LESSON_TASK_IMAGES[lesson.level] : undefined;
-
   return (
     <div className={styles.screen}>
-      <img className={styles.backdrop} src={sceneWithSilhouette} alt="" />
-      <div className={styles.vignette} />
+      <img className={styles.backdrop} src={sceneBg} alt="" />
+      <img className={styles.character} src={characterSrc} alt="" />
+      <div className={styles.edgeBlurTop} />
+      <div className={styles.edgeBlurBottom} />
+      <div className={styles.edgeBlurLeft} />
+      <div className={styles.edgeBlurRight} />
 
-      <div className={styles.taskPanel}>
-        <button className={styles.taskHeader} onClick={() => setTasksExpanded((value) => !value)}>
-          <span><ClipboardList size={16} />{lesson ? `Level ${lesson.level}` : "Tasks"}</span>
-          <ChevronDown size={16} className={tasksExpanded ? styles.chevronOpen : styles.chevron} />
-        </button>
-        {tasksExpanded && (
-          <div className={styles.taskList}>
-            {lesson ? (
-              <>
-                <div className={styles.taskItem}><span />{lesson.userTask}</div>
-                {preparedIntro ? (
-                  <div className={styles.preparedIntro}>
-                    <div className={styles.preparedIntroLabel}>Prepared intro</div>
-                    <div className={styles.preparedIntroText}>{preparedIntro}</div>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              promptSeed.tasks.map((task) => (
-                <div className={styles.taskItem} key={task}><span />{task}</div>
-              ))
-            )}
-          </div>
-        )}
+      <div className={styles.sceneChip}>· {promptSeed.sceneTitle.toUpperCase()} ·</div>
+
+      <div className={styles.activeTask}>
+        <span className={styles.activeTaskBox} aria-hidden />
+        <span>{activeTaskLabel}</span>
       </div>
 
-      {lessonTaskImageSrc ? (
-        <div className={styles.lessonActorWrap}>
-          <img
-            className={styles.lessonActor}
-            src={lessonTaskImageSrc}
-            alt={`Level ${lesson?.level ?? ""} lesson character`}
-          />
-          <div className={styles.nameLabel}>{promptSeed.partnerName}</div>
+      <div className={styles.nameTagWrap}>
+        <div className={styles.nameTag}>{partnerName}</div>
+        <div className={styles.nameTagLine} />
+      </div>
+
+      {activeBubble === "assistant" && assistantBubbleText && (
+        <div className={styles.assistantBubbleWrap}>
+          <div className={styles.assistantBubble}>{assistantBubbleText}</div>
         </div>
-      ) : (
-        <div className={styles.nameLabelFallback}>{promptSeed.partnerName}</div>
       )}
 
-      {bubbleText && (
-        <div className={activeBubble === "user" ? styles.userBubble : assistantBubbleClass}>
-          {bubbleText}
+      {activeBubble === "user" && (userText || recording) && (
+        <div className={styles.userBubbleWrap}>
+          <div className={styles.userBubble}>{userText || <TypingDots />}</div>
         </div>
       )}
 
@@ -383,23 +366,34 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
       )}
 
       <div className={styles.bottomControls}>
-        <button className={styles.circleButton} onClick={() => setShowExitConfirm(true)} aria-label="Exit practice">
-          <X size={22} />
+        <button className={styles.cornerButton} onClick={() => setShowExitConfirm(true)} aria-label="Exit practice">
+          <X size={20} />
         </button>
-        <button
-          className={`${styles.micButton} ${recording ? styles.micButtonRecording : ""}`}
-          onPointerDown={handleMicPointerDown}
-          onPointerUp={handleMicPointerUp}
-          onPointerCancel={() => finishVoiceTurn()}
-          onContextMenu={(event) => event.preventDefault()}
-          aria-label={recording ? "Send voice turn" : "Start voice turn"}
-          aria-pressed={recording}
-        >
-          <Mic size={27} />
-          <span>{micLabel}</span>
-        </button>
-        <button className={styles.circleButton} onClick={pause} aria-label="Pause practice">
-          <Pause size={21} fill="currentColor" />
+
+        <div className={styles.micColumn}>
+          <div className={styles.micHint}>{micLabel}</div>
+          <button
+            className={`${styles.micRound} ${recording ? styles.micRoundActive : ""}`}
+            onPointerDown={handleMicPointerDown}
+            onPointerUp={handleMicPointerUp}
+            onPointerCancel={() => finishVoiceTurn()}
+            onContextMenu={(event) => event.preventDefault()}
+            aria-label={recording ? "Send voice turn" : "Start voice turn"}
+            aria-pressed={recording}
+          >
+            {recording && (
+              <>
+                <span className={styles.micRipple} />
+                <span className={`${styles.micRipple} ${styles.micRippleDelay1}`} />
+                <span className={`${styles.micRipple} ${styles.micRippleDelay2}`} />
+              </>
+            )}
+            <Mic size={26} color="white" />
+          </button>
+        </div>
+
+        <button className={styles.cornerButton} onClick={pause} aria-label="Pause practice">
+          <Pause size={19} fill="currentColor" />
         </button>
       </div>
 
