@@ -71,17 +71,17 @@
 
 ### Codex 执行硬规范
 
-- **先读再改**: 动代码前把 CLAUDE.md 整篇读完, 按需读 `.design/tokens.css` / `components.md` / `patterns.md` / `assets/README.md`
+- **先读再改**: 动代码前把 `docs/internal/CLAUDE.md` 整篇读完, 按需读 `.design/tokens.css` / `components.md` / `patterns.md` / `assets/README.md`
 - **先复述再动手**: 拿到指令先回 "我打算改 X 文件做 Y, 风险是 Z" 等确认, 不要 cowboy 直接改
 - **typecheck / build 必跑**: 改完跑 `pnpm typecheck` (有则) 或 `pnpm build`, 把输出贴回来; 任何报错先停, 不要自己猜着改下去
 - **不私自 commit**: 默认 `git add` staged 但不 commit; Claude review pass 才 commit
 - **commit message 走模板**: 按本文件 "Git + Vercel 工作流" 的格式, 必须写 Reason
-- **遇到本文件 / TODO.md 之外的判断主动问**: 比如 "这个动效要不要", "这个文案怎么改" 这种, 不要自己拍
+- **遇到本文件 / `docs/internal/TODO.md` 之外的判断主动问**: 比如 "这个动效要不要", "这个文案怎么改" 这种, 不要自己拍
 
 ### 给 Codex 的入会 briefing
 
 每次新开 Codex 会话, 用户会贴一段固定的入会指令 (包含上述分工和规范的简版). Codex 看到后应该:
-1. 确认读完 CLAUDE.md 和 TODO.md
+1. 确认读完 `docs/internal/CLAUDE.md` 和 `docs/internal/TODO.md`
 2. 报告当前 `git status` / 当前分支
 3. 等任务, 不要自己找事做
 
