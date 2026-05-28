@@ -33,6 +33,19 @@ import { MissionPage } from "./pages/mission/MissionPage";
 import { PracticePage } from "./pages/practice/PracticePage";
 import { MissionCompletePage } from "./pages/practice/MissionCompletePage";
 import { ReviewPage } from "./pages/practice/ReviewPage";
+import { isDebugModeEnabled, isStepLocked, readStepFromUrl, type Step } from "./lib/appFlow";
+import {
+  COURSE_SCORE_STORAGE_KEY,
+  COURSE_STREAK_STORAGE_KEY,
+  loadCourseProgress,
+  loadIntroMemory,
+  loadStoredNumber,
+  persistCourseProgress,
+  persistIntroMemory,
+  persistStoredNumber,
+  progressFromCompletedCount,
+} from "./lib/coursePersistence";
+import { resetHomeTodos } from "./lib/homeTodos";
 import {
   buildDefaultOnboardingProfile,
   buildOnboardingProfile,
@@ -51,26 +64,10 @@ import {
   completeLesson,
   getNextLessonId,
   getLessonById,
-  SELF_INTRO_LESSONS,
   type CourseLessonId,
   type CourseProgress,
   type IntroMemory,
-  type LessonMemoryCard,
 } from "./lib/selfIntroCourse";
-
-type Step =
-  // intro
-  | "splash" | "ticket" | "login" | "curtain"
-  // act-i
-  | "after-party" | "conversation"
-  // interlude
-  | "analyzing" | "result" | "reflection"
-  // epilogue
-  | "goal" | "slogan" | "home"
-  // profile
-  | "profile"
-  // practice loop (new)
-  | "mission" | "practice" | "mission-complete" | "review";
 
 interface OverlayState {
   userName: string;
@@ -79,159 +76,6 @@ interface OverlayState {
 }
 
 const DEFAULT_ARCHETYPE: ArchetypeId = "quiet-observer";
-
-const VALID_STEPS: Step[] = [
-  "splash", "ticket", "login", "curtain",
-  "after-party", "conversation",
-  "analyzing", "result", "reflection",
-  "goal", "slogan", "home",
-  "profile",
-  "mission", "practice", "mission-complete", "review",
-];
-const COMPLETED_LESSONS_STORAGE_KEY = "uply.completedLessons";
-const COURSE_PROGRESS_STORAGE_KEY = "uply.courseProgress";
-const INTRO_MEMORY_STORAGE_KEY = "uply.introMemory";
-const COURSE_SCORE_STORAGE_KEY = "uply.courseScore";
-const COURSE_STREAK_STORAGE_KEY = "uply.courseStreak";
-const HOME_TODO_STORAGE_KEY = "uply.review.todos";
-const DEFAULT_HOME_TODOS = [
-  "Review one LinkedIn opener before noon",
-  "Send one warm follow-up message after coffee chat",
-  "Draft a 3-line thank-you note for a mentor",
-] as const;
-
-function loadCompletedLessonCount(): number {
-  if (typeof window === "undefined") return 0;
-  const raw = window.localStorage.getItem(COMPLETED_LESSONS_STORAGE_KEY);
-  const value = Number(raw);
-  if (!Number.isFinite(value)) return 0;
-  if (value <= 0) return 0;
-  if (value >= 5) return 5;
-  return Math.floor(value);
-}
-
-function persistCompletedLessonCount(value: number): void {
-  if (typeof window === "undefined") return;
-  const safeValue = Math.max(0, Math.min(5, Math.floor(value)));
-  window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, String(safeValue));
-}
-
-function progressFromCompletedCount(count: number): CourseProgress {
-  const safeCount = Math.max(0, Math.min(5, Math.floor(count)));
-  const completedLessonIds = SELF_INTRO_LESSONS.slice(0, safeCount).map((lesson) => lesson.id);
-  const currentLessonId = SELF_INTRO_LESSONS[Math.min(safeCount, SELF_INTRO_LESSONS.length - 1)].id;
-  return {
-    ...buildInitialCourseProgress(),
-    currentLessonId,
-    completedLessonIds,
-  };
-}
-
-function normalizeCourseProgress(value: unknown): CourseProgress | null {
-  if (!value || typeof value !== "object") return null;
-  const raw = value as Partial<CourseProgress>;
-  const lessonIds = new Set<CourseLessonId>(SELF_INTRO_LESSONS.map((lesson) => lesson.id));
-  const completedLessonIds = Array.isArray(raw.completedLessonIds)
-    ? raw.completedLessonIds.filter((id): id is CourseLessonId => lessonIds.has(id as CourseLessonId))
-    : [];
-  const currentLessonId = lessonIds.has(raw.currentLessonId as CourseLessonId)
-    ? raw.currentLessonId as CourseLessonId
-    : SELF_INTRO_LESSONS[Math.min(completedLessonIds.length, SELF_INTRO_LESSONS.length - 1)].id;
-  return {
-    themeId: "alumni-coffee-intro",
-    currentLessonId,
-    completedLessonIds,
-    lastPracticedAt: typeof raw.lastPracticedAt === "string" ? raw.lastPracticedAt : null,
-  };
-}
-
-function loadCourseProgress(): CourseProgress {
-  if (typeof window === "undefined") return buildInitialCourseProgress();
-  const raw = window.localStorage.getItem(COURSE_PROGRESS_STORAGE_KEY);
-  if (raw) {
-    try {
-      const parsed = normalizeCourseProgress(JSON.parse(raw));
-      if (parsed) return parsed;
-    } catch {}
-  }
-  return progressFromCompletedCount(loadCompletedLessonCount());
-}
-
-function persistCourseProgress(progress: CourseProgress): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(COURSE_PROGRESS_STORAGE_KEY, JSON.stringify(progress));
-  persistCompletedLessonCount(progress.completedLessonIds.length);
-}
-
-function normalizeLessonCards(value: unknown): LessonMemoryCard[] {
-  if (!Array.isArray(value)) return [];
-  const lessonIds = new Set<CourseLessonId>(SELF_INTRO_LESSONS.map((lesson) => lesson.id));
-  return value.filter((item): item is LessonMemoryCard => {
-    if (!item || typeof item !== "object") return false;
-    const raw = item as Partial<LessonMemoryCard>;
-    return (
-      typeof raw.id === "string" &&
-      lessonIds.has(raw.lessonId as CourseLessonId) &&
-      typeof raw.label === "string" &&
-      typeof raw.value === "string" &&
-      typeof raw.createdAt === "string"
-    );
-  });
-}
-
-function normalizeIntroMemory(value: unknown): IntroMemory | null {
-  if (!value || typeof value !== "object") return null;
-  const raw = value as Partial<IntroMemory>;
-  return {
-    identityAnchor: typeof raw.identityAnchor === "string" ? raw.identityAnchor : null,
-    professionalAnchor: typeof raw.professionalAnchor === "string" ? raw.professionalAnchor : null,
-    curiosityHook: typeof raw.curiosityHook === "string" ? raw.curiosityHook : null,
-    customizedIntro: typeof raw.customizedIntro === "string" ? raw.customizedIntro : null,
-    finalIntro: typeof raw.finalIntro === "string" ? raw.finalIntro : null,
-    nextSmallAsk: typeof raw.nextSmallAsk === "string" ? raw.nextSmallAsk : null,
-    lessonCards: normalizeLessonCards(raw.lessonCards),
-  };
-}
-
-function loadIntroMemory(): IntroMemory {
-  if (typeof window === "undefined") return buildInitialIntroMemory();
-  const raw = window.localStorage.getItem(INTRO_MEMORY_STORAGE_KEY);
-  if (!raw) return buildInitialIntroMemory();
-  try {
-    return normalizeIntroMemory(JSON.parse(raw)) ?? buildInitialIntroMemory();
-  } catch {
-    return buildInitialIntroMemory();
-  }
-}
-
-function persistIntroMemory(memory: IntroMemory): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(INTRO_MEMORY_STORAGE_KEY, JSON.stringify(memory));
-}
-
-function loadStoredNumber(key: string, fallback: number): number {
-  if (typeof window === "undefined") return fallback;
-  const raw = window.localStorage.getItem(key);
-  if (raw === null) return fallback;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : fallback;
-}
-
-function persistStoredNumber(key: string, value: number): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, String(value));
-}
-
-function readStepFromUrl(): Step {
-  if (typeof window === "undefined") return "splash";
-  const param = new URLSearchParams(window.location.search).get("step");
-  return (VALID_STEPS as string[]).includes(param ?? "") ? (param as Step) : "splash";
-}
-
-function isStepLocked(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("lockStep") === "1";
-}
 
 export default function App() {
   const [step, setStep] = useState<Step>(readStepFromUrl);
@@ -249,9 +93,7 @@ export default function App() {
   const [streak, setStreak] = useState<number>(() => loadStoredNumber(COURSE_STREAK_STORAGE_KEY, 10));
   const [, setTranscriptRecords] = useState<TranscriptRecord[]>([]);
   const [, setMemoryCards] = useState<MemoryCard[]>([]);
-  const debugModeEnabled =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("debug") === "1";
+  const debugModeEnabled = isDebugModeEnabled();
 
   const onboardingProfile = useMemo(() => {
     if (!goalId) return buildDefaultOnboardingProfile();
@@ -293,10 +135,7 @@ export default function App() {
     const displayName = name.trim() || PROFILE_CONSTANTS.defaultUserName;
     setUserName(displayName);
     persistUserName(displayName);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(HOME_TODO_STORAGE_KEY, JSON.stringify([...DEFAULT_HOME_TODOS]));
-      window.dispatchEvent(new CustomEvent("uply:todos-updated", { detail: [...DEFAULT_HOME_TODOS] }));
-    }
+    resetHomeTodos();
     setCurtainOpen(false);
     go("curtain");
 
