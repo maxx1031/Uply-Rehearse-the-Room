@@ -22,7 +22,7 @@
   transform: translateX(-50%);
   width: min(500px, 120vw);
   height: auto;
-  opacity: 0.88;
+  opacity: 1;
   z-index: 1;
   pointer-events: none;
 }
@@ -188,6 +188,40 @@
 
 .userBubble {
   border-radius: 16px 16px 4px 16px;
+}
+
+.lessonTipCard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(86%, 320px);
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--text-on-dark) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg-deep-night) 18%, transparent);
+  color: var(--text-ink);
+  font-family: var(--font-body);
+  animation: uply-fade-up 320ms ease-out both;
+}
+
+.lessonTipLabel {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-ink) 70%, transparent);
+  margin-bottom: 6px;
+}
+
+.lessonTipBody {
+  font-size: 14px;
+  font-weight: var(--fw-medium);
+  line-height: 1.45;
 }
 
 .errorText {

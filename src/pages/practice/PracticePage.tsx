@@ -20,6 +20,7 @@ import {
 import {
   buildLessonMockScript,
   buildLessonPromptSeed,
+  LEVEL_4_USER_TEMPLATE,
   type IntroMemory,
   type LessonConfig,
 } from "@/lib/selfIntroCourse";
@@ -352,6 +353,13 @@ export function PracticePage({ profile, lesson, memory, onExit, onComplete }: Pr
       {activeBubble === "assistant" && assistantBubbleText && (
         <div className={styles.assistantBubbleWrap}>
           <div className={styles.assistantBubble}>{assistantBubbleText}</div>
+        </div>
+      )}
+
+      {lesson?.id === "level-4" && (
+        <div className={styles.lessonTipCard}>
+          <div className={styles.lessonTipLabel}>Read this out loud</div>
+          <div className={styles.lessonTipBody}>{LEVEL_4_USER_TEMPLATE}</div>
         </div>
       )}
 
