@@ -44,7 +44,7 @@
 
 ### 注意: voice / STT 还没接
 
-spec §3.4.3 的 STT/TTS 判定 (用户说话检测、NPC TTS onended) 当前**没有实现** — conversation 现在是 tap-to-pick 选项树, 不是真语音。voice 集成在 `TODO.md` 里是单独一项 backlog。spec 里的 voice 行为先按"占位 / 用 tap 模拟"处理, 真 voice 后续单独做。
+spec §3.4.3 的 STT/TTS 判定 (用户说话检测、NPC TTS onended) 当前**没有实现**, conversation 现在是 tap-to-pick 选项树, 不是真语音。voice 集成在 `docs/internal/TODO.md` 里是单独一项 backlog。spec 里的 voice 行为先按"占位 / 用 tap 模拟"处理, 真 voice 后续单独做。
 
 ---
 
